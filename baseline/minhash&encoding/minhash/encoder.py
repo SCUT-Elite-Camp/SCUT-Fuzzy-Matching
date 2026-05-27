@@ -19,7 +19,7 @@ from preprocessing.text_cleaner import clean_name
 # ---------------------------------------------------------------------------
 # 置换函数系数（全局单例，延迟初始化）
 # ---------------------------------------------------------------------------
-_permutation_params: np.ndarray | None = None  # shape (200, 2), dtype=uint64
+_permutation_params: "np.ndarray | None" = None  # shape (200, 2), dtype=uint64
 
 
 def _get_permutation_params(num_perms: int = NUM_PERMUTATIONS_CLUSTER) -> np.ndarray:
