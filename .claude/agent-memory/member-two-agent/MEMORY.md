@@ -1,3 +1,0 @@
-- [Member Two Boundaries](member-two-boundaries.md) — exact file ownership scope per spec lines 365-459
-- [Critical Constraints](member-two-critical-constraints.md) — nine non-negotiable rules for Member Two implementation
-- [Import Resolution](member-two-import-resolution.md) — how sys.path is set up in party_a/local_prep.py to resolve both baseline_Integration/ and baseline/ packages
