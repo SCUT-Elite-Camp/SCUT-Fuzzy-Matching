@@ -8,7 +8,7 @@ from typing import Iterator
 import numpy as np
 import tenseal as ts
 
-from ckks.operations import add_plain, dot_ct_ct, matmul_ct_pt, mul_plain
+from ckks.operations import add_plain, dot_ct_ct, matmul_ct_pt
 from config.params import RANDOM_MASK_MAX, RANDOM_MASK_MIN, SIMILARITY_THRESHOLD
 from protocol.types import EncryptedScalar, SecondRoundRequest
 
@@ -69,10 +69,13 @@ def column_wise_matching(
         )
 
     for column_index in range(max_size):
+        mask = _sample_positive_mask()
         column_j = matrix[:, column_index, :]
-        encrypted_selected_name_j = matmul_ct_pt(encrypted_selector, column_j)
+        masked_column_j = mask * column_j
+        encrypted_selected_name_j = matmul_ct_pt(
+            encrypted_selector, masked_column_j
+        )
         encrypted_cos_score_j = dot_ct_ct(
             encrypted_query_50, encrypted_selected_name_j
         )
-        encrypted_temp_j = add_plain(encrypted_cos_score_j, -tau)
-        yield mul_plain(encrypted_temp_j, _sample_positive_mask())
+        yield add_plain(encrypted_cos_score_j, -mask * tau)

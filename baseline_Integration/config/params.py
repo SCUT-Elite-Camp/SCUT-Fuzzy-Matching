@@ -15,8 +15,8 @@ K_CLUSTERS_FUNC = lambda n: int(n ** 0.5)   # k ≈ √|N_B|
 KMEANS_ITERATIONS = 20
 
 # ==================== CKKS 参数 ====================
-POLY_MODULUS_DEGREE = 16384       # 多项式模度，提供足够层数支撑 Step 6-8 链路
-COEFF_MOD_BIT_SIZES = [60, 40, 40, 40, 60]  # 额外一层模数支撑随机 mask 乘法
+POLY_MODULUS_DEGREE = 8192        # 多项式模度，论文 / baseline 默认参数
+COEFF_MOD_BIT_SIZES = [60, 40, 40, 60]  # CKKS 系数模数链
 SCALE = 2 ** 40             # 缩放因子（定点数小数点位置），控制数值精度
 
 # ==================== 协议参数 ====================
