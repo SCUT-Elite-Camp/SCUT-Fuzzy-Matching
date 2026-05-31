@@ -23,7 +23,32 @@ def dot_ct_pt(enc_vec: ts.CKKSVector, plain_vec: np.ndarray) -> ts.CKKSVector:
     Returns:
         ts.CKKSVector: 加密的点积结果（标量密文）。
     """
+    if enc_vec.size() != int(np.asarray(plain_vec).shape[0]):
+        raise ValueError(
+            f"Shape mismatch for dot_ct_pt: ciphertext size {enc_vec.size()} "
+            f"vs plain vector length {np.asarray(plain_vec).shape[0]}"
+        )
     return (enc_vec * plain_vec.tolist()).sum()
+
+
+def matmul_ct_pt(enc_vec: ts.CKKSVector, plain_matrix: np.ndarray) -> ts.CKKSVector:
+    """计算加密向量与明文矩阵的乘法。
+
+    输入密文按 packed layout 表示 selector，明文矩阵形状应为 (k, d)。
+    输出为 packed 的 d 维加密向量。
+    """
+
+    matrix = np.asarray(plain_matrix, dtype=np.float64)
+    if matrix.ndim != 2:
+        raise ValueError(
+            f"plain_matrix must be 2-D, got shape {matrix.shape}"
+        )
+    if enc_vec.size() != int(matrix.shape[0]):
+        raise ValueError(
+            f"Shape mismatch for matmul_ct_pt: ciphertext size {enc_vec.size()} "
+            f"vs matrix rows {matrix.shape[0]}"
+        )
+    return enc_vec.matmul(matrix.tolist())
 
 
 def dot_ct_ct(enc_left: ts.CKKSVector, enc_right: ts.CKKSVector) -> ts.CKKSVector:

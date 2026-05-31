@@ -62,3 +62,33 @@ class PartyALocalState:
     """
     secret_context: object
     encrypted_query_50: EncryptedVector50
+
+
+@dataclass
+class SecondRoundRequest:
+    """A 侧发送给 B 的第二轮请求 payload。"""
+
+    encrypted_query_50: EncryptedVector50
+    encrypted_selector: EncryptedVectorK
+
+
+@dataclass
+class ClusterSelectionDebug:
+    """A 侧本地保留的 cluster 选择调试信息。"""
+
+    selected_cluster: int
+
+
+@dataclass
+class MatchResult:
+    """生产接口对外只暴露是否命中。"""
+
+    catch: bool
+
+
+@dataclass
+class MatchDebug:
+    """A 侧本地调试信息，不得对外暴露。"""
+
+    checked_columns: int
+    first_positive_column: int | None
