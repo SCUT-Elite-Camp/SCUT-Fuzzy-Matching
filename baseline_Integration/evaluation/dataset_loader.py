@@ -1,15 +1,19 @@
 """
-数据集加载：NCVR、图书馆目录、US Census、以及从常见名字合成数据
-若文件不存在则生成模拟数据。
+数据集加载：NCVR、图书馆目录、US Census、以及从常见名字合成数据。
 """
 
-import numpy as np
+from __future__ import annotations
+
+import csv
 import os
+from pathlib import Path
+
+import numpy as np
 
 def load_dataset(name, path):
     """
     Args:
-        name: str, 数据集名称，可选 "ncvr", "libcat", "census", "forenames"
+        name: str, 数据集名称，可选 "ncvr", "ncvr_10k", "libcat", "census", "forenames"
         path: str, 数据集文件所在目录或文件路径（对于 forenames，直接指向 CSV 文件路径）
 
     Returns:
@@ -18,16 +22,109 @@ def load_dataset(name, path):
             names_B: list of str, 响应方名单
             labels: list of bool/ int, 对于每个查询，是否存在真实匹配（长度等于names_A）
     """
-    if name.lower() == "ncvr":
+    dataset_name = name.lower()
+    if dataset_name == "ncvr":
         return _load_ncvr(path)
-    elif name.lower() == "libcat":
+    elif dataset_name == "ncvr_10k":
+        return _load_ncvr_10k(path)
+    elif dataset_name == "libcat":
         return _load_libcat(path)
-    elif name.lower() == "census":
+    elif dataset_name == "census":
         return _load_census(path)
-    elif name.lower() == "forenames":
+    elif dataset_name == "forenames":
         return _load_forenames(path)
     else:
-        raise ValueError(f"Unknown dataset: {name}. Choose from 'ncvr', 'libcat', 'census', 'forenames'.")
+        raise ValueError(
+            f"Unknown dataset: {name}. Choose from 'ncvr', 'ncvr_10k', "
+            "'libcat', 'census', 'forenames'."
+        )
+
+
+def _load_ncvr_10k(path):
+    """Load the curated two-file NCVR 10K subset.
+
+    Accepted paths:
+    - ``data/ncvr_10k``
+    - ``data`` when it contains the ``ncvr_10k`` subdirectory
+    """
+    database_path, queries_path = _resolve_ncvr_10k_paths(path)
+    database_rows = _read_csv_records(database_path)
+    query_rows = _read_csv_records(queries_path)
+
+    _require_columns(database_rows, database_path, {"ncid", "full_name"})
+    _require_columns(query_rows, queries_path, {"query_ncid", "query_name", "label"})
+
+    names_B = [
+        row["full_name"].strip()
+        for row in database_rows
+        if row["full_name"].strip()
+    ]
+    names_A = [
+        row["query_name"].strip()
+        for row in query_rows
+        if row["query_name"].strip()
+    ]
+    labels = [
+        _parse_bool(row["label"])
+        for row in query_rows
+        if row["query_name"].strip()
+    ]
+
+    if not names_B:
+        raise ValueError(f"NCVR 10K database is empty: {database_path}")
+    if not names_A:
+        raise ValueError(f"NCVR 10K queries are empty: {queries_path}")
+    if len(names_A) != len(labels):
+        raise ValueError("NCVR 10K query names and labels are misaligned")
+    return names_A, names_B, labels
+
+
+def _resolve_ncvr_10k_paths(path):
+    root = Path(path)
+    if root.is_file():
+        raise ValueError(
+            "ncvr_10k expects a directory containing both "
+            "ncvr_10k_database.csv and ncvr_10k_queries.csv"
+        )
+
+    candidates = [root, root / "ncvr_10k"]
+    for candidate in candidates:
+        database_path = candidate / "ncvr_10k_database.csv"
+        queries_path = candidate / "ncvr_10k_queries.csv"
+        if database_path.exists() and queries_path.exists():
+            return database_path, queries_path
+
+    raise FileNotFoundError(
+        "Could not find NCVR 10K files. Expected either "
+        f"{root / 'ncvr_10k_database.csv'} and {root / 'ncvr_10k_queries.csv'}, "
+        f"or {root / 'ncvr_10k' / 'ncvr_10k_database.csv'} and "
+        f"{root / 'ncvr_10k' / 'ncvr_10k_queries.csv'}."
+    )
+
+
+def _read_csv_records(path):
+    with Path(path).open(newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
+def _require_columns(rows, path, expected_columns):
+    if not rows:
+        raise ValueError(f"CSV file has no data rows: {path}")
+    actual_columns = set(rows[0].keys())
+    missing = expected_columns - actual_columns
+    if missing:
+        raise ValueError(
+            f"CSV file {path} is missing required columns: {sorted(missing)}"
+        )
+
+
+def _parse_bool(value):
+    normalized = str(value).strip().lower()
+    if normalized in {"true", "1", "yes", "y"}:
+        return True
+    if normalized in {"false", "0", "no", "n"}:
+        return False
+    raise ValueError(f"Invalid boolean label: {value!r}")
 
 def _load_ncvr(path):
     """模拟 NCVR 数据加载。实际使用时根据 NCVR CSV 文件格式修改。"""

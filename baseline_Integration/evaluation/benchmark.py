@@ -1,14 +1,24 @@
 """
 性能基准测试：运行完整协议并收集指标。
-注意：此模块依赖其他成员（任务2、3、4）的接口。当前版本使用占位模拟，
-实际联调时需替换为真实调用。
 """
 
 import time
 import tracemalloc
 import numpy as np
-from .metrics import compute_metrics
+from .metrics import compute_confusion_counts, compute_metrics
 from .communication_cost import measure_ct_size
+from config.params import SIMILARITY_THRESHOLD
+from party_a.local_prep import (
+    create_ckks_context,
+    prepare_encrypted_query,
+    prepare_encrypted_query_with_context,
+)
+from party_a.online_querier import (
+    check_encrypted_scores_debug,
+    choose_cluster_and_build_request,
+)
+from party_b.offline_prep import prepare_party_b_offline
+from party_b.online_responder import compare_to_centroids, column_wise_matching
 
 def benchmark(config):
     """
@@ -24,6 +34,7 @@ def benchmark(config):
                 "k": 50,                      # 聚类数（若为0则线性搜索）
                 "tau": 0.9,                   # 相似度阈值
                 "query_limit": 100,           # 最多使用多少个查询（-1表示全部）
+                "db_limit": 1000,             # 最多使用多少个 B 侧名字（-1表示全部）
                 "use_mock": True              # 若为True，使用mock模拟其他模块；False则调用真实接口
             }
 
@@ -42,14 +53,19 @@ def benchmark(config):
     if config.get("query_limit", -1) > 0:
         names_A = names_A[:config["query_limit"]]
         labels = labels[:config["query_limit"]]
+    if config.get("db_limit", -1) > 0:
+        names_B = names_B[:config["db_limit"]]
 
     # 2. 离线阶段（Party B 预处理）
-    print("Running offline preprocessing (simulated)...")
+    print(
+        "Running offline preprocessing "
+        f"({'simulated' if config.get('use_mock', True) else 'real'})..."
+    )
     tracemalloc.start()
     offline_start = time.perf_counter()
-    if config.get("use_mock", True):
+    use_mock = config.get("use_mock", True)
+    if use_mock:
         # 模拟 B 的离线产物
-        import numpy as np
         centroids = np.random.randn(config["k"], config["el_cluster"]).astype(np.float64)
         cluster_matrix = np.random.randn(config["k"], 300, config["el_match"]).astype(np.float64)
         scaler_mean = np.zeros(config["el_cluster"])
@@ -59,11 +75,19 @@ def benchmark(config):
         _, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         memory_peak = peak / 1024**2
+        artifacts = None
     else:
-        # TODO: 调用成员4的真实离线预处理接口
-        # from party_b.offline_prep import run_offline
-        # centroids, cluster_matrix, scaler_mean, scaler_scale = run_offline(...)
-        raise NotImplementedError("Real offline interface not integrated yet")
+        k_config = config.get("k", 0)
+        k_mode = config.get("k_mode", "sqrt" if not k_config else k_config)
+        artifacts = prepare_party_b_offline(names_B, k_mode=k_mode)
+        centroids = artifacts.centroids
+        cluster_matrix = artifacts.cluster_matrix
+        scaler_mean = artifacts.scaler_mean
+        scaler_scale = artifacts.scaler_scale
+        offline_time = time.perf_counter() - offline_start
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        memory_peak = peak / 1024**2
 
     # 3. 在线阶段（对每个查询执行协议）
     print(f"Running online phase for {len(names_A)} queries...")
@@ -74,10 +98,18 @@ def benchmark(config):
     round1_times = []
     round2_times = []
     predictions = []
+    reusable_secret_context = None
+    reusable_public_context_bytes = None
+    reuse_context = (
+        not use_mock and config.get("reuse_context", True)
+    )
+    if reuse_context:
+        reusable_secret_context = create_ckks_context()
+        reusable_secret_context.generate_relin_keys()
 
     for idx, query_name in enumerate(names_A):
         # 模拟 A 预处理：生成 MinHash 签名、归一化、标准化（mock）
-        if config.get("use_mock", True):
+        if use_mock:
             # 随机生成查询签名（mock）
             query_sig_cluster = np.random.randn(config["el_cluster"])
             query_sig_match = np.random.randn(config["el_match"])
@@ -122,23 +154,90 @@ def benchmark(config):
             round2_time = time.perf_counter() - round2_start
             round2_times.append(round2_time)
         else:
-            # TODO: 调用真实协议接口
-            raise NotImplementedError("Real protocol interface not integrated yet")
+            round1_start = time.perf_counter()
+            if reuse_context:
+                (
+                    first_round_request,
+                    party_a_state,
+                    reusable_public_context_bytes,
+                ) = prepare_encrypted_query_with_context(
+                    query_name,
+                    scaler_mean,
+                    scaler_scale,
+                    reusable_secret_context,
+                    reusable_public_context_bytes,
+                )
+            else:
+                first_round_request, party_a_state = prepare_encrypted_query(
+                    query_name,
+                    scaler_mean,
+                    scaler_scale,
+                )
+            total_sent_bytes += len(first_round_request.public_context_bytes)
+            total_sent_bytes += measure_ct_size(
+                first_round_request.encrypted_query_200
+            )
+
+            sim_scores_cipher = compare_to_centroids(
+                first_round_request,
+                centroids,
+            )
+            total_recv_bytes += sum(
+                measure_ct_size(score) for score in sim_scores_cipher
+            )
+            second_round_request, _ = choose_cluster_and_build_request(
+                sim_scores_cipher,
+                party_a_state,
+                k=centroids.shape[0],
+            )
+            total_sent_bytes += measure_ct_size(
+                second_round_request.encrypted_query_50
+            )
+            total_sent_bytes += measure_ct_size(
+                second_round_request.encrypted_selector
+            )
+            round1_time = time.perf_counter() - round1_start
+            round1_times.append(round1_time)
+
+            round2_start = time.perf_counter()
+            raw_scores = column_wise_matching(
+                cluster_matrix,
+                second_round_request,
+                first_round_request.public_context_bytes,
+                tau=config.get("tau", SIMILARITY_THRESHOLD),
+            )
+
+            def counted_scores():
+                nonlocal total_recv_bytes
+                for score in raw_scores:
+                    total_recv_bytes += measure_ct_size(score)
+                    yield score
+
+            result, _ = check_encrypted_scores_debug(
+                counted_scores(),
+                party_a_state.secret_context,
+                early_stop=config.get("early_stop", True),
+            )
+            predictions.append(result.catch)
+            round2_time = time.perf_counter() - round2_start
+            round2_times.append(round2_time)
 
     online_time = time.perf_counter() - online_start
-    avg_round1 = np.mean(round1_times) if round1_times else 0
-    avg_round2 = np.mean(round2_times) if round2_times else 0
+    avg_round1 = float(np.mean(round1_times)) if round1_times else 0.0
+    avg_round2 = float(np.mean(round2_times)) if round2_times else 0.0
 
     # 4. 计算指标
     metrics = compute_metrics(predictions, labels)
+    confusion = compute_confusion_counts(predictions, labels)
 
     # 5. 组织返回结果
     result = {
         "config": config,
         "metrics": metrics,
+        "confusion": confusion,
         "timing_sec": {
-            "offline": offline_time,
-            "online_total": online_time,
+            "offline": float(offline_time),
+            "online_total": float(online_time),
             "avg_round1": avg_round1,
             "avg_round2": avg_round2,
         },

@@ -1,4 +1,4 @@
-"""成员四：B 侧第二轮列式密文匹配。"""
+"""Party B online responders for centroid and column-wise matching."""
 
 from __future__ import annotations
 
@@ -8,9 +8,14 @@ from typing import Iterator
 import numpy as np
 import tenseal as ts
 
-from ckks.operations import add_plain, dot_ct_ct, matmul_ct_pt
-from config.params import RANDOM_MASK_MAX, RANDOM_MASK_MIN, SIMILARITY_THRESHOLD
-from protocol.types import EncryptedScalar, SecondRoundRequest
+from ckks.operations import add_plain, dot_ct_ct, dot_ct_pt, matmul_ct_pt
+from config.params import (
+    NUM_PERMUTATIONS_CLUSTER,
+    RANDOM_MASK_MAX,
+    RANDOM_MASK_MIN,
+    SIMILARITY_THRESHOLD,
+)
+from protocol.types import EncryptedScalar, FirstRoundRequest, SecondRoundRequest
 
 _RNG = SystemRandom()
 
@@ -29,6 +34,40 @@ def _load_ciphertext(ciphertext, context: ts.Context) -> ts.CKKSVector:
 
 def _sample_positive_mask() -> float:
     return _RNG.uniform(RANDOM_MASK_MIN, RANDOM_MASK_MAX)
+
+
+def compare_to_centroids(
+    first_round_request: FirstRoundRequest,
+    centroids: np.ndarray,
+    serialize_output: bool = False,
+) -> list[EncryptedScalar]:
+    """Step 3: compute encrypted query-to-centroid scores on Party B."""
+
+    matrix = np.asarray(centroids, dtype=np.float64)
+    if matrix.ndim != 2:
+        raise ValueError(f"centroids must be 2-D, got shape {matrix.shape}")
+    if matrix.shape[1] != NUM_PERMUTATIONS_CLUSTER:
+        raise ValueError(
+            f"centroids second dimension must be {NUM_PERMUTATIONS_CLUSTER}, "
+            f"got {matrix.shape[1]}"
+        )
+
+    context = _load_public_context(first_round_request.public_context_bytes)
+    encrypted_query_200 = _load_ciphertext(
+        first_round_request.encrypted_query_200, context
+    )
+    if encrypted_query_200.size() != NUM_PERMUTATIONS_CLUSTER:
+        raise ValueError(
+            f"encrypted_query_200 length must be {NUM_PERMUTATIONS_CLUSTER}, "
+            f"got {encrypted_query_200.size()}"
+        )
+
+    encrypted_scores = [
+        dot_ct_pt(encrypted_query_200, centroid) for centroid in matrix
+    ]
+    if serialize_output:
+        return [score.serialize() for score in encrypted_scores]
+    return encrypted_scores
 
 
 def column_wise_matching(

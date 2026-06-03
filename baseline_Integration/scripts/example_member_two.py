@@ -4,28 +4,27 @@
 的完整调用流程，并验证所有协议约束。
 
 运行方式（从 baseline_Integration 目录）：
-    python example_member_two.py
+    python scripts/example_member_two.py
 """
 
 import sys
 from pathlib import Path
-from config.params import COEFF_MOD_BIT_SIZES, POLY_MODULUS_DEGREE, SCALE
 
 # ---------------------------------------------------------------------------
 # 路径设置
 # ---------------------------------------------------------------------------
-_INTEGRATION_DIR = Path(__file__).resolve().parent
+_INTEGRATION_DIR = Path(__file__).resolve().parent.parent
 if str(_INTEGRATION_DIR) not in sys.path:
     sys.path.insert(0, str(_INTEGRATION_DIR))
-
-_BASELINE_DIR = _INTEGRATION_DIR.parent / "baseline" / "minhash&encoding"
-if str(_BASELINE_DIR) not in sys.path:
-    sys.path.append(str(_BASELINE_DIR))
 
 # ---------------------------------------------------------------------------
 import numpy as np
 
-from config.params import NUM_PERMUTATIONS_CLUSTER, NUM_PERMUTATIONS_MATCH
+from config.params import (
+    NUM_PERMUTATIONS_CLUSTER,
+    NUM_PERMUTATIONS_MATCH,
+    POLY_MODULUS_DEGREE,
+)
 from party_a.local_prep import (
     create_ckks_context,
     encode_query_vectors,
@@ -37,7 +36,7 @@ from protocol.types import FirstRoundRequest, PartyALocalState
 
 def main() -> None:
     print("=" * 60)
-    print("Member Two — 端到端验证")
+    print("Member Two - 端到端验证")
     print("=" * 60)
 
     # ---- Step 0: 准备模拟的 scaler 参数（来自成员一的输出） ----

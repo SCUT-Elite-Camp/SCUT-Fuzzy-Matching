@@ -43,10 +43,11 @@ def compute_metrics(preds, labels):
     labels = list(labels)
     assert len(preds) == len(labels), "preds and labels must have same length"
 
-    tp = sum(1 for p, l in zip(preds, labels) if p and l)
-    fp = sum(1 for p, l in zip(preds, labels) if p and not l)
-    fn = sum(1 for p, l in zip(preds, labels) if not p and l)
-    tn = sum(1 for p, l in zip(preds, labels) if not p and not l)
+    counts = compute_confusion_counts(preds, labels)
+    tp = counts["tp"]
+    fp = counts["fp"]
+    fn = counts["fn"]
+    tn = counts["tn"]
 
     precision = compute_precision(tp, fp)
     recall = compute_recall(tp, fn)
@@ -58,4 +59,18 @@ def compute_metrics(preds, labels):
         "recall": recall,
         "f1": f1,
         "accuracy": accuracy
+    }
+
+
+def compute_confusion_counts(preds, labels):
+    """Return TP/FP/FN/TN counts for boolean predictions and labels."""
+    preds = list(preds)
+    labels = list(labels)
+    assert len(preds) == len(labels), "preds and labels must have same length"
+
+    return {
+        "tp": sum(1 for p, l in zip(preds, labels) if p and l),
+        "fp": sum(1 for p, l in zip(preds, labels) if p and not l),
+        "fn": sum(1 for p, l in zip(preds, labels) if not p and l),
+        "tn": sum(1 for p, l in zip(preds, labels) if not p and not l),
     }

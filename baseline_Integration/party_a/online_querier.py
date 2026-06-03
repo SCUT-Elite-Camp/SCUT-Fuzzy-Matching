@@ -1,14 +1,22 @@
-"""成员四：A 侧最终判断逻辑。"""
+"""Party A online logic for cluster selection and final judgment."""
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Any
 
 import numpy as np
 import tenseal as ts
 
 from config.params import DECRYPT_EPS
-from protocol.types import MatchDebug, MatchResult
+from ckks.keys import encrypt
+from protocol.types import (
+    ClusterSelectionDebug,
+    EncryptedVectorK,
+    MatchDebug,
+    MatchResult,
+    PartyALocalState,
+    SecondRoundRequest,
+)
 
 
 def _load_ciphertext(ciphertext, context: ts.Context) -> ts.CKKSVector:
@@ -20,6 +28,78 @@ def _load_ciphertext(ciphertext, context: ts.Context) -> ts.CKKSVector:
 def _decrypt_scalar(ciphertext, secret_context: ts.Context) -> float:
     values = _load_ciphertext(ciphertext, secret_context).decrypt()
     return float(np.asarray(values, dtype=np.float64).reshape(-1)[0])
+
+
+def decrypt_sim_scores(
+    encrypted_sim_scores: Any,
+    secret_context: ts.Context,
+) -> np.ndarray:
+    """Step 4: decrypt centroid scores on Party A."""
+
+    if isinstance(encrypted_sim_scores, (list, tuple)):
+        values = []
+        for ciphertext in encrypted_sim_scores:
+            decrypted = _load_ciphertext(ciphertext, secret_context).decrypt()
+            values.extend(np.asarray(decrypted, dtype=np.float64).reshape(-1))
+        return np.asarray(values, dtype=np.float64)
+
+    decrypted = _load_ciphertext(encrypted_sim_scores, secret_context).decrypt()
+    return np.asarray(decrypted, dtype=np.float64).reshape(-1)
+
+
+def build_selector(sim_scores: np.ndarray, k: int) -> tuple[int, np.ndarray]:
+    """Build a one-hot selector for the highest-scoring cluster."""
+
+    scores = np.asarray(sim_scores, dtype=np.float64).reshape(-1)
+    if k <= 0:
+        raise ValueError(f"k must be positive, got {k}")
+    if scores.shape != (k,):
+        raise ValueError(
+            f"sim_scores shape mismatch: expected ({k},), got {scores.shape}"
+        )
+    if not np.all(np.isfinite(scores)):
+        raise ValueError("sim_scores contains NaN or Inf")
+
+    selected_cluster = int(np.argmax(scores))
+    selector = np.zeros(k, dtype=np.float64)
+    selector[selected_cluster] = 1.0
+    return selected_cluster, selector
+
+
+def encrypt_selector(
+    selector: np.ndarray,
+    secret_context: ts.Context,
+) -> EncryptedVectorK:
+    """Step 5: encrypt the one-hot selector before sending it to Party B."""
+
+    selector = np.asarray(selector, dtype=np.float64).reshape(-1)
+    if not np.isclose(selector.sum(), 1.0):
+        raise ValueError("selector must be one-hot: sum(selector) should be 1")
+    if not np.all((selector == 0.0) | (selector == 1.0)):
+        raise ValueError("selector must be one-hot: values must be 0 or 1")
+    return encrypt(selector, secret_context)
+
+
+def choose_cluster_and_build_request(
+    encrypted_sim_scores: Any,
+    party_a_state: PartyALocalState,
+    k: int,
+) -> tuple[SecondRoundRequest, ClusterSelectionDebug]:
+    """Step 4-5: choose a cluster and build the second-round request."""
+
+    sim_scores = decrypt_sim_scores(
+        encrypted_sim_scores, party_a_state.secret_context
+    )
+    selected_cluster, selector = build_selector(sim_scores, k)
+    encrypted_selector = encrypt_selector(selector, party_a_state.secret_context)
+
+    return (
+        SecondRoundRequest(
+            encrypted_query_50=party_a_state.encrypted_query_50,
+            encrypted_selector=encrypted_selector,
+        ),
+        ClusterSelectionDebug(selected_cluster=selected_cluster),
+    )
 
 
 def check_encrypted_scores(

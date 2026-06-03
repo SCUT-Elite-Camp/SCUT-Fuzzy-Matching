@@ -10,15 +10,11 @@ import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# 路径设置：确保可以导入 baseline_Integration 和 baseline 的模块
+# 路径设置：确保可以导入 baseline_Integration 内部模块
 # ---------------------------------------------------------------------------
 _INTEGRATION_DIR = Path(__file__).resolve().parent.parent
 if str(_INTEGRATION_DIR) not in sys.path:
     sys.path.insert(0, str(_INTEGRATION_DIR))
-
-_BASELINE_DIR = _INTEGRATION_DIR.parent / "baseline" / "minhash&encoding"  # 之后要整合，目前用之前的编码模块
-if str(_BASELINE_DIR) not in sys.path:
-    sys.path.append(str(_BASELINE_DIR))
 
 # ---------------------------------------------------------------------------
 # 第三方与项目导入
@@ -28,7 +24,6 @@ import tenseal as ts
 
 from config.params import NUM_PERMUTATIONS_CLUSTER, NUM_PERMUTATIONS_MATCH
 
-# 等待实现
 from minhash.encoder import batch_encode
 from preprocessing.normalizer import l2_normalize
 
@@ -171,3 +166,35 @@ def prepare_encrypted_query(
     )
     context = create_ckks_context()
     return encrypt_query_vectors(query_200_std, query_50_norm, context)
+
+
+def prepare_encrypted_query_with_context(
+    query_name: str,
+    scaler_mean: np.ndarray,
+    scaler_scale: np.ndarray,
+    context: ts.Context,
+    public_context_bytes: bytes | None = None,
+) -> tuple[FirstRoundRequest, PartyALocalState, bytes]:
+    """Prepare a query using an existing A-side CKKS context.
+
+    This is useful for benchmark/report runs where one Party A issues many
+    queries under the same key material. It avoids regenerating CKKS keys for
+    every query while preserving the same protocol boundary.
+    """
+    query_200_std, query_50_norm = encode_query_vectors(
+        query_name, scaler_mean, scaler_scale
+    )
+    encrypted_query_200 = encrypt(query_200_std, context)
+    encrypted_query_50 = encrypt(query_50_norm, context)
+    if public_context_bytes is None:
+        public_context_bytes = serialize_public_context(context)
+
+    first_round_req = FirstRoundRequest(
+        public_context_bytes=public_context_bytes,
+        encrypted_query_200=encrypted_query_200,
+    )
+    local_state = PartyALocalState(
+        secret_context=context,
+        encrypted_query_50=encrypted_query_50,
+    )
+    return first_round_req, local_state, public_context_bytes
