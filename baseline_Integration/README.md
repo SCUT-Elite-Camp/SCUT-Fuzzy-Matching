@@ -85,6 +85,25 @@ from evaluation.dataset_loader import load_dataset
 names_a, names_b, labels = load_dataset("ncvr_10k", "data")
 ```
 
+## 演示
+
+展示协议链路，跑一个几秒级 demo：
+
+```powershell
+python scripts/demo_ncvr_matches.py
+```
+
+默认配置使用 `100` 条 B 侧记录、`5` 条查询和 `k=10`。其中 4 条正样本来自不同 cluster 和不同命中列，另有 1 条负样本；脚本会打印每条查询的真实标签、是否命中、A 侧选择的 cluster、首个命中的 B 侧姓名和检查列数。示例输出会保存到：
+
+输出中的单条 `sec` 只统计该 query 的在线协议耗时；B 侧离线预处理和 HE context 初始化会在表格下方单独列出。
+
+```text
+artifacts/demo/ncvr_matches/demo_ncvr_matches.json
+artifacts/demo/ncvr_matches/demo_ncvr_matches.csv
+```
+
+注意：`selected_cluster` 只在本地 demo/debug 输出中展示，用于汇报解释协议流程；正式第二轮请求仍发送加密 selector，不把 cluster id 明文发给 B。
+
 ## 跑 10K 指标与可视化
 
 全量运行：
