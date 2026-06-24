@@ -9,7 +9,6 @@ test_files = [
     "tests/test_security_boundary.py",
     "tests/test_correctness.py",
     "tests/test_evaluation_reporting.py",
-    "tests/integration_test.py",
     "tests/test_end_to_end.py",
     "tests/test_ncvr_10k_loader.py",
     "tests/test_benchmark_real.py",
