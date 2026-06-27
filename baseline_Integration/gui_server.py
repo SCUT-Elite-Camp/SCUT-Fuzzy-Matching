@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """GUI server for privacy-preserving fuzzy name matching demo.
 
-Usage:
+启动方式:
     cd baseline_Integration
     pip install flask
     python gui_server.py
-    # Open http://localhost:5000 in browser
+    # 在浏览器打开 http://localhost:5000
 """
 
 from __future__ import annotations
