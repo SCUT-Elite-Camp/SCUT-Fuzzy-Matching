@@ -503,21 +503,216 @@ class StreamingDemoEngineV2:
         self, queries: list[QueryState], verbose: bool = True
     ) -> list[QueryState]:
         """运行所有查询的完整 9 步演示"""
+        for _ in self.run_all_queries_with_events(queries, verbose=verbose):
+            pass  # consume generator
+        return self._last_results
+
+    def run_all_queries_with_events(
+        self, queries: list[QueryState], verbose: bool = True
+    ):
+        """Generator that yields structured events at each protocol step.
+
+        Yields dicts of the form:
+            {"event": "step_complete", "step": N, "name": "...", "party": "A"|"B",
+             "data": {...}, "timing_ms": float}
+
+        The final yield is:
+            {"event": "complete", "summary": {...}}
+        """
         t_total = time.perf_counter()
+        step_timings = {}
 
-        # Step 1 (once per database)
+        # ── Step 1: Clustering ──
+        t0 = time.perf_counter()
         self.run_step1_clustering(verbose=verbose)
+        step_timings[1] = (time.perf_counter() - t0) * 1000
 
-        # Step 2-9 (batch all queries)
+        centroids_np = self.artifacts.centroids
+        k = centroids_np.shape[0]
+        cluster_counts = np.bincount(
+            self.artifacts.cluster_assignments, minlength=k
+        ).tolist()
+
+        yield {
+            "event": "step_complete",
+            "step": 1,
+            "name": "Clustering (Offline)",
+            "party": "B",
+            "data": {
+                "db_size": len(self.names_b),
+                "k": k,
+                "cluster_sizes": cluster_counts,
+                "max_cluster_size": int(self.artifacts.max_size),
+                "signature_dim": 200,
+                "match_dim": 50,
+                "sample_names": self.names_b[:5],
+            },
+            "timing_ms": round(step_timings[1], 2),
+        }
+
+        # ── Step 2: Query Encrypt ──
+        t0 = time.perf_counter()
         self.run_step2_encrypt_queries(queries, verbose=verbose)
-        self.run_step3_compare_centroids(queries, verbose=verbose)
-        self.run_step4_5_select_clusters(queries, verbose=verbose)
-        self.run_step6_7_8_compute_sim(queries, verbose=verbose)
-        self.run_step9_check_sim(queries, verbose=verbose)
+        step_timings[2] = (time.perf_counter() - t0) * 1000
 
+        yield {
+            "event": "step_complete",
+            "step": 2,
+            "name": "Query Vector Encrypt",
+            "party": "A",
+            "data": {
+                "num_queries": len(queries),
+                "context_time_ms": round(self.context_time_ms, 2),
+                "query_names": [q.query_name for q in queries],
+            },
+            "timing_ms": round(step_timings[2], 2),
+        }
+
+        # ── Step 3: Compare to Centroids ──
+        t0 = time.perf_counter()
+        self.run_step3_compare_centroids(queries, verbose=verbose)
+        step_timings[3] = (time.perf_counter() - t0) * 1000
+
+        yield {
+            "event": "step_complete",
+            "step": 3,
+            "name": "Compare to Centroids",
+            "party": "B",
+            "data": {
+                "num_centroids": k,
+                "num_queries": len(queries),
+            },
+            "timing_ms": round(step_timings[3], 2),
+        }
+
+        # ── Step 4/5: Decrypt & Select ──
+        t0 = time.perf_counter()
+        self.run_step4_5_select_clusters(queries, verbose=verbose)
+        step_timings[4] = (time.perf_counter() - t0) * 1000
+
+        # Collect per-query centroid similarity scores for visualization
+        centroid_scores = []
+        for q in queries:
+            centroid_scores.append({
+                "query_name": q.query_name,
+                "selected_cluster": int(q.selected_cluster),
+                "scores": [round(float(s), 4) for s in q.sim_scores],
+            })
+
+        yield {
+            "event": "step_complete",
+            "step": 4,
+            "name": "Decrypt & Select Cluster",
+            "party": "A",
+            "data": {
+                "centroid_scores": centroid_scores,
+                "num_centroids": k,
+            },
+            "timing_ms": round(step_timings[4], 2),
+        }
+
+        # ── Step 6/7/8: Column Matching ──
+        t0 = time.perf_counter()
+        self.run_step6_7_8_compute_sim(queries, verbose=verbose)
+        step_timings[6] = (time.perf_counter() - t0) * 1000
+
+        yield {
+            "event": "step_complete",
+            "step": 6,
+            "name": "Column-wise Matching",
+            "party": "B",
+            "data": {
+                "num_queries": len(queries),
+                "columns_per_query": [
+                    {"query_name": q.query_name, "num_columns": len(q.encrypted_results)}
+                    for q in queries
+                ],
+            },
+            "timing_ms": round(step_timings[6], 2),
+        }
+
+        # ── Step 9: Check Sim ──
+        t0 = time.perf_counter()
+        # We need per-column scores for the frontend visualization.
+        # run_step9_check_sim decrypts and judges but doesn't store all scores.
+        # We do a manual check here that also collects per-column plaintext scores.
+        if verbose:
+            phase(9, "Check Sim (Decrypt & Judge)", "A")
+            info(f"Checking {len(queries)} queries: decrypt column scores, find positive values")
+            kv("Threshold τ", self.tau)
+            kv("Early stop", self.early_stop)
+            print(f"{' ' * 4}{_c('Query', Colors.DIM):<25} {'Match':>6} {'Checked':>8} {'Hit Col':>8} {'Hit Name':>20}")
+            print(f"{' ' * 4}{'-' * 71}")
+
+        column_scores_data = []
+        for q in queries:
+            checked = 0
+            first_positive = None
+            col_scores = []
+
+            for col_idx, enc_score in enumerate(q.encrypted_results):
+                values = (
+                    enc_score.decrypt()
+                    if hasattr(enc_score, "decrypt")
+                    else q.party_a_state.secret_context.decrypt(enc_score)
+                )
+                plain_score = float(np.asarray(values, dtype=np.float64).reshape(-1)[0])
+                col_scores.append(round(plain_score, 6))
+                checked += 1
+
+                if plain_score > 1e-6 and first_positive is None:
+                    first_positive = col_idx
+                    if self.early_stop:
+                        break
+
+            q.match_found = first_positive is not None
+            q.checked_columns = checked
+            q.first_positive_column = first_positive
+
+            if first_positive is not None:
+                members = np.where(self.artifacts.cluster_assignments == q.selected_cluster)[0]
+                if first_positive < len(members):
+                    db_idx = int(members[first_positive])
+                    q.first_hit_name = self.names_b[db_idx]
+
+            column_scores_data.append({
+                "query_name": q.query_name,
+                "match_found": q.match_found,
+                "checked_columns": checked,
+                "first_positive_column": first_positive if first_positive is not None else -1,
+                "hit_name": q.first_hit_name or "",
+                "selected_cluster": int(q.selected_cluster),
+                "column_scores": col_scores,
+            })
+
+            if verbose:
+                match_str = _c("Y", Colors.GREEN) if q.match_found else _c("N", Colors.RED)
+                hit_name = (q.first_hit_name or "")[:18]
+                print(
+                    f"{' ' * 4}{q.query_name[:24]:<25} "
+                    f"{match_str:>6} "
+                    f"{q.checked_columns:>8} "
+                    f"{first_positive if first_positive is not None else '-':>8} "
+                    f"{hit_name:>20}"
+                )
+
+        step_timings[9] = (time.perf_counter() - t0) * 1000
+
+        yield {
+            "event": "step_complete",
+            "step": 9,
+            "name": "Check Similarity (Decrypt & Judge)",
+            "party": "A",
+            "data": {
+                "column_scores": column_scores_data,
+                "tau": self.tau,
+            },
+            "timing_ms": round(step_timings[9], 2),
+        }
+
+        # ── Summary ──
         total_ms = (time.perf_counter() - t_total) * 1000
 
-        # Summary
         if verbose:
             print()
             sep("=", 80)
@@ -552,7 +747,56 @@ class StreamingDemoEngineV2:
             timing("Total query time", total_ms / 1000)
             timing("Offline prep time", self.offline_time_ms / 1000)
 
-        return queries
+        # Build summary
+        results_list = []
+        for q in queries:
+            results_list.append({
+                "query_name": q.query_name,
+                "query_index": q.query_index,
+                "expected_label": q.expected_label,
+                "match_found": q.match_found,
+                "selected_cluster": int(q.selected_cluster),
+                "checked_columns": q.checked_columns,
+                "hit_name": q.first_hit_name or "",
+                "first_positive_column": q.first_positive_column if q.first_positive_column is not None else -1,
+            })
+
+        correct = sum(
+            1 for q in queries
+            if q.expected_label is not None and q.match_found == q.expected_label
+        )
+        total_with_label = sum(1 for q in queries if q.expected_label is not None)
+
+        self._last_results = queries
+
+        yield {
+            "event": "complete",
+            "summary": {
+                "results": results_list,
+                "accuracy": {
+                    "correct": correct,
+                    "total": total_with_label,
+                    "percent": round(correct / total_with_label * 100, 1) if total_with_label > 0 else None,
+                },
+                "timing_ms": {
+                    "step1_clustering": round(step_timings.get(1, 0), 2),
+                    "step2_encrypt": round(step_timings.get(2, 0), 2),
+                    "step3_compare_centroids": round(step_timings.get(3, 0), 2),
+                    "step4_select_cluster": round(step_timings.get(4, 0), 2),
+                    "step6_column_matching": round(step_timings.get(6, 0), 2),
+                    "step9_check_sim": round(step_timings.get(9, 0), 2),
+                    "total": round(total_ms, 2),
+                    "offline": round(self.offline_time_ms, 2),
+                },
+                "config": {
+                    "db_size": len(self.names_b),
+                    "k": k,
+                    "tau": self.tau,
+                    "early_stop": self.early_stop,
+                    "num_queries": len(queries),
+                },
+            },
+        }
 
 
 # =============================================================================

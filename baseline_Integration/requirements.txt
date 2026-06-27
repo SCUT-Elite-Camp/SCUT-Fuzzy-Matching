@@ -4,3 +4,4 @@ tenseal>=0.3.16
 pandas>=2.0
 pytest>=7.0
 matplotlib>=3.8
+flask>=3.0
