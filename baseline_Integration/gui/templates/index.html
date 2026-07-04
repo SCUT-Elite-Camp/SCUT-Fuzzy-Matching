@@ -1,257 +1,457 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Privacy-Preserving Fuzzy Name Matching — GUI Demo</title>
+<title>Privacy-Preserving Fuzzy Name Matching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
 /* ============================================================
-   CSS Reset & Variables
+   Reset & Design Tokens
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-primary: #0f1117;
-  --bg-secondary: #161822;
-  --bg-card: #1c1e2e;
-  --bg-input: #252838;
-  --border: #2d3048;
-  --text-primary: #e1e4ed;
-  --text-secondary: #8b90a5;
-  --text-dim: #555a70;
-  --accent-blue: #5b9cf5;
-  --accent-green: #4ade80;
-  --accent-yellow: #facc15;
-  --accent-red: #f87171;
-  --accent-cyan: #22d3ee;
+  /* Neutral graphite/black (hue ~240, near-zero saturation — no warm cast) */
+  --bg-primary: #0c0d0f;
+  --bg-secondary: #131417;
+  --bg-card: #17181c;
+  --bg-input: #202227;
+  --bg-elevated: #1c1e22;
+  --border: #2a2c32;
+  --border-soft: #24262b40;
+  --text-primary: #e7e9ed;
+  --text-secondary: #969aa4;
+  --text-dim: #62656f;
+  /* Semantic colours */
+  --accent-blue: #6ba1e8;
+  --accent-green: #57c98a;
+  --accent-yellow: #e8b53e;
+  --accent-red: #e87a72;
+  --accent-cyan: #4cc6d8;
   --accent-purple: #a78bfa;
-  --party-a: #5b9cf5;
-  --party-b: #4ade80;
+  --primary: #8b9bb4;   /* muted steel-grey action accent (neutral, not gold) */
+  --party-a: #6ba1e8;   /* Requester */
+  --party-b: #57c98a;   /* Database holder */
   --radius: 8px;
-  --shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --radius-sm: 5px;
+  --shadow: 0 1px 2px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.18);
 }
 
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   height: 100vh;
   overflow: hidden;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* ============================================================
-   Layout
+   Shell Layout
    ============================================================ */
 .app { display: flex; height: 100vh; }
 
 .sidebar {
-  width: 340px; min-width: 340px;
+  width: 360px; min-width: 360px;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
   overflow-y: auto;
-  padding: 20px;
-  gap: 20px;
+  padding: 22px 20px;
+  gap: 22px;
 }
 
 .main {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px 28px;
   display: flex; flex-direction: column;
-  gap: 20px;
+  gap: 22px;
 }
+
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand .mark { color: var(--primary); flex-shrink: 0; display: flex; }
+.brand .brand-text { display: flex; flex-direction: column; gap: 2px; }
+.brand h1 {
+  font-size: 1rem; font-weight: 650; letter-spacing: -0.01em; color: var(--text-primary);
+}
+.brand .subtitle { font-size: 0.7rem; color: var(--text-dim); }
 
 /* ============================================================
-   Sidebar — Controls
+   Section labels
    ============================================================ */
-.sidebar h1 {
-  font-size: 1.15rem;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: -8px;
+.section-label {
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 8px;
 }
+.section-label::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
+/* ============================================================
+   Controls
+   ============================================================ */
+.controls { display: flex; flex-direction: column; gap: 14px; }
 .control-group { display: flex; flex-direction: column; gap: 6px; }
 .control-group label {
-  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.05em; color: var(--text-secondary);
+  font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-secondary);
 }
 .control-group input, .control-group select {
   background: var(--bg-input); color: var(--text-primary);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 10px 12px; font-size: 0.9rem;
-  transition: border-color 0.2s;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 9px 11px; font-size: 0.85rem; transition: border-color 0.2s;
 }
 .control-group input:focus, .control-group select:focus {
-  outline: none; border-color: var(--accent-blue);
+  outline: none; border-color: var(--primary);
 }
+.params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-.query-mode-tabs {
-  display: flex; gap: 4px;
-}
+.query-mode-tabs { display: flex; gap: 5px; }
 .query-mode-tabs button {
-  flex: 1; padding: 8px; font-size: 0.78rem; font-weight: 600;
-  border: 1px solid var(--border); border-radius: var(--radius);
+  flex: 1; padding: 8px 4px; font-size: 0.72rem; font-weight: 600;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
   background: var(--bg-input); color: var(--text-secondary);
-  cursor: pointer; transition: all 0.2s;
+  cursor: pointer; transition: all 0.18s;
 }
 .query-mode-tabs button.active {
-  background: var(--accent-blue); color: #fff; border-color: var(--accent-blue);
+  background: var(--bg-elevated); color: var(--text-primary); border-color: var(--text-dim);
 }
+.mode-hint { font-size: 0.68rem; color: var(--text-dim); line-height: 1.5; }
 
 .btn-run {
-  width: 100%; padding: 14px; font-size: 1rem; font-weight: 700;
-  border: none; border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-  color: #fff; cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
-  margin-top: 4px;
+  width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--primary); border-radius: var(--radius-sm);
+  background: var(--primary); color: #0c0d0f; cursor: pointer;
+  transition: background 0.18s, transform 0.1s;
 }
-.btn-run:hover { opacity: 0.9; }
-.btn-run:active { transform: scale(0.98); }
-.btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-run:hover { background: #a0aec6; }
+.btn-run:active { transform: scale(0.99); }
+.btn-run:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-run svg { width: 15px; height: 15px; }
 
 /* ============================================================
-   Sidebar — Progress Timeline
+   Two-Party Data Panels (left side, transparency view)
    ============================================================ */
-.progress-panel { margin-top: 4px; }
-.progress-panel h3 {
-  font-size: 0.75rem; text-transform: uppercase;
-  letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 10px;
+.parties { display: flex; flex-direction: column; gap: 12px; }
+.party-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 13px 14px;
 }
 
+.party-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.party-head .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.party-head .dot.a { background: var(--party-a); }
+.party-head .dot.b { background: var(--party-b); }
+.party-head .title { font-size: 0.82rem; font-weight: 700; }
+.party-head .title .a { color: var(--party-a); }
+.party-head .title .b { color: var(--party-b); }
+.party-role { font-size: 0.68rem; color: var(--text-dim); margin-bottom: 9px; }
+
+.party-rows { display: flex; flex-direction: column; }
+.party-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 5px 0; gap: 10px; border-top: 1px solid var(--border-soft);
+  font-size: 0.76rem;
+}
+.party-row:first-child { border-top: none; }
+.party-row .k { color: var(--text-dim); flex-shrink: 0; }
+.party-row .v {
+  color: var(--text-primary); text-align: right; word-break: break-word;
+  font-variant-numeric: tabular-nums;
+}
+.party-row .v.enc { color: var(--accent-yellow); font-style: italic; }
+.party-row .v.muted { color: var(--text-dim); }
+.party-empty { font-size: 0.74rem; color: var(--text-dim); padding: 6px 0; }
+
+/* ============================================================
+   Protocol Timeline
+   ============================================================ */
+.timeline { display: flex; flex-direction: column; gap: 4px; }
 .step-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: 6px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
   border-left: 3px solid var(--border);
-  margin-bottom: 4px; transition: all 0.3s;
-  font-size: 0.82rem;
+  transition: all 0.25s; font-size: 0.8rem;
 }
 .step-item .step-num {
   width: 22px; height: 22px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 0.7rem; font-weight: 700;
-  background: var(--bg-input); color: var(--text-dim);
-  flex-shrink: 0;
+  background: var(--bg-input); color: var(--text-dim); flex-shrink: 0;
 }
 .step-item .step-info { flex: 1; min-width: 0; }
 .step-item .step-name { font-weight: 500; white-space: nowrap; }
 .step-item .step-party {
-  font-size: 0.7rem; color: var(--text-dim);
-  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  font-size: 0.66rem; padding: 1px 6px; border-radius: 3px; font-weight: 600;
 }
 .step-item .step-party.party-A { background: rgba(91,156,245,0.15); color: var(--party-a); }
 .step-item .step-party.party-B { background: rgba(74,222,128,0.15); color: var(--party-b); }
-.step-item .step-time { font-size: 0.7rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-.step-item.pending { opacity: 0.4; }
-.step-item.active {
-  border-left-color: var(--accent-yellow);
-  background: rgba(250,204,21,0.06);
-}
+.step-item .step-time { font-size: 0.68rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.step-item.pending { opacity: 0.38; }
+.step-item.active { border-left-color: var(--accent-yellow); background: rgba(250,204,21,0.06); }
 .step-item.active .step-num { background: var(--accent-yellow); color: #000; }
-.step-item.done {
-  border-left-color: var(--accent-green);
-}
+.step-item.done { border-left-color: var(--accent-green); }
 .step-item.done .step-num { background: var(--accent-green); color: #000; }
 
-/* ============================================================
-   Main — Cards
-   ============================================================ */
-.card {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 18px;
-  box-shadow: var(--shadow);
-}
-.card h3 {
-  font-size: 0.8rem; text-transform: uppercase;
-  letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 12px;
-}
-
-/* Two-column grid for charts */
-.charts-row {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-/* ============================================================
-   Status bar
-   ============================================================ */
 .status-bar {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 16px; background: var(--bg-secondary);
-  border-radius: var(--radius); font-size: 0.8rem;
+  padding: 9px 13px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 0.78rem;
 }
-.status-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--text-dim);
-  flex-shrink: 0;
-}
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
 .status-dot.running { background: var(--accent-yellow); animation: pulse 1s infinite; }
 .status-dot.done { background: var(--accent-green); }
 .status-dot.error { background: var(--accent-red); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+/* ============================================================
+   Main — Flow banner (always-on top bar)
+   ============================================================ */
+.flow-banner {
+  display: flex; align-items: stretch; gap: 0;
+  background: rgba(19,20,23,0.72);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 28px; flex-shrink: 0;
+  position: sticky; top: -24px; z-index: 50;
+  margin: -24px -28px 22px;
 }
+.flow-step {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 5px; text-align: center; position: relative;
+  opacity: 0.32; transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(3px);
+}
+.flow-step:not(:last-child)::after {
+  content: "→"; position: absolute; right: -8px; top: 13px;
+  color: var(--text-dim); font-size: 0.9rem;
+}
+/* lit = active or done */
+.flow-step.flow-active {
+  opacity: 1; transform: translateY(0);
+  animation: flowPulse 0.5s ease-out;
+}
+.flow-step.flow-done { opacity: 0.7; transform: translateY(0); }
+@keyframes flowPulse {
+  0%   { opacity: 0; transform: translateY(6px); }
+  60%  { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.flow-badge {
+  font-size: 0.6rem; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.flow-badge.a { background: rgba(107,161,232,0.14); color: var(--party-a); }
+.flow-badge.b { background: rgba(87,201,138,0.14); color: var(--party-b); }
+.flow-title { font-size: 0.78rem; font-weight: 600; }
+.flow-desc { font-size: 0.66rem; color: var(--text-dim); line-height: 1.4; max-width: 130px; }
+
+/* Step 9 + Timing side-by-side inside one card */
+.step9-timing-row { display: flex; gap: 24px; align-items: flex-start; min-width: 0; }
+.step9-main { flex: 3; min-width: 0; }
+.step9-aside {
+  flex: 2; min-width: 220px; max-width: 340px;
+  border-left: 1px solid var(--border); padding-left: 24px;
+}
+
+/* ============================================================
+   Cards
+   ============================================================ */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
+}
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.card-head .titles { display: flex; flex-direction: column; gap: 2px; }
+.card-head .step-tag {
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.card-head h3 { font-size: 0.95rem; font-weight: 650; display: flex; align-items: center; gap: 7px; }
+.card-head h3 .h-icon { color: var(--text-dim); display: flex; }
+.card-head .party-pill {
+  font-size: 0.6rem; font-weight: 600; padding: 3px 9px; border-radius: 4px;
+  text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;
+}
+.card-head .party-pill.a { background: rgba(107,161,232,0.14); color: var(--party-a); }
+.card-head .party-pill.b { background: rgba(87,201,138,0.14); color: var(--party-b); }
+.card-explain {
+  font-size: 0.76rem; color: var(--text-secondary); line-height: 1.55;
+  margin-bottom: 16px;
+}
+.card-explain .hl-a { color: var(--party-a); font-weight: 600; }
+.card-explain .hl-b { color: var(--party-b); font-weight: 600; }
+.card-explain .hl-y { color: var(--accent-yellow); font-weight: 600; }
+
+.charts-row { display: grid; grid-template-columns: 3fr 2fr; gap: 22px; }
+
+/* ============================================================
+   Stat tiles
+   ============================================================ */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.stat-tile {
+  background: var(--bg-elevated); padding: 14px 12px; border-radius: var(--radius-sm);
+  text-align: center; border: 1px solid var(--border-soft);
+}
+.stat-tile .v { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat-tile .l { font-size: 0.66rem; color: var(--text-secondary); margin-top: 3px; line-height: 1.3; }
+
+/* Step 1 dual view: bar chart + 3D cloud */
+.step1-views { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 18px; }
+.step1-view { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.view-caption { font-size: 0.7rem; color: var(--text-dim); line-height: 1.45; min-height: 30px; }
+.cloud-3d {
+  height: 420px; border-radius: var(--radius-sm);
+  background: radial-gradient(circle at 50% 40%, #1a1c20 0%, #0a0b0d 100%);
+  border: 1px solid var(--border-soft); cursor: grab; overflow: hidden;
+}
+.cloud-3d:active { cursor: grabbing; }
+.cloud-3d canvas { display: block; }
+
+/* Heatmap (Step 4) */
+.heatmap-wrap { overflow-x: auto; padding-top: 4px; }
+.heatmap-grid { display: grid; gap: 3px; font-size: 0.72rem; min-width: max-content; }
+.heatmap-corner { }
+.heatmap-colhead, .heatmap-rowhead {
+  color: var(--text-secondary); font-size: 0.68rem; display: flex; align-items: center;
+}
+.heatmap-colhead { justify-content: center; padding-bottom: 2px; font-variant-numeric: tabular-nums; }
+.heatmap-rowhead { justify-content: flex-end; padding-right: 10px; white-space: nowrap; gap: 6px; }
+.heatmap-rowhead .tag-fuzzy, .heatmap-rowhead .tag-neg { margin-left: 0; }
+.heatmap-cell {
+  height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  cursor: default; transition: transform 0.1s; position: relative;
+}
+.heatmap-cell:hover { transform: scale(1.08); z-index: 2; outline: 1px solid rgba(255,255,255,0.3); }
+/* Hit rows: selected cluster gets green outline + checkmark */
+.heatmap-cell.selected-hit {
+  outline: 2px solid var(--accent-green); z-index: 1;
+}
+.heatmap-cell.selected-hit::after {
+  content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; color: var(--accent-green);
+}
+/* Miss/absent rows: greyscale, no selected marker */
+.heatmap-cell.grey {
+  filter: grayscale(1) brightness(0.6);
+}
+.heatmap-legend {
+  display: flex; align-items: center; gap: 10px; margin-top: 14px;
+  font-size: 0.7rem; color: var(--text-dim);
+}
+.heatmap-legend .scale {
+  height: 10px; width: 140px; border-radius: 5px;
+  background: linear-gradient(90deg, rgb(38,22,26), rgb(90,26,32), rgb(168,38,42), rgb(228,64,58), rgb(255,120,96));
+}
+/* Results table row fade-in */
+@keyframes rowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.result-row-in { animation: rowIn 0.3s ease-out both; }
+
+/* Match status grid (Step 9) */
+.match-grid-wrap { overflow-x: auto; padding-top: 4px; }
+.match-grid { display: grid; gap: 3px; font-size: 0.72rem; min-width: max-content; }
+.match-colhead { color: var(--text-secondary); font-size: 0.62rem; text-align: center; padding-bottom: 2px; }
+.match-rowhead {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding-right: 10px; white-space: nowrap; color: var(--text-secondary); font-size: 0.7rem;
+}
+.match-rowhead .tag-fuzzy, .match-rowhead .tag-neg { margin-left: 0; flex-shrink: 0; }
+.match-rowhead .rh-name { margin-left: auto; }
+
+/* Streaming reveal: rows fade/slide in one by one */
+.match-row-cells { display: contents; }
+.mrow-in { animation: mrowIn 0.32s ease-out both; }
+@keyframes mrowIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+.match-summary {
+  display: flex; align-items: center; padding-left: 10px; white-space: nowrap;
+  font-size: 0.66rem; color: var(--text-dim); font-variant-numeric: tabular-nums;
+}
+.match-summary .hit { color: var(--accent-green); font-weight: 700; }
+.match-summary .miss { color: var(--accent-red); font-weight: 700; }
+.mcell-ph { height: 26px; border-radius: 4px; }
+.mcell {
+  height: 26px; border-radius: 4px; position: relative;
+  transition: transform 0.1s, background 0.12s; cursor: default;
+}
+.mcell:hover { transform: scale(1.12); z-index: 2; outline: 1px solid rgba(255,255,255,0.45); }
+.mcell.neg { background: rgba(248,113,113,0.16); border: 1px solid rgba(248,113,113,0.22); }
+.mcell.pos { background: rgba(74,222,128,0.30); border: 1px solid rgba(74,222,128,0.45); }
+.mcell.skip { background: repeating-linear-gradient(45deg, #24262b, #24262b 4px, #16171b 4px, #16171b 8px); border: 1px solid var(--border-soft); }
+.mcell.hit {
+  background: var(--accent-green); border: 1px solid var(--accent-green);
+  box-shadow: 0 0 8px rgba(74,222,128,0.5);
+}
+.match-legend {
+  display: flex; align-items: center; gap: 18px; margin-top: 14px;
+  font-size: 0.7rem; color: var(--text-dim); flex-wrap: wrap;
+}
+.match-legend .li { display: flex; align-items: center; gap: 7px; }
+.match-legend .sw { width: 16px; height: 16px; border-radius: 4px; display: inline-block; }
+.match-legend .sw.neg { background: rgba(248,113,113,0.16); border: 1px solid rgba(248,113,113,0.22); }
+.match-legend .sw.pos { background: rgba(74,222,128,0.30); border: 1px solid rgba(74,222,128,0.45); }
+.match-legend .sw.hit { background: var(--accent-green); }
+.match-legend .sw.skip { background: repeating-linear-gradient(45deg, #24262b, #24262b 3px, #16171b 3px, #16171b 6px); border: 1px solid var(--border-soft); }
 
 /* ============================================================
    Results Table
    ============================================================ */
-.results-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.results-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 .results-table th {
-  text-align: left; padding: 8px 10px;
-  font-size: 0.7rem; text-transform: uppercase;
-  letter-spacing: 0.04em; color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
+  text-align: left; padding: 9px 10px; font-size: 0.66rem;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
 }
-.results-table td {
-  padding: 8px 10px; border-bottom: 1px solid rgba(45,48,72,0.5);
-}
+.results-table td { padding: 9px 10px; border-bottom: 1px solid var(--border-soft); }
+.results-table tr.fuzzy-row { background: rgba(250,204,21,0.04); }
+.results-table tr.neg-row td:first-child { color: var(--text-secondary); }
 .match-yes { color: var(--accent-green); font-weight: 700; }
 .match-no { color: var(--accent-red); font-weight: 700; }
-.correct-mark { color: var(--accent-green); }
-.wrong-mark { color: var(--accent-red); }
+.correct-mark { color: var(--accent-green); font-weight: 700; }
+.wrong-mark { color: var(--accent-red); font-weight: 700; }
+.tag-fuzzy {
+  font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 4px;
+  background: rgba(250,204,21,0.16); color: var(--accent-yellow);
+  margin-left: 6px; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.tag-neg {
+  font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 4px;
+  background: rgba(248,113,113,0.14); color: var(--accent-red);
+  margin-left: 6px; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.hit-name { font-size: 0.76rem; color: var(--text-secondary); }
+.hit-name.ok { color: var(--accent-green); }
+.hit-name.bad { color: var(--accent-red); }
 
 .accuracy-badge {
-  display: inline-block; padding: 4px 12px; border-radius: 20px;
-  font-weight: 700; font-size: 0.85rem;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 5px; font-weight: 600; font-size: 0.78rem;
 }
 .accuracy-badge.perfect { background: rgba(74,222,128,0.15); color: var(--accent-green); }
 .accuracy-badge.good { background: rgba(250,204,21,0.15); color: var(--accent-yellow); }
 .accuracy-badge.poor { background: rgba(248,113,113,0.15); color: var(--accent-red); }
 
 /* ============================================================
-   Cluster info cards
+   Welcome
    ============================================================ */
-.db-stats {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+.welcome {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 14px; color: var(--text-dim); text-align: center;
 }
-.db-stat {
-  background: var(--bg-input); padding: 12px; border-radius: var(--radius);
-  text-align: center;
-}
-.db-stat .stat-value { font-size: 1.4rem; font-weight: 700; }
-.db-stat .stat-label { font-size: 0.7rem; color: var(--text-secondary); margin-top: 2px; }
-
-/* ============================================================
-   Responsive
-   ============================================================ */
-@media (max-width: 900px) {
-  .app { flex-direction: column; }
-  .sidebar { width: 100%; min-width: 0; max-height: 45vh; }
-  .charts-row { grid-template-columns: 1fr; }
-  .db-stats { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.welcome .icon { color: var(--text-dim); opacity: 0.7; }
+.welcome .icon svg { width: 48px; height: 48px; }
+.welcome h2 { font-size: 1.15rem; color: var(--text-secondary); font-weight: 600; letter-spacing: -0.01em; }
+.welcome .tech { font-size: 0.78rem; }
+.welcome .tech b { color: var(--text-secondary); font-weight: 600; }
 
 /* ============================================================
    Info button & Modal
@@ -260,89 +460,54 @@ body {
   display: inline-flex; align-items: center; justify-content: center;
   width: 18px; height: 18px; border-radius: 50%;
   background: var(--bg-input); color: var(--text-secondary);
-  font-size: 0.65rem; font-weight: 700; border: 1px solid var(--border);
-  cursor: pointer; vertical-align: middle; margin-left: 6px;
-  transition: all 0.2s;
+  font-size: 0.64rem; font-weight: 700; border: 1px solid var(--border);
+  cursor: pointer; vertical-align: middle; transition: all 0.2s; flex-shrink: 0;
 }
-.info-btn:hover { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+.info-btn:hover { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--text-dim); }
 
 .modal-overlay {
-  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.65); z-index: 1000;
-  align-items: center; justify-content: center;
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.66);
+  z-index: 1000; align-items: center; justify-content: center;
 }
 .modal-overlay.show { display: flex; }
-
 .modal-box {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 28px; max-width: 560px; width: 90%;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
-  animation: modalIn 0.2s ease-out;
+  border-radius: var(--radius); padding: 26px; max-width: 540px; width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45); animation: modalIn 0.2s ease-out;
 }
 @keyframes modalIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
-
-.modal-box h2 { font-size: 1.05rem; margin-bottom: 6px; }
-.modal-box .modal-subtitle {
-  font-size: 0.75rem; color: var(--text-dim); margin-bottom: 16px;
+.modal-box h2 { font-size: 1.05rem; margin-bottom: 4px; }
+.modal-box .modal-subtitle { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 16px; }
+.modal-box p { font-size: 0.85rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 10px; }
+.modal-box .hl-a { color: var(--party-a); font-weight: 600; }
+.modal-box .hl-b { color: var(--party-b); font-weight: 600; }
+.modal-box .hl-y { color: var(--accent-yellow); font-weight: 600; }
+.modal-box .note {
+  display: flex; gap: 9px; align-items: flex-start; margin-top: 14px;
+  padding: 11px 13px; background: var(--bg-input); border-radius: var(--radius-sm);
+  border-left: 2px solid var(--primary); font-size: 0.76rem; color: var(--text-secondary); line-height: 1.6;
 }
-.modal-box p { font-size: 0.88rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 10px; }
-.modal-box .highlight-a { color: var(--party-a); font-weight: 600; }
-.modal-box .highlight-b { color: var(--party-b); font-weight: 600; }
-.modal-box .highlight-y { color: var(--accent-yellow); font-weight: 600; }
+.modal-box .note svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; color: var(--primary); }
+.modal-box .note b { color: var(--text-primary); }
 .modal-btn-close {
-  margin-top: 16px; padding: 10px 24px; font-size: 0.85rem; font-weight: 600;
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--bg-input); color: var(--text-primary); cursor: pointer;
-  transition: all 0.2s;
+  margin-top: 14px; padding: 9px 22px; font-size: 0.82rem; font-weight: 600;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-input); color: var(--text-primary); cursor: pointer; transition: all 0.2s;
 }
-.modal-btn-close:hover { background: var(--accent-blue); border-color: var(--accent-blue); }
+.modal-btn-close:hover { background: var(--bg-elevated); border-color: var(--text-dim); }
 
-/* ============================================================
-   Data View Panel (Party A / B)
-   ============================================================ */
-.btn-data-view {
-  width: 100%; padding: 10px; font-size: 0.85rem; font-weight: 600;
-  border: 1px dashed var(--border); border-radius: var(--radius);
-  background: transparent; color: var(--text-secondary);
-  cursor: pointer; transition: all 0.2s;
-}
-.btn-data-view:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
-.btn-data-view.active { border-style: solid; border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(34,211,238,0.06); }
+/* Scrollbar */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-.data-view-panel {
-  display: none; margin-top: 8px; gap: 12px;
-}
-.data-view-panel.show { display: grid; grid-template-columns: 1fr 1fr; }
-
-.data-party-card {
-  background: var(--bg-input); border-radius: var(--radius); padding: 14px;
-  border: 1px solid var(--border);
-}
-.data-party-card h4 {
-  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;
-  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
-}
-.data-party-card h4 .dot {
-  width: 10px; height: 10px; border-radius: 50%; display: inline-block;
-}
-.data-party-card h4 .dot.a { background: var(--party-a); }
-.data-party-card h4 .dot.b { background: var(--party-b); }
-
-.data-party-card .data-row {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  padding: 5px 0; border-bottom: 1px solid rgba(45,48,72,0.3);
-  font-size: 0.78rem; gap: 8px;
-}
-.data-party-card .data-row .data-label {
-  color: var(--text-dim); flex-shrink: 0; font-size: 0.7rem;
-  text-transform: uppercase; letter-spacing: 0.03em;
-}
-.data-party-card .data-row .data-value {
-  color: var(--text-primary); text-align: right; word-break: break-all;
-  font-variant-numeric: tabular-nums;
-}
-.data-party-card .data-row .data-value.encrypted {
-  color: var(--text-dim); font-style: italic; font-size: 0.72rem;
+@media (max-width: 980px) {
+  .app { flex-direction: column; }
+  .sidebar { width: 100%; min-width: 0; max-height: 50vh; }
+  .charts-row { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .step1-views { grid-template-columns: 1fr; }
+  .flow-banner { flex-wrap: wrap; }
 }
 </style>
 </head>
@@ -353,118 +518,132 @@ body {
        Sidebar
        ============================================================ -->
   <aside class="sidebar">
-    <h1>🔐 Fuzzy Matching GUI</h1>
-
-    <div class="control-group">
-      <label>Query Mode</label>
-      <div class="query-mode-tabs">
-        <button id="tab-indices" class="active" onclick="setQueryMode('indices')">By Indices</button>
-        <button id="tab-text" onclick="setQueryMode('text')">Custom Name</button>
+    <div class="brand">
+      <span class="mark">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <rect x="9" y="11" width="6" height="5" rx="1"/>
+          <path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <h1>Fuzzy Name Matching</h1>
+        <span class="subtitle">Privacy-preserving record linkage</span>
       </div>
     </div>
 
-    <div class="control-group" id="group-indices">
-      <label>Query Indices (comma-separated)</label>
-      <input type="text" id="input-indices" value="2,7,26,49,100" placeholder="e.g. 2,7,26">
-    </div>
+    <!-- Controls -->
+    <div class="controls">
+      <div class="section-label">Configuration</div>
 
-    <div class="control-group hidden" id="group-text" style="display:none">
-      <label>Query Name</label>
-      <input type="text" id="input-query" value="John Smith" placeholder="Enter a name...">
-    </div>
-
-    <div class="control-group">
-      <label>Database Size (records)</label>
-      <input type="number" id="input-db-limit" value="100" min="10" max="10000" step="10">
-    </div>
-
-    <div class="control-group">
-      <label>Clusters K</label>
-      <input type="number" id="input-k" value="10" min="2" max="500">
-    </div>
-
-    <div class="control-group">
-      <label>Threshold τ (tau)</label>
-      <input type="number" id="input-tau" value="0.9" min="0.1" max="1.0" step="0.05">
-    </div>
-
-    <div class="control-group">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-        <input type="checkbox" id="input-early-stop" checked style="width:auto">
-        Early Stopping
-      </label>
-    </div>
-
-    <button class="btn-run" id="btn-run" onclick="runProtocol()">▶  Run Protocol</button>
-
-    <button class="btn-data-view" id="btn-data-view" onclick="toggleDataView()">
-      👁 View Party A / B Data
-    </button>
-    <div class="data-view-panel" id="data-view-panel">
-      <div class="data-party-card" id="card-party-b">
-        <h4><span class="dot b"></span> Party B — 响应方（数据库持有者）</h4>
-        <div id="data-party-b-content" style="color:var(--text-dim);font-size:0.78rem">
-          运行协议后显示数据...
+      <div class="control-group">
+        <label>Query Set</label>
+        <div class="query-mode-tabs">
+          <button id="tab-demo" class="active" onclick="setQueryMode('demo')">Demo Set</button>
+          <button id="tab-indices" onclick="setQueryMode('indices')">By Index</button>
+          <button id="tab-text" onclick="setQueryMode('text')">Custom</button>
+        </div>
+        <div class="mode-hint" id="mode-hint">
+          5 real names + their misspelled variants + 3 absent names — the same set as the terminal demo.
         </div>
       </div>
-      <div class="data-party-card" id="card-party-a">
-        <h4><span class="dot a"></span> Party A — 请求方（查询者）</h4>
-        <div id="data-party-a-content" style="color:var(--text-dim);font-size:0.78rem">
-          运行协议后显示数据...
+
+      <div class="control-group" id="group-indices" style="display:none">
+        <label>Query Indices (comma-separated)</label>
+        <input type="text" id="input-indices" value="2,7,26,49,100" placeholder="e.g. 2,7,26">
+      </div>
+
+      <div class="control-group" id="group-text" style="display:none">
+        <label>Query Name</label>
+        <input type="text" id="input-query" value="John Smith" placeholder="Enter a name...">
+      </div>
+
+      <div class="params-grid">
+        <div class="control-group">
+          <label>Database Size</label>
+          <input type="number" id="input-db-limit" value="100" min="10" max="10000" step="10">
+        </div>
+        <div class="control-group">
+          <label>Clusters K</label>
+          <input type="number" id="input-k" value="10" min="2" max="500">
+        </div>
+        <div class="control-group">
+          <label>Threshold τ</label>
+          <input type="number" id="input-tau" value="0.9" min="0.1" max="1.0" step="0.05">
+        </div>
+        <div class="control-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:0.72rem">
+            <input type="checkbox" id="input-early-stop" checked style="width:auto">
+            Early Stopping
+          </label>
+        </div>
+      </div>
+
+      <button class="btn-run" id="btn-run" onclick="runProtocol()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Run Protocol
+      </button>
+    </div>
+
+    <!-- Two-Party transparency view -->
+    <div class="parties">
+      <div class="section-label">What Each Party Sees</div>
+
+      <div class="party-card b">
+        <div class="party-head">
+          <span class="dot b"></span>
+          <span class="title">Party <span class="b">B</span> · Database Holder</span>
+        </div>
+        <div class="party-role">Owns the name database. Computes on ciphertext only.</div>
+        <div class="party-rows" id="party-b-rows">
+          <div class="party-empty">Run the protocol to populate…</div>
+        </div>
+      </div>
+
+      <div class="party-card a">
+        <div class="party-head">
+          <span class="dot a"></span>
+          <span class="title">Party <span class="a">A</span> · Requester</span>
+        </div>
+        <div class="party-role">Holds the queries &amp; the private key. Sees decrypted results.</div>
+        <div class="party-rows" id="party-a-rows">
+          <div class="party-empty">Run the protocol to populate…</div>
         </div>
       </div>
     </div>
 
-    <!-- Progress Timeline -->
-    <div class="progress-panel">
-      <h3>Protocol Steps</h3>
-      <div id="steps-container">
+    <!-- Protocol Timeline -->
+    <div class="timeline-wrap">
+      <div class="section-label">Protocol Steps</div>
+      <div class="timeline" id="steps-container" style="margin-top:10px">
         <div class="step-item pending" data-step="1">
           <span class="step-num">1</span>
-          <span class="step-info">
-            <div class="step-name">Clustering</div>
-            <span class="step-party party-B">Party B</span>
-          </span>
+          <span class="step-info"><div class="step-name">Clustering</div><span class="step-party party-B">Party B</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="2">
           <span class="step-num">2</span>
-          <span class="step-info">
-            <div class="step-name">Query Encrypt</div>
-            <span class="step-party party-A">Party A</span>
-          </span>
+          <span class="step-info"><div class="step-name">Query Encrypt</div><span class="step-party party-A">Party A</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="3">
           <span class="step-num">3</span>
-          <span class="step-info">
-            <div class="step-name">Compare Centroids</div>
-            <span class="step-party party-B">Party B</span>
-          </span>
+          <span class="step-info"><div class="step-name">Compare Centroids</div><span class="step-party party-B">Party B</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="4">
           <span class="step-num">4</span>
-          <span class="step-info">
-            <div class="step-name">Select Cluster</div>
-            <span class="step-party party-A">Party A</span>
-          </span>
+          <span class="step-info"><div class="step-name">Select Cluster</div><span class="step-party party-A">Party A</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="6">
           <span class="step-num">6</span>
-          <span class="step-info">
-            <div class="step-name">Column Matching</div>
-            <span class="step-party party-B">Party B</span>
-          </span>
+          <span class="step-info"><div class="step-name">Column Matching</div><span class="step-party party-B">Party B</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="9">
           <span class="step-num">9</span>
-          <span class="step-info">
-            <div class="step-name">Decrypt &amp; Judge</div>
-            <span class="step-party party-A">Party A</span>
-          </span>
+          <span class="step-info"><div class="step-name">Decrypt &amp; Judge</div><span class="step-party party-A">Party A</span></span>
           <span class="step-time"></span>
         </div>
       </div>
@@ -480,45 +659,146 @@ body {
        Main Content
        ============================================================ -->
   <main class="main" id="main-content">
-    <!-- Welcome / placeholder -->
-    <div id="welcome-panel" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text-dim)">
-      <div style="font-size:3rem">🔐</div>
-      <div style="font-size:1.1rem">Privacy-Preserving Fuzzy Name Matching</div>
-      <div style="font-size:0.85rem">Configure parameters and click <strong>Run Protocol</strong> to start</div>
-      <div style="font-size:0.75rem;margin-top:8px">MinHash + CKKS Homomorphic Encryption + Cosine K-Means</div>
+    <!-- Flow banner — always visible at the top, steps light up as protocol runs -->
+    <div class="flow-banner" id="flow-banner">
+      <div class="flow-step" data-flow-step="1">
+        <span class="flow-badge b">Party B</span>
+        <span class="flow-title">Cluster DB</span>
+        <span class="flow-desc">Group names into K buckets offline</span>
+      </div>
+      <div class="flow-step" data-flow-step="2">
+        <span class="flow-badge a">Party A</span>
+        <span class="flow-title">Encrypt Query</span>
+        <span class="flow-desc">Send encrypted query vector</span>
+      </div>
+      <div class="flow-step" data-flow-step="3">
+        <span class="flow-badge b">Party B</span>
+        <span class="flow-title">Find Bucket</span>
+        <span class="flow-desc">Score vs centroids on ciphertext</span>
+      </div>
+      <div class="flow-step" data-flow-step="4">
+        <span class="flow-badge a">Party A</span>
+        <span class="flow-title">Pick Cluster</span>
+        <span class="flow-desc">Decrypt scores, choose best</span>
+      </div>
+      <div class="flow-step" data-flow-step="6">
+        <span class="flow-badge b">Party B</span>
+        <span class="flow-title">Match Column</span>
+        <span class="flow-desc">Masked similarity per name</span>
+      </div>
+      <div class="flow-step" data-flow-step="9">
+        <span class="flow-badge a">Party A</span>
+        <span class="flow-title">Judge Hit</span>
+        <span class="flow-desc">Decrypt &amp; decide match</span>
+      </div>
     </div>
 
-    <!-- Results area (hidden until run) -->
-    <div id="results-area" style="display:none;display:flex;flex-direction:column;gap:20px">
+    <!-- Welcome -->
+    <div class="welcome" id="welcome-panel">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <rect x="9" y="11" width="6" height="5" rx="1"/>
+          <path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/>
+        </svg>
+      </div>
+      <h2>Privacy-Preserving Fuzzy Name Matching</h2>
+      <div>Configure parameters and click <strong style="color:var(--text-secondary)">Run Protocol</strong> to begin.</div>
+      <div class="tech">Pipeline: <b>MinHash</b> → <b>Cosine K-Means</b> → <b>CKKS Homomorphic Encryption</b></div>
+    </div>
 
-      <!-- Database Overview -->
+    <!-- Results -->
+    <div id="results-area" style="display:none;flex-direction:column;gap:22px">
+
+      <!-- Step 1 -->
       <div class="card" id="card-db">
-        <h3>📊 Step 1 — Database &amp; Clustering Overview <span class="info-btn" onclick="showModal('step1')" title="What does this mean?">?</span></h3>
-        <div class="db-stats" id="db-stats"></div>
+        <div class="card-head">
+          <div class="titles">
+            <span class="step-tag">Step 1 · Offline</span>
+            <h3>Database &amp; Clustering <span class="info-btn" onclick="showModal('step1')" title="What does this mean?">?</span></h3>
+          </div>
+          <span class="party-pill b">Party B</span>
+        </div>
+        <div class="card-explain">
+          Party <span class="hl-b">B</span> turns every database name into a MinHash signature and groups them into
+          <span class="hl-b">K clusters</span>, so later a query only needs to search one bucket instead of the whole database.
+        </div>
+        <div class="stat-grid" id="db-stats"></div>
+        <div class="step1-views">
+          <div class="step1-view">
+            <div class="view-caption">Cluster Size Distribution — how many names landed in each bucket.</div>
+            <div style="height:420px"><canvas id="chart-cluster-dist"></canvas></div>
+          </div>
+          <div class="step1-view">
+            <div class="view-caption">3D Signature Projection — each dot is one name (PCA to 3D); nearby dots are similar, same colour = same cluster. Drag to rotate.</div>
+            <div id="cloud-3d" class="cloud-3d"></div>
+          </div>
+        </div>
       </div>
 
-      <!-- Cluster Similarity Chart -->
+      <!-- Step 4 -->
       <div class="card" id="card-centroids" style="display:none">
-        <h3>🎯 Step 4 — Query vs Centroid Similarity Scores <span class="info-btn" onclick="showModal('step4')" title="What does this mean?">?</span></h3>
-        <div style="height:280px"><canvas id="chart-centroids"></canvas></div>
-        <div id="centroid-legend" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:0.75rem"></div>
+        <div class="card-head">
+          <div class="titles">
+            <span class="step-tag">Step 4 · Online</span>
+            <h3>Query → Cluster Similarity <span class="info-btn" onclick="showModal('step4')" title="What does this mean?">?</span></h3>
+          </div>
+          <span class="party-pill a">Party A</span>
+        </div>
+        <div class="card-explain">
+          Rows are queries, columns are clusters. A <span class="hl-y">brighter cell</span> means higher similarity;
+          the ★-marked cell is the <span class="hl-y">selected cluster</span> — where the matching name most likely lives.
+        </div>
+        <div class="heatmap-wrap" id="heatmap-centroids"></div>
+        <div class="heatmap-legend" id="heatmap-legend"></div>
       </div>
 
-      <!-- Column Scores & Results -->
-      <div class="charts-row">
-        <div class="card" id="card-columns" style="display:none">
-          <h3>📈 Step 9 — Column-wise Score Breakdown <span class="info-btn" onclick="showModal('step9')" title="What does this mean?">?</span></h3>
-          <div style="height:280px"><canvas id="chart-columns"></canvas></div>
-        </div>
-        <div class="card" id="card-timing" style="display:none">
-          <h3>⏱ Step Timing Breakdown</h3>
-          <div style="height:280px"><canvas id="chart-timing"></canvas></div>
+      <!-- Step 9 + Timing (same card, side by side) -->
+      <div class="card" id="card-columns" style="display:none">
+        <div class="step9-timing-row">
+          <!-- left: match grid -->
+          <div class="step9-main">
+            <div class="card-head" style="margin-bottom:6px">
+              <div class="titles">
+                <span class="step-tag">Step 9 · Online</span>
+                <h3>Column-wise Match <span class="info-btn" onclick="showModal('step9')" title="What does this mean?">?</span></h3>
+              </div>
+              <span class="party-pill a">Party A</span>
+            </div>
+            <div class="card-explain">
+              Within the chosen cluster, each cell is one candidate name. A <span class="hl-b">positive</span> score beats
+              threshold τ; the <span class="hl-y">first positive (★)</span> is the declared hit. Cells after the hit are skipped by early-stopping.
+            </div>
+            <div class="match-grid-wrap" id="match-grid"></div>
+            <div class="match-legend" id="match-legend"></div>
+          </div>
+          <!-- right: timing -->
+          <div class="step9-aside" id="card-timing" style="display:none">
+            <div class="card-head" style="margin-bottom:6px">
+              <div class="titles">
+                <span class="step-tag">Performance</span>
+                <h3>Time Breakdown</h3>
+              </div>
+            </div>
+            <div class="card-explain">Where the wall-clock time goes across steps.</div>
+            <div style="height:280px"><canvas id="chart-timing"></canvas></div>
+          </div>
         </div>
       </div>
 
-      <!-- Results Table -->
+      <!-- Results table -->
       <div class="card" id="card-results" style="display:none">
-        <h3>📋 Results Summary <span id="accuracy-badge"></span></h3>
+        <div class="card-head">
+          <div class="titles">
+            <span class="step-tag">Outcome</span>
+            <h3>Results Summary</h3>
+          </div>
+          <span id="accuracy-badge"></span>
+        </div>
+        <div class="card-explain">
+          A query is <span class="hl-y">correct</span> only when it hits the <b>right</b> database name
+          (exact for real names, recovered for misspellings), and absent names produce no match.
+        </div>
         <div style="overflow-x:auto">
           <table class="results-table" id="results-table"></table>
         </div>
@@ -533,67 +813,66 @@ body {
      ============================================================ -->
 <div class="modal-overlay" id="modal-step1">
   <div class="modal-box">
-    <h2>📊 Step 1 — Database Clustering</h2>
-    <div class="modal-subtitle">Party B · 离线预处理 · 仅执行一次</div>
+    <h2>Step 1 — Database Clustering</h2>
+    <div class="modal-subtitle">Party B · offline preprocessing · runs once</div>
     <p>
-      <span class="highlight-b">Party B（响应方）</span> 拥有一个包含 <b>10,000 条真实姓名</b> 的数据库。
-      为了加速后续搜索，B 首先将每条姓名转换为 <b>200 维的 MinHash 签名</b>，
-      然后使用 <b>余弦 K-Means</b> 算法将这 10,000 个签名自动分成 <b>K 个簇（cluster）</b>。
+      <span class="hl-b">Party B (the database holder)</span> owns a database of real names.
+      Each name is converted into a <b>200-dimensional MinHash signature</b>, then
+      <b>cosine K-Means</b> groups all signatures into <b>K clusters</b>.
     </p>
     <p>
-      📌 <b>通俗理解：</b>就像图书馆把书籍按主题分类一样，B 把数据库中相似的姓名预先归为一组。
-      每个簇内部的姓名彼此相似，不同簇的姓名差异较大。
-      之后收到查询时，只需定位到最相关的那个簇，而不是遍历整个数据库。
+      Like a library shelving books by topic: similar names land in the same cluster.
+      A later query only searches the most relevant cluster instead of scanning everything.
     </p>
-    <p style="font-size:0.78rem;color:var(--text-dim)">
-      🔒 <b>隐私说明：</b>此步骤完全在 B 的本地执行，不涉及任何外部通信。
-    </p>
-    <button class="modal-btn-close" onclick="closeModal('step1')">关闭</button>
+    <div class="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span><b>Privacy:</b> this step runs entirely on B's machine — no communication, no data leaves B.</span>
+    </div>
+    <button class="modal-btn-close" onclick="closeModal('step1')">Close</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="modal-step4">
   <div class="modal-box">
-    <h2>🎯 Step 4 — Cluster Selection</h2>
-    <div class="modal-subtitle">Party A · 在线查询 · 解密后选择最佳簇</div>
+    <h2>Step 4 — Cluster Selection</h2>
+    <div class="modal-subtitle">Party A · online · select best cluster after decryption</div>
     <p>
-      <span class="highlight-a">Party A（请求方）</span> 将自己的查询姓名同样转换为 MinHash 签名并
-      <b>同态加密</b>后发送给 B。B 在<b>密文状态下</b>计算查询与每个簇中心的相似度，
-      返回 <b>K 个加密的分数</b>给 A。
+      <span class="hl-a">Party A (the requester)</span> encrypts its query and sends it to B.
+      B computes the query-to-centroid similarity <b>under encryption</b> and returns
+      <b>K encrypted scores</b>.
     </p>
     <p>
-      A 使用自己的私钥解密这 K 个分数，图中<b>每条折线代表一个查询</b>，
-      横轴是 K 个簇（C0, C1, C2...），纵轴是余弦相似度。
-      <span class="highlight-y">★ SELECTED</span> 标记了 <b>相似度最高的簇</b>——
-      A 将选择该簇进行后续的精确匹配。
+      A decrypts those scores with its private key. Each row is one query; columns are
+      the K clusters and the colour is cosine similarity. The <span class="hl-y">★ brightest cell</span> marks
+      the <b>most similar cluster</b>, which A selects for exact matching.
     </p>
-    <p style="font-size:0.78rem;color:var(--text-dim)">
-      🔒 <b>隐私说明：</b>B 只能看到加密的查询和加密的分数，
-      无法知道 A 最终选择了哪个簇。A 只知道自己选了哪个簇，不知道簇内有哪些具体姓名。
-    </p>
-    <button class="modal-btn-close" onclick="closeModal('step4')">关闭</button>
+    <div class="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span><b>Privacy:</b> B only ever sees an encrypted query and encrypted scores — it never learns which cluster A picked. A learns its chosen cluster but not the names inside it.</span>
+    </div>
+    <button class="modal-btn-close" onclick="closeModal('step4')">Close</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="modal-step9">
   <div class="modal-box">
-    <h2>📈 Step 9 — Column-wise Match Detection</h2>
-    <div class="modal-subtitle">Party A · 最终判断 · 逐列解密检测命中</div>
+    <h2>Step 9 — Column-wise Match Detection</h2>
+    <div class="modal-subtitle">Party A · final decision · decrypt column scores</div>
     <p>
-      A 向 B 发送了<b>加密的选择器</b>（指示选中的簇）和<b>加密的查询向量</b>。
-      B 将选择器与簇矩阵相乘，逐列计算加密的相似度分数，并对每列加上<b>随机掩码（mask）</b>后返回给 A。
+      A sends B an <b>encrypted selector</b> (the chosen cluster) and its <b>encrypted query vector</b>.
+      B multiplies the selector with the cluster matrix, scores each column under encryption, adds a
+      <b>random mask</b> per column, and returns the ciphertext.
     </p>
     <p>
-      A 逐列解密这些分数：<b>正数（绿色柱）</b> 表示该列的姓名与查询相似度超过阈值 τ，
-      <span style="color:var(--accent-green);font-weight:600">亮绿色柱（★ FIRST MATCH）</span>
-      是<b>第一个正分数</b>——协议判定为 <b>"命中"</b>。
-      如果遍历完所有列都没正数，则判定 <b>"未命中"</b>。
+      A decrypts column by column: a <b>positive score</b> means that name beats threshold τ.
+      The <span style="color:var(--accent-green);font-weight:600">first positive (★)</span> is declared the <b>hit</b>.
+      If no column is positive, the query is a <b>miss</b>.
     </p>
-    <p style="font-size:0.78rem;color:var(--text-dim)">
-      🔒 <b>隐私说明：</b>B 在每列加了随机掩码，所以 B 无法从返回的密文中推断出原始相似度。
-      A 解密后能看到分数，但只能看到被选中簇内的姓名，看不到整个数据库。
-    </p>
-    <button class="modal-btn-close" onclick="closeModal('step9')">关闭</button>
+    <div class="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span><b>Privacy:</b> the per-column random mask prevents B from learning the true similarity. A sees scores only for names inside its chosen cluster — never the whole database.</span>
+    </div>
+    <button class="modal-btn-close" onclick="closeModal('step9')">Close</button>
   </div>
 </div>
 
@@ -601,26 +880,34 @@ body {
 // ============================================================
 // State
 // ============================================================
-let queryMode = 'indices';
+let queryMode = 'demo';
 let charts = {};
 let isRunning = false;
+let rawDataStore = {};
+
+const MODE_HINTS = {
+  demo: '5 real names + their misspelled variants + 3 absent names — the same set as the terminal demo.',
+  indices: 'Pick rows by their index in the query dataset (Party A side).',
+  text: 'Type any single name; it has no ground-truth label so accuracy is not computed.',
+};
 
 // ============================================================
-// UI Helpers
+// Helpers
 // ============================================================
 function $(id) { return document.getElementById(id); }
 
 function setQueryMode(mode) {
   queryMode = mode;
+  $('tab-demo').classList.toggle('active', mode === 'demo');
   $('tab-indices').classList.toggle('active', mode === 'indices');
   $('tab-text').classList.toggle('active', mode === 'text');
   $('group-indices').style.display = mode === 'indices' ? '' : 'none';
   $('group-text').style.display = mode === 'text' ? '' : 'none';
+  $('mode-hint').textContent = MODE_HINTS[mode];
 }
 
 function setStatus(state, text) {
-  const dot = $('status-dot');
-  dot.className = 'status-dot ' + state; // running, done, error
+  $('status-dot').className = 'status-dot ' + state;
   $('status-text').textContent = text;
 }
 
@@ -628,112 +915,90 @@ function setStepState(step, state) {
   const el = document.querySelector(`.step-item[data-step="${step}"]`);
   if (!el) return;
   el.classList.remove('pending', 'active', 'done');
-  el.classList.add(state); // pending, active, done
+  el.classList.add(state);
 }
 
 function setStepTime(step, ms) {
   const el = document.querySelector(`.step-item[data-step="${step}"]`);
   if (!el) return;
-  const timeEl = el.querySelector('.step-time');
-  if (ms < 1000) timeEl.textContent = ms.toFixed(0) + 'ms';
-  else timeEl.textContent = (ms/1000).toFixed(1) + 's';
+  const t = el.querySelector('.step-time');
+  t.textContent = ms < 1000 ? ms.toFixed(0) + 'ms' : (ms / 1000).toFixed(1) + 's';
 }
 
 function destroyChart(name) {
   if (charts[name]) { charts[name].destroy(); delete charts[name]; }
 }
 
-// ============================================================
-// Modal
-// ============================================================
-function showModal(step) {
-  const m = document.getElementById('modal-' + step);
-  if (m) m.classList.add('show');
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
-function closeModal(step) {
-  const m = document.getElementById('modal-' + step);
-  if (m) m.classList.remove('show');
-}
-// Click overlay background to close
-document.addEventListener('click', function(e) {
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.classList.remove('show');
-  }
+
+// ============================================================
+// Modals
+// ============================================================
+function showModal(step) { const m = $('modal-' + step); if (m) m.classList.add('show'); }
+function closeModal(step) { const m = $('modal-' + step); if (m) m.classList.remove('show'); }
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('show');
 });
 
 // ============================================================
-// Data View (Party A / B transparency panel)
+// Two-Party transparency panels
 // ============================================================
-let dataViewVisible = false;
-let rawDataStore = {}; // accumulates raw data from each step
+const LOCK_SVG = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
 
-function toggleDataView() {
-  dataViewVisible = !dataViewVisible;
-  const panel = $('data-view-panel');
-  const btn = $('btn-data-view');
-  if (dataViewVisible) {
-    panel.classList.add('show');
-    btn.classList.add('active');
-    btn.innerHTML = '👁 Hide Party A / B Data';
-    // Refresh panels from accumulated data
-    const allData = Object.assign({}, ...Object.values(rawDataStore));
-    updateDataViewPartyB(allData);
-    updateDataViewPartyA(allData);
-  } else {
-    panel.classList.remove('show');
-    btn.classList.remove('active');
-    btn.innerHTML = '👁 View Party A / B Data';
+function renderRows(containerId, rows) {
+  if (!rows.length) {
+    $(containerId).innerHTML = '<div class="party-empty">Run the protocol to populate…</div>';
+    return;
   }
+  $(containerId).innerHTML = rows.map(r =>
+    `<div class="party-row"><span class="k">${r[0]}</span><span class="v ${r[2] || ''}">${r[1]}</span></div>`
+  ).join('');
 }
 
-function updateDataViewPartyB(stepData) {
-  // Build Party B's view: what B sees at each step
-  let rows = [];
-  if (stepData.db_size !== undefined) {
-    rows.push(['数据库大小', stepData.db_size + ' 条记录']);
-    rows.push(['聚类数 K', stepData.k + ' 个簇']);
-    rows.push(['签名维度', stepData.signature_dim + ' 维 (MinHash)']);
+function updatePartyB(d) {
+  const rows = [];
+  if (d.db_size !== undefined) {
+    rows.push(['Database size', d.db_size + ' names']);
+    rows.push(['Clusters (K)', d.k]);
+    rows.push(['Signature dim', d.signature_dim + ' (MinHash)']);
   }
-  if (stepData.sample_names) {
-    rows.push(['数据库样本', stepData.sample_names.slice(0,3).join('<br>')]);
+  if (d.sample_names) rows.push(['Sample names', d.sample_names.slice(0, 3).join('<br>')]);
+  if (d.num_queries !== undefined && d.num_centroids !== undefined) {
+    rows.push(['Query received', LOCK_SVG + 'encrypted vector', 'enc']);
+    rows.push(['Computation', `${d.num_queries} × ${d.num_centroids} ciphertext dot-products`]);
   }
-  if (stepData.num_queries !== undefined && stepData.num_centroids !== undefined) {
-    rows.push(['收到查询', '<span style="color:var(--text-dim);font-style:italic">🔒 加密向量 (无法读取)</span>']);
-    rows.push(['计算操作', stepData.num_queries + ' × ' + stepData.num_centroids + ' 次密文点积']);
+  if (d.columns_per_query) {
+    const total = d.columns_per_query.reduce((s, q) => s + q.num_columns, 0);
+    rows.push(['Column matches', total + ' ciphertext mults']);
+    rows.push(['Returned', LOCK_SVG + 'masked encrypted scores', 'enc']);
   }
-  if (stepData.columns_per_query) {
-    const total = stepData.columns_per_query.reduce((s,q)=>s+q.num_columns, 0);
-    rows.push(['列匹配操作', total + ' 次密文乘法']);
-    rows.push(['返回数据', '<span style="color:var(--text-dim);font-style:italic">🔒 加密分数列 (含随机掩码)</span>']);
-  }
-  let html = rows.map(r =>
-    `<div class="data-row"><span class="data-label">${r[0]}</span><span class="data-value">${r[1]}</span></div>`
-  ).join('');
-  $('data-party-b-content').innerHTML = html || '等待协议运行...';
+  renderRows('party-b-rows', rows);
 }
 
-function updateDataViewPartyA(stepData) {
-  let rows = [];
-  if (stepData.query_names) {
-    rows.push(['查询姓名', stepData.query_names.join('<br>')]);
-    rows.push(['查询数量', stepData.query_names.length + ' 条']);
-    rows.push(['加密耗时', (stepData.context_time_ms || 0).toFixed(0) + ' ms']);
-    rows.push(['本地状态', '私钥 + 加密查询向量 (仅A持有)']);
+function updatePartyA(d) {
+  const rows = [];
+  if (d.query_names) {
+    rows.push(['Queries', d.query_names.length + ' names']);
+    rows.push(['Encrypt time', (d.context_time_ms || 0).toFixed(0) + ' ms']);
+    rows.push(['Held locally', 'private key + query vector', 'muted']);
   }
-  if (stepData.centroid_scores) {
-    const selections = stepData.centroid_scores.map(q =>
-      `${q.query_name.slice(0,15)}… → Cluster ${q.selected_cluster}`
-    ).join('<br>');
-    rows.push(['解密分数', stepData.centroid_scores.length + ' × ' + stepData.num_centroids + ' 个分数']);
-    rows.push(['选中簇', selections]);
+  if (d.centroid_scores) {
+    const sel = d.centroid_scores.slice(0, 4).map(q =>
+      `${esc(q.query_name.slice(0, 16))} → C${q.selected_cluster}`).join('<br>');
+    rows.push(['Decrypted', `${d.centroid_scores.length} × ${d.num_centroids} scores`]);
+    rows.push(['Selected cluster', sel]);
   }
-  if (stepData.tau !== undefined) {
-    rows.push(['相似度阈值 τ', stepData.tau]);
-  }
-  let html = rows.map(r =>
-    `<div class="data-row"><span class="data-label">${r[0]}</span><span class="data-value">${r[1]}</span></div>`
-  ).join('');
-  $('data-party-a-content').innerHTML = html || '等待协议运行...';
+  if (d.tau !== undefined) rows.push(['Threshold τ', d.tau]);
+  renderRows('party-a-rows', rows);
+}
+
+function refreshParties() {
+  const all = Object.assign({}, ...Object.values(rawDataStore));
+  updatePartyB(all);
+  updatePartyA(all);
 }
 
 // ============================================================
@@ -744,88 +1009,72 @@ async function runProtocol() {
   isRunning = true;
   $('btn-run').disabled = true;
 
-  // Reset UI
   $('welcome-panel').style.display = 'none';
   $('results-area').style.display = 'flex';
-  ['card-centroids','card-columns','card-timing','card-results'].forEach(
-    id => $(id).style.display = 'none'
-  );
+  ['card-centroids', 'card-columns', 'card-results'].forEach(id => $(id).style.display = 'none');
+  // card-timing is inside card-columns (.step9-aside), reset it too
+  const timingAside = $('card-timing');
+  if (timingAside) timingAside.style.display = 'none';
+  // Reset flow-step states
+  document.querySelectorAll('.flow-step').forEach(el => {
+    el.classList.remove('flow-active', 'flow-done');
+  });
 
-  // Reset steps
   document.querySelectorAll('.step-item').forEach(el => {
-    el.classList.remove('active','done');
+    el.classList.remove('active', 'done');
     el.classList.add('pending');
     el.querySelector('.step-time').textContent = '';
   });
-
-  // Destroy old charts
   Object.keys(charts).forEach(k => destroyChart(k));
-
-  // Reset data view
+  disposeCloud();
+  if (step9Timer) { clearInterval(step9Timer); step9Timer = null; }
+  $('match-grid').innerHTML = '';
   rawDataStore = {};
-  if (dataViewVisible) {
-    $('data-party-b-content').innerHTML = '<span style="color:var(--text-dim);font-size:0.78rem">运行中...</span>';
-    $('data-party-a-content').innerHTML = '<span style="color:var(--text-dim);font-size:0.78rem">运行中...</span>';
-  }
+  renderRows('party-b-rows', []);
+  renderRows('party-a-rows', []);
 
-  setStatus('running', 'Running protocol...');
+  setStatus('running', 'Running protocol…');
 
-  // Build request
-  let body = {
+  const body = {
+    query_mode: queryMode,
     db_limit: parseInt($('input-db-limit').value) || 100,
     k: parseInt($('input-k').value) || 10,
     tau: parseFloat($('input-tau').value) || 0.9,
     early_stop: $('input-early-stop').checked,
   };
-
   if (queryMode === 'text') {
-    body.query = ($('input-query').value || '').trim();
-    if (!body.query) { body.query = 'John Smith'; }
-  } else {
+    body.query = ($('input-query').value || '').trim() || 'John Smith';
+  } else if (queryMode === 'indices') {
     const raw = ($('input-indices').value || '2,7,26,49,100').trim();
     body.query_indices = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
   }
 
   try {
-    const response = await fetch('/api/run', {
+    const res = await fetch('/api/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    if (!res.ok) throw new Error(`Server error: ${res.status} ${res.statusText}`);
 
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status} ${response.statusText}`);
-    }
-
-    const reader = response.body.getReader();
+    const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // keep incomplete line in buffer
-
-      let eventType = '';
-      let dataStr = '';
-
+      buffer = lines.pop() || '';
+      let eventType = '', dataStr = '';
       for (const line of lines) {
-        if (line.startsWith('event: ')) {
-          eventType = line.slice(7).trim();
-        } else if (line.startsWith('data: ')) {
+        if (line.startsWith('event: ')) eventType = line.slice(7).trim();
+        else if (line.startsWith('data: ')) {
           dataStr = line.slice(6);
           if (eventType && dataStr) {
-            try {
-              const data = JSON.parse(dataStr);
-              handleEvent(eventType, data);
-            } catch (e) {
-              console.warn('Failed to parse SSE data:', e, dataStr);
-            }
-            eventType = '';
-            dataStr = '';
+            try { handleEvent(eventType, JSON.parse(dataStr)); }
+            catch (e) { console.warn('Bad SSE data:', e, dataStr); }
+            eventType = ''; dataStr = '';
           }
         }
       }
@@ -843,425 +1092,536 @@ async function runProtocol() {
 // Event Handlers
 // ============================================================
 function handleEvent(type, payload) {
-  if (type === 'error') {
-    setStatus('error', 'Error: ' + payload.message);
-    console.error('Server error:', payload);
-    return;
-  }
+  if (type === 'error') { setStatus('error', 'Error: ' + payload.message); console.error(payload); return; }
+  if (type === 'step_complete') handleStepComplete(payload);
+  else if (type === 'complete') handleComplete(payload.summary);
+}
 
-  if (type === 'step_complete') {
-    handleStepComplete(payload);
-  } else if (type === 'complete') {
-    handleComplete(payload.summary);
-  }
+function lightFlowStep(step) {
+  // Mark all flow-steps with data-flow-step <= step as done, current as active.
+  document.querySelectorAll('.flow-step[data-flow-step]').forEach(el => {
+    const s = parseInt(el.dataset.flowStep);
+    if (s < step) { el.classList.remove('flow-active'); el.classList.add('flow-done'); }
+    else if (s === step) { el.classList.remove('flow-done'); el.classList.add('flow-active'); }
+  });
 }
 
 function handleStepComplete(evt) {
   const step = evt.step;
-  const data = evt.data;
-  const timing = evt.timing_ms;
-
-  // Mark previous steps as done, current as active
   document.querySelectorAll('.step-item').forEach(el => {
     const s = parseInt(el.dataset.step);
-    if (s < step) { el.classList.remove('pending','active'); el.classList.add('done'); }
-    else if (s === step) { el.classList.remove('pending','done'); el.classList.add('active'); }
+    if (s < step) { el.classList.remove('pending', 'active'); el.classList.add('done'); }
+    else if (s === step) { el.classList.remove('pending', 'done'); el.classList.add('active'); }
   });
-  setStepTime(step, timing);
+  setStepTime(step, evt.timing_ms);
+  lightFlowStep(step);
 
-  // Accumulate raw data for Party A/B view
-  rawDataStore['step' + step] = data;
+  rawDataStore['step' + step] = evt.data;
+  refreshParties();
 
-  // Update data view panels if visible
-  if (dataViewVisible) {
-    updateDataViewPartyB(data);
-    updateDataViewPartyA(data);
-  }
-
-  // Handle specific step data
-  switch (step) {
-    case 1:
-      renderStep1(data);
-      break;
-    case 4:
-      renderStep4(data);
-      break;
-    case 9:
-      renderStep9(data);
-      break;
-  }
+  if (step === 1) { renderStep1(evt.data); setTimeout(() => scrollToCard('card-db'), 120); }
+  else if (step === 4) { renderStep4(evt.data); setTimeout(() => scrollToCard('card-centroids'), 120); }
+  else if (step === 9) { renderStep9(evt.data); setTimeout(() => scrollToCard('card-columns'), 120); }
 }
 
 function handleComplete(summary) {
-  // Mark all steps done
   document.querySelectorAll('.step-item').forEach(el => {
-    el.classList.remove('pending', 'active');
-    el.classList.add('done');
+    el.classList.remove('pending', 'active'); el.classList.add('done');
   });
-
+  // All flow steps done
+  document.querySelectorAll('.flow-step[data-flow-step]').forEach(el => {
+    el.classList.remove('flow-active'); el.classList.add('flow-done'); el.style.opacity = '1';
+  });
   renderTiming(summary.timing_ms);
-  renderResults(summary);
-  setStatus('done', `Complete — ${summary.accuracy.correct}/${summary.accuracy.total} correct (${summary.accuracy.percent}%)`);
+  const a = summary.accuracy;
+  const accTxt = a.total > 0 ? `${a.correct}/${a.total} correct (${a.percent}%)` : 'no labelled queries';
+  setStatus('done', 'Complete — ' + accTxt);
 
-  // Update data view with final results
-  if (dataViewVisible) {
-    const matches = summary.results.map(r =>
-      `${r.query_name.slice(0,15)}… → ${r.match_found ? '✅ 命中' : '❌ 未命中'}`
-    ).join('<br>');
-    const accStr = summary.accuracy.total > 0
-      ? `${summary.accuracy.correct}/${summary.accuracy.total} (${summary.accuracy.percent}%)`
-      : 'N/A';
-    $('data-party-a-content').innerHTML += `
-      <div class="data-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
-        <span class="data-label">最终结果</span>
-        <span class="data-value">${matches}</span>
-      </div>
-      <div class="data-row">
-        <span class="data-label">准确率</span>
-        <span class="data-value" style="color:var(--accent-green)">${accStr}</span>
-      </div>`;
-  }
+  // Wait for Step9 column animation to finish before showing Results card.
+  const waitAndShowResults = () => {
+    if (step9Timer !== null) {
+      setTimeout(waitAndShowResults, 200);
+      return;
+    }
+    renderResults(summary);
+    setTimeout(() => scrollToCard('card-results'), 120);
+  };
+  waitAndShowResults();
 }
 
 // ============================================================
-// Render: Step 1 — Database Overview
+// Auto-scroll: scroll to a card once, only if the user hasn't
+// manually scrolled within the last 2s (avoids fighting user).
+// ============================================================
+let _lastUserScroll = 0;
+document.addEventListener('DOMContentLoaded', () => {
+  const main = document.querySelector('.main');
+  if (main) main.addEventListener('scroll', () => { _lastUserScroll = Date.now(); }, { passive: true });
+});
+
+const STEP_CARD_MAP = { 1: 'card-db', 4: 'card-centroids', 9: 'card-columns' };
+
+function scrollToCard(cardId) {
+  if (Date.now() - _lastUserScroll < 2000) return; // user recently scrolled — skip
+  const el = document.getElementById(cardId);
+  if (!el || el.style.display === 'none') return;
+  const main = document.querySelector('.main');
+  const banner = document.getElementById('flow-banner');
+  const bannerH = banner ? banner.offsetHeight : 0;
+  const offset = el.offsetTop - bannerH - 16;
+  main.scrollTo({ top: offset, behavior: 'smooth' });
+}
+
+// ============================================================
+// Chart theme
+// ============================================================
+const AXIS = '#a39e92';
+const GRID = 'rgba(52,50,43,0.55)';
+
+// ============================================================
+// Step 1 — DB & clustering
 // ============================================================
 function renderStep1(data) {
   $('card-db').style.display = '';
-  const clusterSizes = data.cluster_sizes || [];
-  const avgSize = clusterSizes.length > 0
-    ? (clusterSizes.reduce((a,b)=>a+b,0) / clusterSizes.length).toFixed(1)
-    : '-';
-  const minSize = clusterSizes.length > 0 ? Math.min(...clusterSizes) : '-';
-  const maxSize = clusterSizes.length > 0 ? Math.max(...clusterSizes) : '-';
+  const sizes = data.cluster_sizes || [];
+  const avg = sizes.length ? (sizes.reduce((a, b) => a + b, 0) / sizes.length).toFixed(1) : '–';
+  const mn = sizes.length ? Math.min(...sizes) : '–';
+  const mx = sizes.length ? Math.max(...sizes) : '–';
 
   $('db-stats').innerHTML = `
-    <div class="db-stat">
-      <div class="stat-value" style="color:var(--accent-cyan)">${data.db_size}</div>
-      <div class="stat-label">Database Records</div>
-    </div>
-    <div class="db-stat">
-      <div class="stat-value" style="color:var(--accent-purple)">${data.k}</div>
-      <div class="stat-label">Clusters (K)</div>
-    </div>
-    <div class="db-stat">
-      <div class="stat-value" style="color:var(--accent-yellow)">${minSize}–${maxSize}</div>
-      <div class="stat-label">Cluster Size Range (avg ${avgSize})</div>
-    </div>
-    <div class="db-stat">
-      <div class="stat-value" style="color:var(--accent-green)">${data.signature_dim} / ${data.match_dim}</div>
-      <div class="stat-label">Signature Dims (cluster/match)</div>
-    </div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-cyan)">${data.db_size}</div><div class="l">Database Records</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-purple)">${data.k}</div><div class="l">Clusters (K)</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-yellow)">${mn}–${mx}</div><div class="l">Cluster Size (avg ${avg})</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-green)">${data.signature_dim}/${data.match_dim}</div><div class="l">Sig Dims (cluster/match)</div></div>
   `;
 
-  // Also render cluster size distribution as a small bar chart
-  if (clusterSizes.length > 0) {
+  if (sizes.length) {
     destroyChart('clusterDist');
-    const canvas = document.createElement('canvas');
-    canvas.id = 'chart-cluster-dist';
-    const container = $('card-db');
-    // Remove old chart container if exists
-    const old = container.querySelector('.cluster-chart-wrap');
-    if (old) old.remove();
-    const wrap = document.createElement('div');
-    wrap.className = 'cluster-chart-wrap';
-    wrap.style.cssText = 'height:150px;margin-top:12px';
-    wrap.appendChild(canvas);
-    container.appendChild(wrap);
-
-    const ctx = canvas.getContext('2d');
+    const ctx = $('chart-cluster-dist').getContext('2d');
     charts['clusterDist'] = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: clusterSizes.map((_,i) => `C${i}`),
+        labels: sizes.map((_, i) => `C${i}`),
         datasets: [{
-          label: 'Cluster Size',
-          data: clusterSizes,
-          backgroundColor: clusterSizes.map((_,i) =>
-            `hsla(${i * 360 / clusterSizes.length}, 70%, 60%, 0.7)`
-          ),
-          borderColor: clusterSizes.map((_,i) =>
-            `hsla(${i * 360 / clusterSizes.length}, 70%, 60%, 1)`
-          ),
-          borderWidth: 1,
+          label: 'Names per cluster',
+          data: sizes,
+          backgroundColor: sizes.map((_, i) => `hsla(${i * 360 / sizes.length}, 65%, 58%, 0.7)`),
+          borderColor: sizes.map((_, i) => `hsla(${i * 360 / sizes.length}, 65%, 58%, 1)`),
+          borderWidth: 1, borderRadius: 3,
         }]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          title: { display: true, text: 'Cluster Size Distribution', color: '#8b90a5', font: { size: 11 } }
+          title: { display: true, text: 'Cluster Size Distribution', color: AXIS, font: { size: 11 } },
+          tooltip: { callbacks: { label: c => `${c.raw} names` } }
         },
         scales: {
-          x: { ticks: { color: '#8b90a5', font: { size: 9 } }, grid: { display: false } },
-          y: { ticks: { color: '#8b90a5', font: { size: 9 } }, grid: { color: 'rgba(45,48,72,0.4)' } }
+          x: { ticks: { color: AXIS, font: { size: 9 } }, grid: { display: false } },
+          y: { ticks: { color: AXIS, font: { size: 9 } }, grid: { color: GRID }, beginAtZero: true }
         }
       }
     });
   }
+
+  renderCloud3D(data.points_3d || [], data.point_clusters || [], data.k || 1);
 }
 
 // ============================================================
-// Render: Step 4 — Centroid Similarity Scores
+// Step 1 — 3D PCA point cloud (Three.js)
 // ============================================================
+let cloud = null; // { renderer, scene, camera, controls, raf }
+
+function disposeCloud() {
+  if (!cloud) return;
+  cancelAnimationFrame(cloud.raf);
+  cloud.controls && cloud.controls.dispose();
+  cloud.scene.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) o.material.dispose();
+  });
+  cloud.renderer.dispose();
+  const el = $('cloud-3d');
+  if (el && cloud.renderer.domElement.parentNode === el) el.removeChild(cloud.renderer.domElement);
+  cloud = null;
+}
+
+function clusterColor(i, k) {
+  // Match the bar-chart palette: hsl wheel by cluster index.
+  const c = new THREE.Color();
+  c.setHSL((i / Math.max(k, 1)) % 1, 0.62, 0.58);
+  return c;
+}
+
+function renderCloud3D(points, clusterIds, k) {
+  disposeCloud();
+  if (typeof THREE === 'undefined' || !points.length) return;
+  const el = $('cloud-3d');
+  const w = el.clientWidth || 400, h = el.clientHeight || 200;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
+  camera.position.set(0, 0, 3.2);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setSize(w, h);
+  el.appendChild(renderer.domElement);
+
+  // Geometry: one vertex per name, coloured by cluster.
+  const positions = new Float32Array(points.length * 3);
+  const colors = new Float32Array(points.length * 3);
+  for (let i = 0; i < points.length; i++) {
+    positions[i * 3] = points[i][0];
+    positions[i * 3 + 1] = points[i][1];
+    positions[i * 3 + 2] = points[i][2];
+    const col = clusterColor(clusterIds[i] || 0, k);
+    colors[i * 3] = col.r; colors[i * 3 + 1] = col.g; colors[i * 3 + 2] = col.b;
+  }
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  // Circle sprite for round points.
+  const circleCanvas = document.createElement('canvas');
+  circleCanvas.width = circleCanvas.height = 64;
+  const cc = circleCanvas.getContext('2d');
+  cc.beginPath(); cc.arc(32, 32, 30, 0, Math.PI * 2); cc.fillStyle = '#fff'; cc.fill();
+  const circleTex = new THREE.CanvasTexture(circleCanvas);
+  const mat = new THREE.PointsMaterial({
+    size: 0.07, vertexColors: true, sizeAttenuation: true,
+    map: circleTex, alphaTest: 0.5, transparent: true,
+  });
+  const cloudPoints = new THREE.Points(geom, mat);
+  scene.add(cloudPoints);
+
+  // Infinite white axes through the origin — bidirectional lines, no arrowheads.
+  const axes = new THREE.Group();
+  const AL = 2.2; // half-length (extends ±AL in each axis direction)
+  const axisMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22 });
+  [
+    [new THREE.Vector3(-AL,0,0), new THREE.Vector3(AL,0,0)],
+    [new THREE.Vector3(0,-AL,0), new THREE.Vector3(0,AL,0)],
+    [new THREE.Vector3(0,0,-AL), new THREE.Vector3(0,0,AL)],
+  ].forEach(([a, b]) => {
+    const g = new THREE.BufferGeometry().setFromPoints([a, b]);
+    axes.add(new THREE.Line(g, axisMat));
+  });
+  scene.add(axes);
+
+  let controls = null;
+  if (typeof THREE.OrbitControls !== 'undefined') {
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enablePan = false;
+    controls.minDistance = 1.8;
+    controls.maxDistance = 6;
+    controls.autoRotate = true;        // slow spin around the vertical (Z) axis
+    controls.autoRotateSpeed = 0.8;
+  }
+
+  cloud = { renderer, scene, camera, controls, raf: 0 };
+
+  const animate = () => {
+    cloud.raf = requestAnimationFrame(animate);
+    if (controls) controls.update();
+    else { cloudPoints.rotation.y += 0.003; axes.rotation.y += 0.003; }
+    renderer.render(scene, camera);
+  };
+  animate();
+}
+
+// Keep the cloud sized to its container.
+window.addEventListener('resize', () => {
+  if (!cloud) return;
+  const el = $('cloud-3d');
+  const w = el.clientWidth || 400, h = el.clientHeight || 200;
+  cloud.camera.aspect = w / h;
+  cloud.camera.updateProjectionMatrix();
+  cloud.renderer.setSize(w, h);
+});
+
+// ============================================================
+// Step 4 — query × cluster similarity heatmap
+// ============================================================
+// Sequential RED ramp: dark (low similarity) → bright red (high similarity).
+function heatColor(t) {
+  const stops = [
+    [0.00, [38, 22, 26]],    // near-black maroon
+    [0.30, [90, 26, 32]],    // deep red
+    [0.60, [168, 38, 42]],   // mid red
+    [0.85, [228, 64, 58]],   // bright red
+    [1.00, [255, 120, 96]],  // hot red-orange highlight
+  ];
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 1; i < stops.length; i++) {
+    if (t <= stops[i][0]) {
+      const [t0, c0] = stops[i - 1], [t1, c1] = stops[i];
+      const f = (t - t0) / (t1 - t0 || 1);
+      const c = c0.map((v, j) => Math.round(v + (c1[j] - v) * f));
+      return `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+  }
+  return 'rgb(255,120,96)';
+}
+
 function renderStep4(data) {
   $('card-centroids').style.display = '';
   const scores = data.centroid_scores || [];
-  if (scores.length === 0) return;
+  const K = data.num_centroids || (scores[0] ? scores[0].scores.length : 0);
+  if (!scores.length || !K) return;
 
-  destroyChart('centroids');
+  // Global min/max for a shared colour scale across all cells.
+  let lo = Infinity, hi = -Infinity;
+  scores.forEach(q => q.scores.forEach(s => { if (s < lo) lo = s; if (s > hi) hi = s; }));
+  const span = (hi - lo) || 1;
+  const norm = v => (v - lo) / span;
 
-  const datasets = scores.map((q, qi) => ({
-    label: q.query_name.length > 22 ? q.query_name.slice(0,20) + '…' : q.query_name,
-    data: q.scores,
-    borderColor: `hsl(${qi * 280 / scores.length + 200}, 70%, 65%)`,
-    backgroundColor: `hsla(${qi * 280 / scores.length + 200}, 70%, 65%, 0.1)`,
-    borderWidth: 2,
-    pointRadius: 4,
-    pointHoverRadius: 7,
-    tension: 0.2,
-    spanGaps: true,
-  }));
+  // Grid template: 1 label column + K cluster columns.
+  const grid = $('heatmap-centroids');
+  let html = `<div class="heatmap-grid" style="grid-template-columns:minmax(150px,max-content) repeat(${K}, minmax(34px, 1fr))">`;
 
-  const ctx = $('chart-centroids').getContext('2d');
-  charts['centroids'] = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: Array.from({length: data.num_centroids}, (_,i) => `C${i}`),
-      datasets: datasets,
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: '#8b90a5', font: { size: 10 }, usePointStyle: true, padding: 15 }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) {
-              const q = scores[ctx.datasetIndex];
-              const highlight = ctx.dataIndex === q.selected_cluster ? ' ★ SELECTED' : '';
-              return `Score: ${ctx.raw.toFixed(4)}${highlight}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: { ticks: { color: '#8b90a5', font: { size: 9 } }, grid: { display: false } },
-        y: {
-          ticks: { color: '#8b90a5', font: { size: 9 } },
-          grid: { color: 'rgba(45,48,72,0.4)' },
-          title: { display: true, text: 'Cosine Similarity', color: '#8b90a5' }
-        }
+  // Header row
+  html += `<div class="heatmap-corner"></div>`;
+  for (let c = 0; c < K; c++) html += `<div class="heatmap-colhead">C${c}</div>`;
+
+  // Data rows
+  // A row is a "hit" if expected_label !== false (i.e. positive or fuzzy query).
+  // Miss/absent rows: greyscale, no selected-cluster marker.
+  scores.forEach(q => {
+    const isFuzzy = q.is_fuzzy;
+    const isNeg = q.expected_label === false;
+    const isHitRow = !isNeg; // show selected cluster only for positive/fuzzy rows
+    let tag = '';
+    if (isFuzzy) tag = `<span class="tag-fuzzy">fuzzy</span>`;
+    else if (isNeg) tag = `<span class="tag-neg">absent</span>`;
+    const name = q.query_name.length > 22 ? q.query_name.slice(0, 20) + '…' : q.query_name;
+    html += `<div class="heatmap-rowhead" title="${esc(q.query_name)}">${tag}<span>${esc(name)}</span></div>`;
+    q.scores.forEach((s, ci) => {
+      const bg = heatColor(norm(s));
+      let cls = 'heatmap-cell';
+      if (!isHitRow) {
+        cls += ' grey'; // greyscale for miss/absent rows, no selection marker
+      } else if (ci === q.selected_cluster) {
+        cls += ' selected-hit'; // green outline + checkmark
       }
-    }
+      html += `<div class="${cls}" style="background:${bg}" title="${esc(q.query_name)} · C${ci} = ${s.toFixed(4)}"></div>`;
+    });
   });
+  html += `</div>`;
+  grid.innerHTML = html;
 
-  // Annotate selected clusters
-  const legendHtml = scores.map((q, i) => {
-    const color = `hsl(${i * 280 / scores.length + 200}, 70%, 65%)`;
-    return `<span style="display:flex;align-items:center;gap:6px">
-      <span style="width:10px;height:10px;border-radius:50%;background:${color}"></span>
-      <span style="font-size:0.78rem">${q.query_name.slice(0,18)}</span>
-      <span style="font-size:0.7rem;color:var(--accent-yellow)">→ Cluster ${q.selected_cluster} (${q.scores[q.selected_cluster].toFixed(3)})</span>
-    </span>`;
-  }).join('');
-  $('centroid-legend').innerHTML = legendHtml;
+  $('heatmap-legend').innerHTML =
+    `<span>low</span><span class="scale"></span><span>high similarity</span>` +
+    `<span style="margin-left:14px;color:var(--accent-green)">✓ = selected cluster (hit rows only)</span>`;
 }
 
 // ============================================================
-// Render: Step 9 — Column Scores
+// Step 9 — column scores
 // ============================================================
+// Step 9 — per-column hit-status grid, revealed one query at a time.
+// Only the SIGN of each decrypted score is meaningful (the random per-column
+// mask scrambles the magnitude), so we encode state, not value.
+let step9Timer = null;
+
+function buildStep9Row(q, maxCols, earlyStop) {
+  // Returns the HTML for one query's row (rowhead + cells + outcome).
+  const isFuzzy = q.is_fuzzy;
+  const isNeg = q.expected_label === false;
+  let tag = '';
+  if (isFuzzy) tag = `<span class="tag-fuzzy">fuzzy</span>`;
+  else if (isNeg) tag = `<span class="tag-neg">absent</span>`;
+  const name = q.query_name.length > 22 ? q.query_name.slice(0, 20) + '…' : q.query_name;
+  let html = `<div class="match-rowhead mrow-in" title="${esc(q.query_name)}">${tag}<span class="rh-name">${esc(name)}</span></div>`;
+
+  const fp = q.first_positive_column;
+  for (let ci = 0; ci < maxCols; ci++) {
+    if (ci >= q.column_scores.length) { html += `<div class="mrow-in"></div>`; continue; }
+    const v = q.column_scores[ci];
+    let cls, tip;
+    if (ci === fp) { cls = 'hit'; tip = `Col ${ci}: first positive → HIT`; }
+    else if (earlyStop && fp >= 0 && ci > fp) { cls = 'skip'; tip = `Col ${ci}: skipped (early-stop after hit)`; }
+    else if (v > 0) { cls = 'pos'; tip = `Col ${ci}: positive (beats τ)`; }
+    else { cls = 'neg'; tip = `Col ${ci}: below τ`; }
+    html += `<div class="mcell mrow-in ${cls}" title="${esc(q.query_name)} · ${tip}"></div>`;
+  }
+
+  let summary;
+  if (q.match_found) summary = `<span class="hit">✓ hit at col ${fp}</span>`;
+  else summary = `<span class="miss">✗ no match (${q.column_scores.length} cols checked)</span>`;
+  html += `<div class="match-summary mrow-in">${summary}</div>`;
+  return html;
+}
+
 function renderStep9(data) {
   $('card-columns').style.display = '';
-  const colScores = data.column_scores || [];
-  if (colScores.length === 0) return;
+  const cols = data.column_scores || [];
+  if (step9Timer) { clearInterval(step9Timer); step9Timer = null; }
+  if (!cols.length) { $('match-grid').innerHTML = ''; $('match-legend').innerHTML = ''; return; }
+  const earlyStop = data.early_stop !== false;
+  const maxCols = Math.max(...cols.map(q => q.column_scores.length), 1);
+  const grid = $('match-grid');
 
-  destroyChart('columns');
-
-  const maxCols = Math.max(...colScores.map(q => q.column_scores.length), 1);
-  const datasets = colScores.map((q, qi) => {
-    const hue = q.match_found ? 140 : 0; // green hue if match, red if not
-    const scores = [...q.column_scores];
-    // Zero-pad to same length
-    while (scores.length < maxCols) scores.push(null);
-    return {
-      label: q.query_name.length > 18 ? q.query_name.slice(0,16) + '…' : q.query_name,
-      data: scores,
-      backgroundColor: scores.map((v, ci) => {
-        if (v === null) return 'transparent';
-        if (ci === q.first_positive_column) return 'rgba(74,222,128,0.9)';
-        if (v > 0) return `hsla(${hue}, 70%, 55%, 0.5)`;
-        return `hsla(${hue}, 20%, 40%, 0.3)`;
-      }),
-      borderColor: `hsl(${hue}, 70%, 55%)`,
-      borderWidth: 1,
-    };
-  });
-
-  const ctx = $('chart-columns').getContext('2d');
-  charts['columns'] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: Array.from({length: maxCols}, (_,i) => `Col ${i}`),
-      datasets: datasets,
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: '#8b90a5', font: { size: 10 }, usePointStyle: true, padding: 15 }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) {
-              if (ctx.raw === null) return '';
-              const q = colScores[ctx.datasetIndex];
-              let suffix = '';
-              if (ctx.dataIndex === q.first_positive_column) suffix = ' ★ FIRST MATCH';
-              else if (ctx.raw > 0) suffix = ' (positive)';
-              return `Score: ${ctx.raw.toFixed(6)}${suffix}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: { ticks: { color: '#8b90a5', font: { size: 8 } }, grid: { display: false }, title: { display: true, text: 'Column Index', color: '#8b90a5' } },
-        y: { ticks: { color: '#8b90a5', font: { size: 9 } }, grid: { color: 'rgba(45,48,72,0.4)' }, title: { display: true, text: 'Decrypted Score (masked)', color: '#8b90a5' } }
-      }
+  // 1) Build full scaffold: header + all rows with rowhead + placeholder cells + outcome placeholder.
+  //    Cells start as empty divs; they get replaced column-by-column in step 2.
+  let html = `<div class="match-grid" style="grid-template-columns:minmax(150px,max-content) repeat(${maxCols}, minmax(22px, 1fr)) minmax(120px,max-content)">`;
+  // header
+  html += `<div class="match-colhead"></div>`;
+  for (let c = 0; c < maxCols; c++) html += `<div class="match-colhead">${c}</div>`;
+  html += `<div class="match-colhead" style="text-align:left;padding-left:10px">Outcome</div>`;
+  // rows
+  cols.forEach((q, qi) => {
+    const isFuzzy = q.is_fuzzy, isNeg = q.expected_label === false;
+    let tag = isFuzzy ? `<span class="tag-fuzzy">fuzzy</span>` : isNeg ? `<span class="tag-neg">absent</span>` : '';
+    const name = q.query_name.length > 22 ? q.query_name.slice(0, 20) + '…' : q.query_name;
+    html += `<div class="match-rowhead" title="${esc(q.query_name)}">${tag}<span class="rh-name">${esc(name)}</span></div>`;
+    for (let c = 0; c < maxCols; c++) {
+      html += `<div class="mcell-ph" data-qi="${qi}" data-ci="${c}"></div>`;
     }
+    html += `<div class="match-summary" data-qi="${qi}"></div>`;
   });
+  html += `</div>`;
+  grid.innerHTML = html;
+
+  // 2) Stream: reveal one column at a time (left → right), each ~80ms.
+  let colIdx = 0;
+  const revealCol = () => {
+    if (colIdx >= maxCols) { clearInterval(step9Timer); step9Timer = null; return; }
+    const c = colIdx;
+    cols.forEach((q, qi) => {
+      const ph = grid.querySelector(`.mcell-ph[data-qi="${qi}"][data-ci="${c}"]`);
+      if (!ph) return;
+      if (c >= q.column_scores.length) { ph.className = ''; return; }
+      const v = q.column_scores[c];
+      const fp = q.first_positive_column;
+      let cls;
+      if (c === fp) cls = 'mcell hit';
+      else if (earlyStop && fp >= 0 && c > fp) cls = 'mcell skip';
+      else if (v > 0) cls = 'mcell pos';
+      else cls = 'mcell neg';
+      ph.className = cls;
+      ph.title = `${q.query_name} · Col ${c}`;
+      // reveal outcome after last column of this row is processed
+      if (c === q.column_scores.length - 1 || c === maxCols - 1) {
+        const sumEl = grid.querySelector(`.match-summary[data-qi="${qi}"]`);
+        if (sumEl && !sumEl.dataset.filled) {
+          sumEl.dataset.filled = '1';
+          sumEl.innerHTML = q.match_found
+            ? `<span class="hit">✓ hit at col ${fp}</span>`
+            : `<span class="miss">✗ no match (${q.column_scores.length} cols checked)</span>`;
+        }
+      }
+    });
+    colIdx++;
+  };
+  revealCol(); // col 0 immediately
+  step9Timer = setInterval(revealCol, 160);
+
+  $('match-legend').innerHTML =
+    `<span class="li"><span class="sw neg"></span> below τ</span>` +
+    `<span class="li"><span class="sw pos"></span> positive</span>` +
+    `<span class="li"><span class="sw hit"></span> first match (hit)</span>` +
+    (earlyStop ? `<span class="li"><span class="sw skip"></span> skipped by early-stop</span>` : '');
 }
 
 // ============================================================
-// Render: Timing Pie Chart
+// Timing doughnut
 // ============================================================
-function renderTiming(timing) {
+function renderTiming(t) {
+  // card-timing is the .step9-aside inside card-columns; show it alongside the match grid
+  $('card-columns').style.display = '';
   $('card-timing').style.display = '';
   destroyChart('timing');
+  const labels = ['S1 Cluster', 'S2 Encrypt', 'S3 Centroids', 'S4 Select', 'S6 Columns', 'S9 Judge'];
+  const values = [t.step1_clustering, t.step2_encrypt, t.step3_compare_centroids, t.step4_select_cluster, t.step6_column_matching, t.step9_check_sim];
+  const colors = ['rgba(87,201,138,0.85)', 'rgba(107,161,232,0.85)', 'rgba(87,201,138,0.6)', 'rgba(107,161,232,0.6)', 'rgba(87,201,138,0.42)', 'rgba(107,161,232,0.42)'];
 
-  const labels = [
-    'Step1 Clustering',
-    'Step2 Encrypt',
-    'Step3 Centroids',
-    'Step4 Select',
-    'Step6 Columns',
-    'Step9 Judge',
-  ];
-  const values = [
-    timing.step1_clustering,
-    timing.step2_encrypt,
-    timing.step3_compare_centroids,
-    timing.step4_select_cluster,
-    timing.step6_column_matching,
-    timing.step9_check_sim,
-  ];
-  const colors = [
-    'rgba(74,222,128,0.8)',   // B - green
-    'rgba(91,156,245,0.8)',   // A - blue
-    'rgba(74,222,128,0.6)',   // B
-    'rgba(91,156,245,0.6)',   // A
-    'rgba(74,222,128,0.5)',   // B
-    'rgba(91,156,245,0.5)',   // A
-  ];
-
-  const ctx = $('chart-timing').getContext('2d');
-  charts['timing'] = new Chart(ctx, {
+  charts['timing'] = new Chart($('chart-timing').getContext('2d'), {
     type: 'doughnut',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: values,
-        backgroundColor: colors,
-        borderColor: 'rgba(28,30,46,1)',
-        borderWidth: 3,
-      }]
-    },
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: '#17181c', borderWidth: 3 }] },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false, cutout: '58%',
       plugins: {
         legend: {
           position: 'bottom',
           labels: {
-            color: '#8b90a5',
-            font: { size: 10, weight: '500' },
-            usePointStyle: true,
-            padding: 12,
-            generateLabels: function(chart) {
-              const data = chart.data;
-              return data.labels.map((label, i) => ({
-                text: `${label}: ${data.datasets[0].data[i].toFixed(0)}ms`,
-                fillStyle: data.datasets[0].backgroundColor[i],
-                strokeStyle: data.datasets[0].backgroundColor[i],
-                pointStyle: 'circle',
-                index: i,
-                fontColor: '#8b90a5',
-              }));
-            }
+            color: AXIS, font: { size: 10 }, usePointStyle: true, padding: 10,
+            generateLabels: chart => chart.data.labels.map((label, i) => ({
+              text: `${label}: ${chart.data.datasets[0].data[i].toFixed(0)}ms`,
+              fillStyle: chart.data.datasets[0].backgroundColor[i],
+              strokeStyle: chart.data.datasets[0].backgroundColor[i],
+              pointStyle: 'circle', index: i, fontColor: AXIS,
+            }))
           }
         },
-        title: {
-          display: true,
-          text: `Total: ${timing.total.toFixed(0)}ms  |  Offline: ${timing.offline.toFixed(0)}ms`,
-          color: '#8b90a5',
-          font: { size: 11 }
-        }
+        title: { display: true, text: `Total ${t.total.toFixed(0)}ms · Offline ${t.offline.toFixed(0)}ms`, color: AXIS, font: { size: 11 } }
       }
     }
   });
 }
 
 // ============================================================
-// Render: Results Table
+// Results table
 // ============================================================
+function buildResultRow(r, delay) {
+  const isNeg = r.expected_label === false;
+  const matchTxt = r.match_found ? 'YES' : 'NO';
+  const matchCls = r.match_found ? 'match-yes' : 'match-no';
+  const correct = r.is_correct;
+  const mark = correct === true ? '✓' : correct === false ? '✗' : '–';
+  const markCls = correct === true ? 'correct-mark' : correct === false ? 'wrong-mark' : '';
+
+  let hitCell;
+  if (isNeg) {
+    hitCell = r.match_found
+      ? `<span class="hit-name bad">${esc(r.hit_name)} (should be none)</span>`
+      : `<span class="hit-name ok">— none —</span>`;
+  } else {
+    const want = r.expected_hit_name || '', got = r.hit_name || '';
+    if (!r.match_found) hitCell = `<span class="hit-name bad">no hit</span>`;
+    else if (got === want) hitCell = `<span class="hit-name ok">${esc(got)}</span>`;
+    else hitCell = `<span class="hit-name bad">${esc(got)}</span>`;
+  }
+
+  let tag = '';
+  if (r.is_fuzzy) tag = `<span class="tag-fuzzy">fuzzy</span>`;
+  else if (isNeg) tag = `<span class="tag-neg">absent</span>`;
+
+  const rowCls = (r.is_fuzzy ? 'fuzzy-row' : isNeg ? 'neg-row' : '') + ' result-row-in';
+  const expectTxt = isNeg ? '— none —' : esc(r.expected_hit_name || '');
+  const style = `animation-delay:${delay}ms`;
+
+  return `<tr class="${rowCls}" style="${style}">
+    <td>${esc(r.query_name)}${tag}</td>
+    <td class="${matchCls}">${matchTxt}</td>
+    <td><span class="hit-name">${expectTxt}</span></td>
+    <td>${hitCell}</td>
+    <td class="${markCls}" style="text-align:center">${mark}</td>
+    <td style="color:var(--text-dim)">C${r.selected_cluster}</td>
+  </tr>`;
+}
+
 function renderResults(summary) {
   $('card-results').style.display = '';
   const results = summary.results || [];
-  const acc = summary.accuracy;
+  const a = summary.accuracy;
 
-  let badgeClass = 'poor';
-  if (acc.percent >= 100) badgeClass = 'perfect';
-  else if (acc.percent >= 80) badgeClass = 'good';
+  let cls = 'poor';
+  if (a.percent >= 100) cls = 'perfect';
+  else if (a.percent >= 80) cls = 'good';
+  $('accuracy-badge').innerHTML = a.total > 0
+    ? `<span class="accuracy-badge ${cls}">Accuracy ${a.correct}/${a.total} = ${a.percent}%</span>`
+    : `<span class="accuracy-badge good">No labelled queries</span>`;
 
-  $('accuracy-badge').innerHTML = `
-    <span class="accuracy-badge ${badgeClass}">
-      Accuracy: ${acc.correct}/${acc.total} = ${acc.percent}%
-    </span>
-  `;
-
-  const rows = results.map(r => {
-    const matchClass = r.match_found ? 'match-yes' : 'match-no';
-    const label = r.expected_label === true ? 'Y' : r.expected_label === false ? 'N' : '?';
-    const correct = r.expected_label !== null && r.expected_label !== undefined
-      ? (r.expected_label === r.match_found)
-      : null;
-    const mark = correct === true ? '✓' : correct === false ? '✗' : '';
-    const markClass = correct === true ? 'correct-mark' : correct === false ? 'wrong-mark' : '';
-    return `<tr>
-      <td>${r.query_name || ''}</td>
-      <td>${label}</td>
-      <td class="${matchClass}">${r.match_found ? 'YES' : 'NO'}</td>
-      <td class="${markClass}">${mark}</td>
-      <td>Cluster ${r.selected_cluster}</td>
-      <td>${r.checked_columns} cols</td>
-      <td style="font-size:0.78rem;color:var(--text-dim)">${r.hit_name || '—'}</td>
-    </tr>`;
-  }).join('');
-
+  // Build table with staggered animation-delay per row (80ms apart).
+  const rows = results.map((r, i) => buildResultRow(r, i * 80)).join('');
   $('results-table').innerHTML = `
     <thead><tr>
-      <th>Query Name</th><th>Label</th><th>Prediction</th><th></th>
-      <th>Cluster</th><th>Checked</th><th>Hit Name</th>
+      <th>Query</th><th>Match</th><th>Expected Name</th><th>Hit Name</th>
+      <th style="text-align:center">Correct</th><th>Cluster</th>
     </tr></thead>
-    <tbody>${rows}</tbody>
-  `;
+    <tbody>${rows}</tbody>`;
 }
 </script>
 </body>

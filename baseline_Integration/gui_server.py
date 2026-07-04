@@ -9,6 +9,15 @@
 """
 
 from __future__ import annotations
+from config.params import SIMILARITY_THRESHOLD
+from evaluation.dataset_loader import load_dataset
+from scripts.demo_streaming import (
+    StreamingDemoEngineV2,
+    QueryState,
+    build_demo_queries,
+)
+import numpy as np
+from flask import Flask, request, jsonify, Response, send_from_directory
 
 import json
 import sys
@@ -22,16 +31,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from flask import Flask, request, jsonify, Response, send_from_directory
-import numpy as np
-
-from scripts.demo_streaming_v2 import (
-    StreamingDemoEngineV2,
-    QueryState,
-    parse_args as demo_parse_args,
-)
-from evaluation.dataset_loader import load_dataset
-from config.params import SIMILARITY_THRESHOLD
 
 # ---------------------------------------------------------------------------
 # Flask app setup
@@ -74,8 +73,10 @@ def api_run():
     """
     data = request.get_json(silent=True) or {}
 
+    # query_mode: "demo"（默认演示集，与 CLI 一致）| "indices" | "text"
+    query_mode = data.get("query_mode", "demo")
     query_text = data.get("query", None)
-    query_indices = data.get("query_indices", [2, 7, 26, 49, 100])
+    query_indices = data.get("query_indices", [])
     db_limit = data.get("db_limit", 100)
     k = data.get("k", 10)
     tau = data.get("tau", SIMILARITY_THRESHOLD)
@@ -90,7 +91,7 @@ def api_run():
             names_b = list(names_b_all[:db_limit])
 
             # Build queries
-            if query_text:
+            if query_mode == "text" and query_text:
                 queries = [
                     QueryState(
                         query_name=query_text,
@@ -98,7 +99,7 @@ def api_run():
                         expected_label=None,
                     )
                 ]
-            else:
+            elif query_mode == "indices" and query_indices:
                 queries = [
                     QueryState(
                         query_name=names_a[i],
@@ -108,6 +109,9 @@ def api_run():
                     for i in query_indices
                     if 0 <= i < len(names_a)
                 ]
+            else:
+                # 默认：与 CLI `python scripts/demo_streaming.py` 完全一致的演示集
+                queries = build_demo_queries(names_a, list(labels))
 
             if not queries:
                 yield _sse("error", {"message": "No valid queries."})
@@ -184,10 +188,14 @@ def _sse(event: str, data: dict) -> str:
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="GUI server for fuzzy matching demo")
+    parser = argparse.ArgumentParser(
+        description="GUI server for fuzzy matching demo")
     parser.add_argument("--host", default="127.0.0.1", help="Bind host")
     parser.add_argument("--port", type=int, default=5000, help="Bind port")
-    parser.add_argument("--debug", action="store_true", help="Flask debug mode")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Flask debug mode")
     args = parser.parse_args()
 
     print(f"""
