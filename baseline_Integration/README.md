@@ -10,14 +10,17 @@
 - 单查询协议链路已跑通：B 侧建库、MinHash、归一化、聚类、A 侧查询加密、质心匹配、cluster 选择、列式匹配、最终判断。
 - NCVR 10K 子集已接入：`data/ncvr_10k/` 包含 10000 条 B 侧库记录和 200 条查询。
 - 评估脚本已支持输出 `precision`、`recall`、`f1`、`accuracy`、混淆计数和 PNG 可视化图。
-- 当前测试通过：`39 passed`。
+- 二维 query×candidate SIMD batching 已实现：`m=200` 时每个密文同时承载 200 条查询和 20 个候选列。
+- batch 生产路径强制 A→B bytes 序列化边界，B 侧密文只绑定公开 context。
+- 生产批处理入口已从 483 次逐列同态核切换为 25 个 candidate tiles，全量回归通过。
 
-未对齐论文性能的两个核心点：
+当前实测（2026-07-28，本机）：
 
-1. **多查询 HE batching 尚未实现。** 当前评估是 single-query serial baseline，200 条查询会串行跑 200 次。论文性能依赖 TenSEAL/CKKS batching，把多个 query 打包到密文 slots 中，因此 query 数增加时成本只小幅上升。
-2. **论文级 packed 通信/计算布局尚未实现。** 当前主要使用同进程 TenSEAL 对象传递和 correctness-first 的列式匹配；还没有严格复现论文中面向通信量统计的 packed ciphertext layout、bytes 序列化边界和 column-wise batch 返回格式。
+1. 合成固定尺寸 `m=200, k=50, L=483` 完整 HE 链路为 `79.134s`，R1/R2 严格输出 `3/25` 个密文。
+2. 真实 NCVR 10K、200-query、关闭 early-stop 的 `online_total=144.421s`，相对旧 45min 基准约 `18.7x`。
+3. 真实评估结果为 `precision=0.9804`、`recall=1.0`、`F1=0.9901`、`accuracy=0.99`。
 
-因此，当前结果说明“真实数据 + 协议链路 + 指标评估已完成”，但不能复现论文的 1000 queries / 10K records 约 100 秒性能。
+以上是当前 Windows/TenSEAL/Python 实现的本机数据，不等同于论文运行环境的性能复现。
 
 ## 目录结构
 
@@ -106,7 +109,13 @@ artifacts/demo/ncvr_matches/demo_ncvr_matches.csv
 
 ## 跑 10K 指标与可视化
 
-全量运行：
+全量运行 (二维 query×candidate SIMD Batching 模式)：
+
+```powershell
+python scripts/evaluate_ncvr_10k.py --k 50 --query-limit 200 --db-limit 10000 --batch-size 200 --output-dir artifacts/evaluation/ncvr_10k_batch200
+```
+
+默认串行运行：
 
 ```powershell
 python scripts/evaluate_ncvr_10k.py
@@ -119,8 +128,10 @@ B-side records = 10000
 queries        = 200
 k              = 50
 tau            = 0.9
+batch_size     = 0 (可设 1..4096 启用二维 tiled SIMD 批处理)
 HE path        = real TenSEAL path, not mock
 ```
+
 
 输出目录：
 
@@ -160,7 +171,7 @@ python scripts/evaluate_ncvr_10k.py --db-limit 100 --query-limit 10 --k 10 --out
 python scripts/evaluate_ncvr_10k.py --k 0 --k-mode sqrt --output-dir artifacts/evaluation/ncvr_10k_sqrt
 ```
 
-注意：全量 200 查询当前是串行 HE baseline，可能需要数分钟。该耗时不代表论文 batching 性能。
+注意：本机全量 200 查询、关闭 early-stop 的实测在线耗时为 `144.421s`；其他 CPU、TenSEAL 版本和系统负载下会变动。
 
 ## 最小端到端调用
 
@@ -182,7 +193,6 @@ print(result.match_result.catch)
 
 优先级建议：
 
-1. 实现多查询 HE batching，让多个 query 共享 packed ciphertext 计算。
-2. 对齐论文 packed ciphertext layout、bytes 序列化边界和通信量统计。
-3. 构造更强的模糊查询集，包括 typo、缩写、顺序变化和 nickname。
-4. 扩展到更大 NCVR 子集或完整 NCVR。
+1. 将第二轮 `k×d` 特征累加循环下沉到 C++/TenSEAL tensor 核，同时保持每个 `(query, candidate)` 独立正掩码。
+2. 构造更强的模糊查询集，包括 typo、缩写、顺序变化和 nickname。
+3. 扩展到更大 NCVR 子集或完整 NCVR。

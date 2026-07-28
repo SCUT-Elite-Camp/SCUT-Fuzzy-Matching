@@ -8,11 +8,33 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from minhash.encoder import batch_encode
-from party_a.local_prep import encode_query_vectors, prepare_encrypted_query
-from party_a.online_querier import build_selector, choose_cluster_and_build_request
+from party_a.local_prep import (
+    encode_query_batch,
+    encode_query_vectors,
+    prepare_encrypted_query,
+    prepare_encrypted_query_batch,
+)
+from party_a.online_querier import (
+    build_selector,
+    check_encrypted_score_batch_debug,
+    choose_cluster_and_build_request,
+    choose_clusters_and_build_batch_request,
+)
 from party_b.offline_prep import prepare_party_b_offline
-from party_b.online_responder import compare_to_centroids, column_wise_matching
-from protocol.types import FirstRoundRequest, MatchResult, SecondRoundRequest
+from party_b.online_responder import (
+    column_wise_batch_matching,
+    column_wise_matching,
+    compare_batch_to_centroids,
+    compare_to_centroids,
+)
+from protocol.types import (
+    BatchFirstRoundRequest,
+    BatchMatchResult,
+    BatchSecondRoundRequest,
+    FirstRoundRequest,
+    MatchResult,
+    SecondRoundRequest,
+)
 
 
 def test_member1_offline_artifact_shapes():
@@ -59,6 +81,28 @@ def test_member2_query_shapes_and_first_round_boundary():
     assert party_a_state.encrypted_query_50.size() == 50
 
 
+def test_batch_query_shapes_and_first_round_boundary():
+    artifacts = prepare_party_b_offline(["john smith", "mary jones"], random_state=1)
+
+    q200_std, q50_norm = encode_query_batch(
+        ["john smith", "mary jones"],
+        artifacts.scaler_mean,
+        artifacts.scaler_scale,
+    )
+    batch_req1, batch_state = prepare_encrypted_query_batch(
+        ["john smith", "mary jones"],
+        artifacts.scaler_mean,
+        artifacts.scaler_scale,
+    )
+
+    assert q200_std.shape == (2, 200)
+    assert q50_norm.shape == (2, 50)
+    assert isinstance(batch_req1, BatchFirstRoundRequest)
+    assert batch_req1.batch_size == 2
+    assert len(batch_req1.encrypted_query_200) == 200
+    assert len(batch_state.encrypted_query_50) == 50
+
+
 def test_member3_selector_and_second_round_shapes():
     selected_cluster, selector = build_selector(np.array([0.1, 0.9]), k=2)
 
@@ -99,10 +143,40 @@ def test_member1_to_member4_online_shapes():
     assert isinstance(MatchResult(catch=True).catch, bool)
 
 
+def test_batch_online_shapes():
+    artifacts = prepare_party_b_offline(["john smith", "mary jones"], random_state=1)
+    req1, state = prepare_encrypted_query_batch(
+        ["john smith", "mary jones"],
+        artifacts.scaler_mean,
+        artifacts.scaler_scale,
+    )
+    sim_scores = compare_batch_to_centroids(req1, artifacts.centroids)
+    req2, debug = choose_clusters_and_build_batch_request(
+        sim_scores, state, k=artifacts.centroids.shape[0]
+    )
+    col_scores = list(
+        column_wise_batch_matching(
+            artifacts.cluster_matrix, req2, req1.public_context_bytes
+        )
+    )
+    res, debug_res = check_encrypted_score_batch_debug(
+        col_scores, state.secret_context, batch_size=2
+    )
+
+    assert len(sim_scores) == artifacts.centroids.shape[0]
+    assert isinstance(req2, BatchSecondRoundRequest)
+    assert debug.selected_clusters.shape == (2,)
+    assert len(col_scores) == artifacts.max_size
+    assert res.catches.shape == (2,)
+    assert debug_res.first_positive_columns.shape == (2,)
+
+
 if __name__ == "__main__":
     test_member1_offline_artifact_shapes()
     test_minhash_el50_is_prefix_of_el200()
     test_member2_query_shapes_and_first_round_boundary()
+    test_batch_query_shapes_and_first_round_boundary()
     test_member3_selector_and_second_round_shapes()
     test_member1_to_member4_online_shapes()
+    test_batch_online_shapes()
     print("real interface shape tests passed")

@@ -1,5 +1,8 @@
 """Run NCVR 10K evaluation and write metrics plus plots."""
 
+# Project imports follow the direct-execution path bootstrap below.
+# ruff: noqa: E402
+
 from __future__ import annotations
 
 import argparse
@@ -54,6 +57,21 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--tau", type=float, default=0.9)
     parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=0,
+        help=(
+            "Batch size for V2 query-by-candidate tiled HE batching "
+            "(1..4096). Default 0 uses the single-query serial path."
+        ),
+    )
+    parser.add_argument(
+        "--he-batch-size",
+        type=int,
+        default=None,
+        help="Alias for --batch-size.",
+    )
+    parser.add_argument(
         "--no-early-stop",
         action="store_true",
         help="Disable early stop during A-side final judgment.",
@@ -68,6 +86,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    batch_size = (
+        args.he_batch_size if args.he_batch_size is not None else args.batch_size
+    )
     config = {
         "dataset": "ncvr_10k",
         "data_path": args.data_path,
@@ -78,11 +99,13 @@ def main() -> int:
         "tau": args.tau,
         "query_limit": args.query_limit,
         "db_limit": args.db_limit,
+        "he_batch_size": batch_size,
         "use_mock": False,
         "early_stop": not args.no_early_stop,
         "reuse_context": not args.no_reuse_context,
     }
     result = benchmark(config)
+
     paths = save_evaluation_report(
         result,
         args.output_dir,
