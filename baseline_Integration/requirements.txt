@@ -6,3 +6,4 @@ pytest>=7.0
 matplotlib>=3.8
 flask>=3.0
 anyascii==0.3.3
+wcwidth>=0.2.13

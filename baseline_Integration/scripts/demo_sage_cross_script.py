@@ -12,9 +12,11 @@ import os
 import re
 import sys
 import time
+import unicodedata
 from pathlib import Path
 
 import numpy as np
+from wcwidth import wcswidth
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -353,27 +355,82 @@ def _kv(key: str, value: object) -> None:
     print(f"  {_c(key, Colors.DIM)}: {value}")
 
 
-def _clip(value: object, width: int) -> str:
-    text = str(value)
-    if len(text) <= width:
-        return text
-    return text[: max(0, width - 1)] + "…"
-
-
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+_ANSI_PREFIX_RE = re.compile(r"^(?:\x1b\[[0-9;]*m)+")
+_ANSI_SUFFIX_RE = re.compile(r"(?:\x1b\[[0-9;]*m)+$")
+_LRI = "\u2066"
+_PDI = "\u2069"
+_BIDI_CLASSES = {"R", "AL", "RLE", "RLO", "RLI"}
+
+
+def _terminal_width(value: object) -> int:
+    text = _ANSI_RE.sub("", str(value))
+    return max(0, wcswidth(text))
+
+
+def _clip_plain(text: str, width: int) -> str:
+    if width <= 0:
+        return ""
+    if _terminal_width(text) <= width:
+        return text
+
+    ellipsis = "…"
+    budget = max(0, width - _terminal_width(ellipsis))
+    clipped: list[str] = []
+    for char in text:
+        candidate = "".join(clipped) + char
+        if _terminal_width(candidate) == 0 and not clipped:
+            continue
+        if _terminal_width(candidate) > budget:
+            break
+        clipped.append(char)
+    return "".join(clipped) + ellipsis
+
+
+def _preserve_cell_color(raw: str, clipped_plain: str) -> str:
+    prefix_match = _ANSI_PREFIX_RE.match(raw)
+    suffix_match = _ANSI_SUFFIX_RE.search(raw)
+    plain = _ANSI_RE.sub("", raw)
+    if (
+        prefix_match is not None
+        and suffix_match is not None
+        and prefix_match.group(0) + plain + suffix_match.group(0) == raw
+    ):
+        return prefix_match.group(0) + clipped_plain + suffix_match.group(0)
+    return clipped_plain
+
+
+def _isolate_bidi(text: str) -> str:
+    plain = _ANSI_RE.sub("", text)
+    if any(unicodedata.bidirectional(char) in _BIDI_CLASSES for char in plain):
+        return _LRI + text + _PDI
+    return text
+
+
+def _clip(value: object, width: int) -> str:
+    raw = str(value)
+    plain = _ANSI_RE.sub("", raw)
+    clipped_plain = _clip_plain(plain, width)
+    if clipped_plain == plain:
+        return raw
+    return _preserve_cell_color(raw, clipped_plain)
+
+
+def _display_query(row: dict) -> str:
+    """Show the normalized value sent to the protocol, not the fixture ID."""
+    return row["canonical_query"]
 
 
 def _pad(value: object, width: int) -> str:
-    text = _clip(value, width)
-    visible_length = len(_ANSI_RE.sub("", text))
-    return text + " " * max(0, width - visible_length)
+    text = _isolate_bidi(_clip(value, width))
+    return text + " " * max(0, width - _terminal_width(text))
 
 
 def _table(headers: list[str], rows: list[list[object]], widths: list[int]) -> None:
     print(
         "    "
         + " ".join(
-            _c(header.ljust(width), Colors.DIM)
+            _c(_pad(header, width), Colors.DIM)
             for header, width in zip(headers, widths)
         ).rstrip()
     )
@@ -416,7 +473,7 @@ def _print_demo(result: dict) -> None:
         )
         for entry in entries:
             print(
-                f"      {_c(entry['variant'], Colors.CYAN):<28} "
+                f"      {_pad(_c(entry['variant'], Colors.CYAN), 28)} "
                 f"{entry['search_name']}"
             )
     print()
@@ -429,17 +486,16 @@ def _print_demo(result: dict) -> None:
     _phase(2, "Query Prepare & Encrypt", "A")
     _info("All selected queries are normalized and packed into one tiled HE batch")
     _table(
-        ["Query ID", "Raw Query", "Canonical", "Script"],
+        ["Raw Query", "Canonical Query", "Script"],
         [
             [
-                row["query_id"],
                 row["raw_query"],
                 row["canonical_query"],
                 row["query_script"],
             ]
             for row in rows
         ],
-        [22, 36, 36, 10],
+        [42, 42, 10],
     )
     print()
     _kv("Slot layout", f"{protocol['batch_size']} queries × {protocol['slot_tile_width']} candidates")
@@ -454,12 +510,12 @@ def _print_demo(result: dict) -> None:
 
     _phase(4, "Decrypt Scores & Select Clusters", "A")
     _table(
-        ["Query ID", "Cluster", "Prediction basis"],
+        ["Query", "Cluster", "Prediction basis"],
         [
-            [row["query_id"], row["selected_cluster"], "argmax decrypted score"]
+            [_display_query(row), row["selected_cluster"], "argmax decrypted score"]
             for row in rows
         ],
-        [22, 10, 28],
+        [28, 10, 28],
     )
     print()
     _kv("Selector ciphertexts", protocol["selector_ciphertexts"])
@@ -471,12 +527,12 @@ def _print_demo(result: dict) -> None:
     _kv("Q50 ciphertexts", protocol["round2_query_ciphertexts"])
     _kv("Match score ciphertexts", protocol["match_score_ciphertexts"])
     _table(
-        ["Query ID", "Cluster", "Columns", "Masks"],
+        ["Query", "Cluster", "Columns", "Masks"],
         [
-            [row["query_id"], row["selected_cluster"], row["checked_columns"], "applied"]
+            [_display_query(row), row["selected_cluster"], row["checked_columns"], "applied"]
             for row in rows
         ],
-        [22, 10, 10, 12],
+        [28, 10, 10, 12],
     )
     print()
     _timing("Masked column matching", timing["masked_column_matching"])
@@ -486,10 +542,10 @@ def _print_demo(result: dict) -> None:
     _phase(6, "Check Sim (Decrypt & Judge)", "A")
     _kv("Threshold τ", protocol["threshold"])
     _table(
-        ["Query ID", "Match", "Checked", "Hit Col", "Hit Variant"],
+        ["Query", "Match", "Checked", "Hit Col", "Hit Variant"],
         [
             [
-                row["query_id"],
+                _display_query(row),
                 _c("Y", Colors.GREEN) if row["predicted"] else _c("N", Colors.RED),
                 row["checked_columns"],
                 row["first_positive_column"] if row["first_positive_column"] >= 0 else "-",
@@ -497,7 +553,7 @@ def _print_demo(result: dict) -> None:
             ]
             for row in rows
         ],
-        [22, 8, 10, 10, 30],
+        [28, 8, 10, 10, 30],
     )
     print()
     _timing("Match checking", timing["decrypt_and_judge"])
@@ -507,10 +563,10 @@ def _print_demo(result: dict) -> None:
     print(_c("  FINAL RESULTS SUMMARY", Colors.BOLD + Colors.YELLOW))
     print(_c("=" * 96, Colors.CYAN))
     _table(
-        ["Query ID", "Label", "Pred", "Cluster", "Correct", "Time(ms)", "Hit Source"],
+        ["Query", "Label", "Pred", "Cluster", "Correct", "Time(ms)", "Hit Source"],
         [
             [
-                row["query_id"],
+                _display_query(row),
                 "Y" if row["expected"] else "N",
                 _c("Y", Colors.GREEN) if row["predicted"] else _c("N", Colors.RED),
                 row["selected_cluster"],
@@ -520,7 +576,7 @@ def _print_demo(result: dict) -> None:
             ]
             for row in rows
         ],
-        [22, 8, 8, 10, 10, 12, 34],
+        [28, 6, 6, 8, 8, 10, 24],
     )
     correct = sum(row["passed"] for row in rows)
     accuracy = correct / len(rows) * 100 if rows else 0.0
@@ -540,19 +596,26 @@ def _print_demo(result: dict) -> None:
     )
 
 
-def _save_outputs(result: dict, output_dir: str | Path) -> tuple[Path, Path]:
+def _save_outputs(
+    result: dict,
+    output_dir: str | Path,
+) -> tuple[Path | None, Path | None]:
     root = Path(output_dir)
-    root.mkdir(parents=True, exist_ok=True)
     json_path = root / "demo_sage_cross_script.json"
     csv_path = root / "demo_sage_cross_script.csv"
-    json_path.write_text(
-        json.dumps(result, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    with csv_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(result["rows"][0]))
-        writer.writeheader()
-        writer.writerows(result["rows"])
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        json_path.write_text(
+            json.dumps(result, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        with csv_path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(result["rows"][0]))
+            writer.writeheader()
+            writer.writerows(result["rows"])
+    except PermissionError as exc:
+        print(f"Warning: could not save demo artifacts to {root}: {exc}")
+        return None, None
     return json_path, csv_path
 
 
@@ -563,8 +626,9 @@ def main() -> int:
     result = run_demo(args.config, args.query_ids)
     _print_demo(result)
     json_path, csv_path = _save_outputs(result, args.output_dir)
-    print(f"Saved JSON: {json_path}")
-    print(f"Saved CSV:  {csv_path}")
+    if json_path is not None and csv_path is not None:
+        print(f"Saved JSON: {json_path}")
+        print(f"Saved CSV:  {csv_path}")
     return 0 if result["all_passed"] else 1
 
 

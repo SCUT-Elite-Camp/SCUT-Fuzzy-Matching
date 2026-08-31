@@ -6,7 +6,16 @@ import numpy as np
 
 from data_pipeline import build_prepared_dataset
 from minhash.encoder import batch_encode, generate_signature
-from scripts.demo_sage_cross_script import DEFAULT_QUERY_IDS
+from scripts.demo_sage_cross_script import (
+    DEFAULT_QUERY_IDS,
+    _ANSI_RE,
+    _LRI,
+    _PDI,
+    _clip,
+    _display_query,
+    _pad,
+    _terminal_width,
+)
 from scripts.validate_sage_multilingual import validate_prepared_dataset
 
 
@@ -47,6 +56,39 @@ def test_sage_demo_defaults_to_all_nine_validation_queries():
     assert "zh-romanized" in DEFAULT_QUERY_IDS
     assert "ar-romanized" in DEFAULT_QUERY_IDS
     assert "negative-latin" in DEFAULT_QUERY_IDS
+
+
+def test_sage_demo_tables_display_canonical_names_not_fixture_ids():
+    row = {"query_id": "zh-romanized", "canonical_query": "liaoxueguang"}
+
+    assert _display_query(row) == "liaoxueguang"
+
+
+def test_sage_demo_table_padding_uses_terminal_cell_width():
+    assert _terminal_width("liaoxueguang") == 12
+    assert _terminal_width("廖學廣") == 6
+    assert _terminal_width("ကျော်") == 2
+    assert _terminal_width("a\u0301") == 1
+    assert _terminal_width("\x1b[32mY\x1b[0m") == 1
+
+    assert _clip("廖學廣", 5) == "廖學…"
+    assert _terminal_width(_pad("廖學廣", 8)) == 8
+    assert _terminal_width(
+        _pad("ဦးအောင်ဆန်းကျော်ခဦးဘီလီဘိုးကျော်", 28)
+    ) == 28
+
+    colored = _clip("\x1b[32m廖學廣\x1b[0m", 5)
+    assert _ANSI_RE.sub("", colored) == "廖學…"
+    assert colored.startswith("\x1b[32m")
+
+
+def test_sage_demo_table_isolates_arabic_cells_from_column_layout():
+    padded = _pad("هبه عادل", 20)
+    plain = _ANSI_RE.sub("", padded)
+
+    assert plain.startswith(_LRI)
+    assert _PDI in plain
+    assert _terminal_width(padded) == 20
 
 
 def test_minhash_no_longer_collapses_non_latin_names_to_empty_signature():
