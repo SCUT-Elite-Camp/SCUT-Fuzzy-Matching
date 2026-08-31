@@ -88,6 +88,16 @@ from evaluation.dataset_loader import load_dataset
 names_a, names_b, labels = load_dataset("ncvr_10k", "data")
 ```
 
+NCVR 评测会复用协议现有的英文姓名清洗规则：Unicode NFKC、转小写、移除非英文字母并压缩空格。loader 和原始 CSV 保持不变。
+
+正式评测脚本默认将 30% 的正样本查询替换一个字母，标签和 B 侧数据库保持不变，并使用固定种子保证可复现：
+
+```powershell
+python scripts/evaluate_ncvr_10k.py --fuzzy-ratio 0.3 --fuzzy-seed 42
+```
+
+如需运行原始精确查询基线，使用 `--fuzzy-ratio 0`。
+
 ## 演示
 
 展示协议链路，跑一个几秒级 demo：

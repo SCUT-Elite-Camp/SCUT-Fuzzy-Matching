@@ -13,4 +13,4 @@ Thumbs.db
 .pytest_cache/
 __pycache__/
 *.py[cod]
-.gitignore
+node_modules/

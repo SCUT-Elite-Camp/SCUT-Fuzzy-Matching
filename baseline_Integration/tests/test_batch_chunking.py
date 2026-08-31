@@ -115,7 +115,7 @@ def test_ncvr_10k_script_parse_batch_size_arg(monkeypatch):
     assert args.batch_size == 200
 
 
-def test_ncvr_10k_main_forwards_tau_and_batch_size(monkeypatch, tmp_path):
+def test_ncvr_10k_main_forwards_evaluation_options(monkeypatch, tmp_path):
     captured = {}
 
     def fake_benchmark(config):
@@ -134,6 +134,10 @@ def test_ncvr_10k_main_forwards_tau_and_batch_size(monkeypatch, tmp_path):
             "0.87",
             "--batch-size",
             "200",
+            "--fuzzy-ratio",
+            "0.4",
+            "--fuzzy-seed",
+            "9",
             "--output-dir",
             str(tmp_path),
         ],
@@ -142,6 +146,8 @@ def test_ncvr_10k_main_forwards_tau_and_batch_size(monkeypatch, tmp_path):
     assert evaluate_script.main() == 0
     assert captured["tau"] == pytest.approx(0.87)
     assert captured["he_batch_size"] == 200
+    assert captured["fuzzy_ratio"] == pytest.approx(0.4)
+    assert captured["fuzzy_seed"] == 9
 
 
 def test_batch_benchmark_single_tile_early_stop_preserves_results():

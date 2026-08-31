@@ -57,6 +57,21 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--tau", type=float, default=0.9)
     parser.add_argument(
+        "--fuzzy-ratio",
+        type=float,
+        default=0.3,
+        help=(
+            "Fraction of positive NCVR queries changed by one letter. "
+            "Default 0.3; use 0 for the exact-query baseline."
+        ),
+    )
+    parser.add_argument(
+        "--fuzzy-seed",
+        type=int,
+        default=42,
+        help="Random seed used to select and fuzz positive queries.",
+    )
+    parser.add_argument(
         "--batch-size",
         type=int,
         default=0,
@@ -97,6 +112,8 @@ def main() -> int:
         "k": args.k,
         "k_mode": args.k if args.k > 0 else args.k_mode,
         "tau": args.tau,
+        "fuzzy_ratio": args.fuzzy_ratio,
+        "fuzzy_seed": args.fuzzy_seed,
         "query_limit": args.query_limit,
         "db_limit": args.db_limit,
         "he_batch_size": batch_size,
