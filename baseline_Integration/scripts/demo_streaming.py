@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""流式终端演示脚本 v2：按步骤聚合展示所有查询，精简关键信息。
+"""流式终端演示脚本：按步骤聚合展示所有查询，精简关键信息。
 
 设计目标：
 1. 按步骤聚合：Step 1 一次性展示所有查询的聚类结果，Step 2 一次性展示所有查询的加密结果，以此类推
@@ -9,9 +9,9 @@
 
 使用方式：
     cd baseline_Integration
-    python scripts/demo_streaming_v2.py
-    python scripts/demo_streaming_v2.py --query "John Smith" --db-limit 50
-    python scripts/demo_streaming_v2.py --query-indices 2,7,26 --db-limit 100 --k 10
+    python scripts/demo_streaming.py
+    python scripts/demo_streaming.py --query "John Smith" --db-limit 50
+    python scripts/demo_streaming.py --query-indices 2,7,26 --db-limit 100 --k 10
 """
 
 from __future__ import annotations
@@ -1061,7 +1061,7 @@ def build_demo_queries(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Streaming demo v2: step-aggregated, privacy-preserving fuzzy name matching"
+        description="Streaming demo: step-aggregated, privacy-preserving fuzzy name matching"
     )
     parser.add_argument("--data-path", default=str(PROJECT_ROOT / "data"))
     parser.add_argument("--db-limit", type=int, default=100)

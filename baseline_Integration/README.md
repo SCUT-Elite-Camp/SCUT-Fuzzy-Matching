@@ -9,6 +9,9 @@
 - 代码已整理为正式模块：`preprocessing/`、`minhash/`、`clustering/`、`party_a/`、`party_b/`、`protocol/`、`evaluation/`、`tests/`。
 - 单查询协议链路已跑通：B 侧建库、MinHash、归一化、聚类、A 侧查询加密、质心匹配、cluster 选择、列式匹配、最终判断。
 - NCVR 10K 子集已接入：`data/ncvr_10k/` 包含 10000 条 B 侧库记录和 200 条查询。
+- 已加入统一数据预处理管线：不同数据库 CSV、查询 CSV 和字段名可通过 JSON 配置映射到同一套建库/查询接口。
+- SAGE 多语言样本已接入：43,206 条清洗后记录会展开为 56,705 个去重搜索项，支持原生文字与拉丁转写 variant 的统一建库查询。
+- `unicode_v1` 会保留阿拉伯、汉字、缅甸文字等 Unicode 字母，并通过固定版本 `anyascii==0.3.3` 生成拉丁转写 variants。
 - 评估脚本已支持输出 `precision`、`recall`、`f1`、`accuracy`、混淆计数和 PNG 可视化图。
 - 二维 query×candidate SIMD batching 已实现：`m=200` 时每个密文同时承载 200 条查询和 20 个候选列。
 - batch 生产路径强制 A→B bytes 序列化边界，B 侧密文只绑定公开 context。
@@ -29,7 +32,9 @@ baseline_Integration/
 ├── ckks/                  # TenSEAL CKKS 上下文、密钥与运算封装
 ├── clustering/            # cosine/spherical K-Means
 ├── config/                # 全局参数
+├── data_pipeline/         # 数据适配、标准化、评测扰动、审计清单与导出
 ├── data/ncvr_10k/         # 可提交的 NCVR 10K 测试子集
+├── data/sage/             # SAGE 多语言源表、验证查询和清洗产物
 ├── dataset/               # 本地原始大数据，已被 .gitignore 忽略
 ├── docs/                  # 分工接口规范与流程图
 ├── evaluation/            # 数据加载、指标、通信量、benchmark、reporting
@@ -38,10 +43,9 @@ baseline_Integration/
 ├── party_b/               # B 侧离线建库、质心匹配、列式匹配
 ├── preprocessing/         # 姓名清洗与归一化
 ├── protocol/              # 协议数据结构与端到端编排
-├── scripts/               # 评估脚本
+├── scripts/               # 数据准备、评估、验证与演示脚本
 ├── tests/                 # 测试
-├── requirements.txt
-└── run_all_test.py
+└── requirements.txt
 ```
 
 ## 安装
@@ -59,12 +63,6 @@ python -m pip install -r requirements.txt
 
 ```powershell
 python -m pytest tests -q
-```
-
-或：
-
-```powershell
-python run_all_test.py
 ```
 
 ## NCVR 10K 数据
@@ -98,7 +96,77 @@ python scripts/evaluate_ncvr_10k.py --fuzzy-ratio 0.3 --fuzzy-seed 42
 
 如需运行原始精确查询基线，使用 `--fuzzy-ratio 0`。
 
+## 统一数据预处理与匹配
+
+新数据集不需要修改 `evaluation/dataset_loader.py`。使用 `csv_pair` adapter 分别配置数据库文件、查询文件和各自字段映射即可；NCVR 10K 则已有专用 adapter。示例配置位于：
+
+```text
+config/examples/ncvr_10k_pipeline.json
+config/examples/csv_pair_pipeline.json
+config/examples/ncvr_10k_evaluation.json
+config/examples/sage_pipeline.json
+```
+
+标准化管线的边界如下：adapter 只负责把源字段映射成统一记录；normalizer 负责确定性标准化；perturbation 只用于评测查询的可复现模糊化，不会污染数据库或生产查询。输出仍通过 `PreparedDataset.as_legacy_tuple()` 对接现有 Party A/Party B 协议，因此 HE 建库与查询代码无需针对数据集分支。
+
+只做清理并导出标准数据：
+
+```powershell
+python scripts/prepare_dataset.py `
+  --config config/examples/ncvr_10k_pipeline.json `
+  --output-dir artifacts/prepared/ncvr_10k
+```
+
+输出包含 `database.csv`、`queries.csv` 和 `manifest.json`。manifest 会记录输入/输出行数、空值拒绝、去重、模糊化数量、孤立正样本以及实际配置。
+
+使用同一配置运行完整建库、查询和评测：
+
+```powershell
+python scripts/evaluate_dataset.py `
+  --config config/examples/ncvr_10k_evaluation.json
+```
+
+自定义 CSV 的数据库部分至少配置 `path`、`name_column`，查询部分至少配置 `path`、`name_column`。可选字段包括 `id_column`、`label_column`、`match_id_column`、`expected_ids_column`、`country_column`、`language_column` 和 `metadata_columns`。完整字段示例见 `csv_pair_pipeline.json`。
+
+`english_v1` 严格复用原有英文 NCVR 清洗规则。`unicode_v1` 支持 Unicode NFKC、跨文字大小写处理、标点清理、拉丁重音折叠，并保留原生文字、script、language/country hints 和 variants；MinHash 字符 shingling 也会保留 Unicode 字母与组合符号，不再把阿拉伯、汉字或缅甸文字压成空签名。
+
+SAGE 原始文件包含 123,479 行、23 个国家。`sage_names` adapter 按 NFKC/casefold 后的“姓名+国家”清理成 43,206 条标准数据库记录，生成结果已放在 `data/sage/prepared/`。其中包括 36,437 条拉丁文字、3,225 条阿拉伯文字、2,052 条汉字、1,469 条缅甸文字和少量混合文字记录。加入拉丁转写 variant 后，实际用于模糊匹配建库的是 56,705 个去重搜索项。
+
+运行真实 HE batching 多语言 smoke：
+
+```powershell
+python scripts/validate_sage_multilingual.py
+```
+
+当前验证查询共 9 条：5 条正查询与 4 条负查询；其中 `zh-romanized` 和 `ar-romanized` 直接展示跨文字拉丁转写匹配。
+
+`unicode_v1` 使用固定版本 `anyascii==0.3.3` 生成 `latin_transliterated` 和 `latin_compact` variants，并把这些 variants 一同加入 Party B 建库输入。当前 smoke 已覆盖 `廖學廣 ↔ LiaoXueGuang` 和阿拉伯原名 ↔ 拉丁转写查询。
+
+这仍然是上下文无关的字符级转写，不是语言学姓名模型。真实世界中的多音字、姓名顺序、阿拉伯元音补全以及不同拼音/罗马化标准仍可能产生不一致；后续应把可配置的语言专用 transliterator 接到现有 variant 注册边界，而不是改动 HE 协议。
+
 ## 演示
+
+展示本次 SAGE 跨文字查询特性，运行一个约几秒的真实 HE batching demo：
+
+```powershell
+python scripts/demo_sage_cross_script.py
+```
+
+默认展示全部 9 条验证查询：5 条正查询与 4 条负查询。其中最直观的新跨文字功能是 `LiaoXueGuang` 命中原生汉字姓名 `廖學廣`，以及拉丁转写查询命中阿拉伯原名。终端会按 Party A / Party B 的步骤打印清洗与转写、建库聚类、查询加密、两轮密文计算、解密判断和最终准确率，并把报告保存到：
+
+```text
+artifacts/demo/sage_cross_script/demo_sage_cross_script.json
+artifacts/demo/sage_cross_script/demo_sage_cross_script.csv
+```
+
+可指定其他验证查询：
+
+```powershell
+python scripts/demo_sage_cross_script.py `
+  --query-ids zh-romanized,ar-romanized,negative-latin
+```
+
+终端显示的 cluster、命中 variant 和原始姓名只属于本地 demo/debug 信息；生产协议仍发送序列化密文和加密 selector。
 
 展示协议链路，跑一个几秒级 demo：
 

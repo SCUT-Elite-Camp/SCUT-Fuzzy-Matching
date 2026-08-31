@@ -1,0 +1,10 @@
+query_id,query_name,label,expected_record_id,country,language
+hu-accent-fold,Argyelan Janos,true,sage-75165575d4f7a29e,Hungary,hu
+ar-romanized,hbh dl jmy lyby lsdy,true,sage-a00c0a6bb1497a23,Iraq,ar-Latn
+zh-romanized,LiaoXueGuang,true,sage-b81ed53599b31a21,Taiwan,zh-Latn
+my-width-normalization,ဦးအောင်ဆန်းကျော်（ခ）ဦးဘီလီဘိုးကျော်,true,sage-ca377d725c2898cc,Myanmar,my
+zh-latin-mixed,瓦歷斯貝林 WalisPerin,true,sage-5b677e6ae10fef34,Taiwan,zh
+negative-latin,Completely Absent Validation Name,false,,Hungary,hu
+negative-arabic,اسم تحقق غير موجود,false,,Iraq,ar
+negative-han,不存在測試姓名,false,,Taiwan,zh
+negative-myanmar,စမ်းသပ်မရှိသောအမည်,false,,Myanmar,my

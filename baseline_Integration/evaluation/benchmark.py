@@ -38,6 +38,44 @@ from .communication_cost import measure_ct_size
 from .metrics import compute_confusion_counts, compute_metrics
 
 
+def _load_benchmark_dataset(config):
+    """Load either a configured pipeline dataset or a legacy dataset."""
+    pipeline_config = config.get("dataset_pipeline")
+    if pipeline_config is not None:
+        from data_pipeline import build_prepared_dataset
+
+        prepared = build_prepared_dataset(
+            pipeline_config,
+            base_dir=config.get("dataset_base_dir"),
+        )
+        return (*prepared.as_legacy_tuple(), prepared.manifest.to_dict())
+
+    dataset_name = config["dataset"]
+    if dataset_name.lower() == "ncvr_10k":
+        from data_pipeline import build_prepared_dataset, ncvr_10k_pipeline_config
+
+        prepared = build_prepared_dataset(
+            ncvr_10k_pipeline_config(
+                config["data_path"],
+                database_limit=config.get("db_limit"),
+                query_limit=config.get("query_limit"),
+                fuzzy_ratio=config.get("fuzzy_ratio", 0.0),
+                fuzzy_seed=config.get("fuzzy_seed", 42),
+            )
+        )
+        return (*prepared.as_legacy_tuple(), prepared.manifest.to_dict())
+
+    from .dataset_loader import load_dataset
+
+    names_a, names_b, labels = load_dataset(dataset_name, config["data_path"])
+    if config.get("query_limit", -1) > 0:
+        names_a = names_a[: config["query_limit"]]
+        labels = labels[: config["query_limit"]]
+    if config.get("db_limit", -1) > 0:
+        names_b = names_b[: config["db_limit"]]
+    return names_a, names_b, labels, None
+
+
 def benchmark(config):
     """
     运行一次实验配置，返回各项指标。
@@ -45,7 +83,8 @@ def benchmark(config):
     Args:
         config: dict，包含以下字段（示例）：
             {
-                "dataset": "ncvr",            # 数据集名称
+                "dataset": "ncvr",            # 旧式数据集名称
+                "dataset_pipeline": {...},     # 新式统一数据管线配置（二选一）
                 "data_path": "./data/",       # 数据文件路径
                 "el_cluster": 200,            # 聚类用编码长度
                 "el_match": 50,               # 匹配用编码长度
@@ -67,25 +106,8 @@ def benchmark(config):
             "memory_peak_mb": float,
         }
     """
-    # 1. 加载数据
-    from .dataset_loader import load_dataset
-
-    names_A, names_B, labels = load_dataset(config["dataset"], config["data_path"])
-    if config.get("query_limit", -1) > 0:
-        names_A = names_A[: config["query_limit"]]
-        labels = labels[: config["query_limit"]]
-    if config.get("db_limit", -1) > 0:
-        names_B = names_B[: config["db_limit"]]
-    if config["dataset"].lower() == "ncvr_10k":
-        from .ncvr_preprocessing import prepare_ncvr_names
-
-        names_A, names_B = prepare_ncvr_names(
-            names_A,
-            names_B,
-            labels,
-            fuzzy_ratio=config.get("fuzzy_ratio", 0.0),
-            fuzzy_seed=config.get("fuzzy_seed", 42),
-        )
+    # 1. 加载并标准化数据。旧配置仍然可用，ncvr_10k 自动走新管线。
+    names_A, names_B, labels, dataset_manifest = _load_benchmark_dataset(config)
 
     # 2. 离线阶段（Party B 预处理）
     print(
@@ -376,6 +398,7 @@ def benchmark(config):
 
     result = {
         "config": config,
+        "dataset_manifest": dataset_manifest,
         "predictions": [bool(value) for value in predictions],
         "metrics": metrics,
         "confusion": confusion,

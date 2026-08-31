@@ -17,11 +17,11 @@ from config.params import (
     NUM_PERMUTATIONS_CLUSTER,
     SHINGLE_SIZE,
 )
-from preprocessing.text_cleaner import clean_name
+from preprocessing.text_cleaner import clean_name_unicode
 
 
 def _generate_shingles(name: str, shingle_size: int) -> set[str]:
-    normalized = clean_name(name)
+    normalized = clean_name_unicode(name)
     if len(normalized) < shingle_size:
         return {normalized} if normalized else {"<empty>"}
     return {
@@ -74,4 +74,3 @@ def batch_encode(names: Iterable[str], num_permutations: int) -> np.ndarray:
         permuted = (a[:, None] * hashes[None, :] + b[:, None]) % MAX_HASH
         signatures.append(permuted.min(axis=1).astype(np.float64))
     return np.stack(signatures, axis=0)
-
