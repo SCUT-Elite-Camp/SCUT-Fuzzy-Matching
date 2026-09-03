@@ -1,0 +1,283 @@
+\documentclass[aspectratio=169,10pt]{ctexbeamer}
+
+% PowerPoint widescreen physical size (13.333 in x 7.5 in).
+% Beamer's default 16:9 canvas is only 16 cm wide; the explicit size below
+% lets the absolute TikZ layout use readable centimetre coordinates.
+\geometry{paperwidth=33.867cm,paperheight=19.05cm}
+
+\usepackage{amsmath,amssymb,bm}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,matrix}
+
+\setCJKmainfont{Microsoft YaHei}
+\setCJKsansfont{Microsoft YaHei}
+\setsansfont{Arial}
+\setmonofont{Consolas}
+
+\definecolor{navy}{HTML}{0B2E59}
+\definecolor{blue}{HTML}{1E5A91}
+\definecolor{teal}{HTML}{007F7B}
+\definecolor{mint}{HTML}{EAF7F5}
+\definecolor{lightblue}{HTML}{EDF4FA}
+\definecolor{orange}{HTML}{E66B2E}
+\definecolor{ink}{HTML}{17283B}
+\definecolor{muted}{HTML}{627386}
+\definecolor{linegray}{HTML}{D5DEE7}
+\definecolor{softgray}{HTML}{F5F7F9}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{}
+\setbeamertemplate{headline}{}
+\setbeamercolor{normal text}{fg=ink,bg=white}
+\setbeamerfont{normal text}{size=\small}
+
+\newcommand{\vct}[1]{\bm{#1}}
+\newcommand{\enc}{\operatorname{Enc}}
+\newcommand{\reshape}{\operatorname{reshape}}
+
+\tikzset{
+  panel/.style={draw=linegray, line width=.7pt, rounded corners=3pt, fill=white,
+                inner sep=0pt},
+  steptitle/.style={font=\bfseries\large, text=white, anchor=west},
+  body/.style={font=\small, text=ink, align=left, anchor=north west},
+  formula/.style={draw=teal!55, fill=mint, rounded corners=2pt,
+                  inner sep=4pt, font=\small, text=ink, align=center},
+  note/.style={draw=linegray, fill=softgray, rounded corners=2pt,
+               inner sep=3pt, font=\scriptsize, text=muted, align=left},
+  flow/.style={-{Stealth[length=3mm,width=2mm]}, line width=1.2pt, draw=teal},
+  slotq/.style={draw=white, line width=.5pt, fill=blue, text=white,
+                minimum width=6.2mm, minimum height=5.5mm, font=\bfseries\scriptsize},
+  slotc/.style={draw=white, line width=.5pt, fill=teal, text=white,
+                minimum width=6.2mm, minimum height=5.5mm, font=\bfseries\scriptsize},
+  slotr/.style={draw=white, line width=.5pt, fill=orange, text=white,
+                minimum width=6.2mm, minimum height=5.5mm, font=\bfseries\scriptsize},
+}
+
+\begin{document}
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay,x=1cm,y=1cm]
+  \coordinate (NW) at ([xshift=.55cm,yshift=-.35cm]current page.north west);
+
+  % Title
+  \node[anchor=north west, font=\bfseries\fontsize{20}{23}\selectfont, text=navy]
+    at (NW) {二维打包如何成立：把每个 $(q,t)$ 预先对齐到同一个 CKKS 槽位};
+  \node[anchor=north east, font=\small, text=muted]
+    at ([xshift=-.6cm,yshift=-.55cm]current page.north east)
+    {query-major：$\operatorname{slot}(q,t)=qT+t$};
+  \draw[navy, line width=1.0pt]
+    ([xshift=.55cm,yshift=-1.35cm]current page.north west) --
+    ([xshift=-.55cm,yshift=-1.35cm]current page.north east);
+
+  % --- Top panels ---------------------------------------------------------
+  % Step 1: target matrix
+  \node[panel, minimum width=7.25cm, minimum height=6.55cm, anchor=north west]
+    (p1) at ([xshift=.55cm,yshift=-1.60cm]current page.north west) {};
+  \path[fill=navy, rounded corners=3pt]
+    (p1.north west) rectangle ([yshift=-.85cm]p1.north east);
+  \node[steptitle] at ([xshift=.30cm,yshift=-.43cm]p1.north west)
+    {1\hspace{2mm}先明确目标：得到整张分数表};
+  \node[body] at ([xshift=.32cm,yshift=-1.10cm]p1.north west) {
+    \begin{minipage}{6.60cm}
+    \centering
+    $Q=\begin{bmatrix}1&2\\3&4\end{bmatrix}$\quad
+    $C=\begin{bmatrix}10&20\\30&40\\50&60\end{bmatrix}$
+
+    \vspace{2mm}
+    \textcolor{muted}{两条查询}\quad\textcolor{muted}{B 端连续取出的三个候选}
+
+    \vspace{2mm}
+    \begin{tikzpicture}[baseline]
+      \node[formula, minimum width=5.9cm] {
+        $S=QC^{\mathsf T}$，其中 $S_{q,t}=\sum\limits_f Q_{q,f}C_{t,f}$};
+    \end{tikzpicture}
+
+    \vspace{2mm}
+    $S=\begin{bmatrix}
+      50&110&170\\
+      110&250&390
+    \end{bmatrix}$
+
+    \vspace{2mm}
+    \begin{tikzpicture}[baseline]
+      \node[note, text width=5.9cm] {
+      每个格子就是一个查询--候选组合 $(q,t)$。目标不是跨槽位求和，
+      而是让每个格子的特征乘加都留在自己的槽位。};
+    \end{tikzpicture}
+    \end{minipage}
+  };
+
+  % Step 2: query repeat
+  \node[panel, minimum width=11.55cm, minimum height=6.55cm, anchor=north west]
+    (p2) at ([xshift=8.05cm,yshift=-1.60cm]current page.north west) {};
+  \path[fill=blue, rounded corners=3pt]
+    (p2.north west) rectangle ([yshift=-.85cm]p2.north east);
+  \node[steptitle] at ([xshift=.30cm,yshift=-.43cm]p2.north west)
+    {2\hspace{2mm}A 端：为什么查询要先复制？};
+  \node[body] at ([xshift=.32cm,yshift=-1.08cm]p2.north west) {
+    \begin{minipage}{10.90cm}
+    一个查询要同时碰到 tile 内的 $T=3$ 个候选，因此每个查询值连续占用 $3$ 个槽位：
+
+    \vspace{1.5mm}
+    \begin{center}
+      \begin{tikzpicture}
+        \node[formula, minimum width=9.7cm] {$\displaystyle
+          \vct a_f=Q_{:,f}\otimes\vct 1_T,
+          \qquad a_{qT+t}=Q_{q,f}$};
+      \end{tikzpicture}
+    \end{center}
+    \vspace{-1mm}
+    \begin{tabular}{@{}c@{\ }c@{\ }c@{\ }c@{\ }c@{\ }c@{\ }c@{\quad}l@{}}
+      $a_0:$ & \tikz\node[slotq]{1}; & \tikz\node[slotq]{1}; & \tikz\node[slotq]{1}; &
+      \tikz\node[slotq]{3}; & \tikz\node[slotq]{3}; & \tikz\node[slotq]{3}; &
+      $=[1,1,1,\,3,3,3]$\\[1mm]
+      $a_1:$ & \tikz\node[slotq]{2}; & \tikz\node[slotq]{2}; & \tikz\node[slotq]{2}; &
+      \tikz\node[slotq]{4}; & \tikz\node[slotq]{4}; & \tikz\node[slotq]{4}; &
+      $=[2,2,2,\,4,4,4]$
+    \end{tabular}
+
+    \vspace{2mm}
+    \begin{tikzpicture}[baseline]
+      \node[note, text width=10.1cm] {
+        顺序是 $q_0$ 的 $T$ 个位置，再放 $q_1$ 的 $T$ 个位置。
+        复制在加密前完成，随后逐特征加密：$\enc(\vct a_0),\enc(\vct a_1)$。
+        \textbf{密文数量仍为 $d$ 个}，只是把原本空闲的槽位填满。};
+    \end{tikzpicture}
+    \end{minipage}
+  };
+
+  % Step 3: candidate repeat
+  \node[panel, minimum width=12.55cm, minimum height=6.55cm, anchor=north west]
+    (p3) at ([xshift=19.85cm,yshift=-1.60cm]current page.north west) {};
+  \path[fill=teal, rounded corners=3pt]
+    (p3.north west) rectangle ([yshift=-.85cm]p3.north east);
+  \node[steptitle] at ([xshift=.30cm,yshift=-.43cm]p3.north west)
+    {3\hspace{2mm}B 端：候选从哪里来，如何对齐？};
+  \node[body] at ([xshift=.32cm,yshift=-1.08cm]p3.north west) {
+    \begin{minipage}{11.90cm}
+    候选来自 B 的数据库；本轮连续取 $C_{\rm tile}=[c_0;c_1;c_2]$，尾 tile 不足 $T$ 时补零。
+
+    \vspace{1.5mm}
+    \begin{center}
+      \begin{tikzpicture}
+        \node[formula, minimum width=10.5cm] {$\displaystyle
+          \vct b_f=\vct 1_m\otimes C_{{\rm tile},:,f},
+          \qquad b_{qT+t}=C_{t,f}$};
+      \end{tikzpicture}
+    \end{center}
+    \vspace{-1mm}
+    \begin{tabular}{@{}c@{\ }c@{\ }c@{\ }c@{\ }c@{\ }c@{\ }c@{\quad}l@{}}
+      $b_0:$ & \tikz\node[slotc]{10}; & \tikz\node[slotc]{30}; & \tikz\node[slotc]{50}; &
+      \tikz\node[slotc]{10}; & \tikz\node[slotc]{30}; & \tikz\node[slotc]{50}; &
+      $=[10,30,50,\,10,30,50]$\\[1mm]
+      $b_1:$ & \tikz\node[slotc]{20}; & \tikz\node[slotc]{40}; & \tikz\node[slotc]{60}; &
+      \tikz\node[slotc]{20}; & \tikz\node[slotc]{40}; & \tikz\node[slotc]{60}; &
+      $=[20,40,60,\,20,40,60]$
+    \end{tabular}
+
+    \vspace{2mm}
+    \begin{tikzpicture}[baseline]
+      \node[note, text width=11.05cm] {
+        第一组 $[c_0,c_1,c_2]$ 给 $q_0$，第二组给 $q_1$。
+        B 只在本地构造明文 tile，不新增上传通信；代价是每个 tile 临时生成
+        $d$ 条长度 $mT$ 的明文槽位向量。};
+    \end{tikzpicture}
+    \end{minipage}
+  };
+
+  % Arrows between top panels
+  \draw[-{Stealth[length=1.4mm,width=1.1mm]}, line width=.7pt, draw=teal]
+    (p1.east) -- (p2.west);
+  \draw[-{Stealth[length=1.4mm,width=1.1mm]}, line width=.7pt, draw=teal]
+    (p2.east) -- (p3.west);
+
+  % --- Bottom left: homomorphic arithmetic -------------------------------
+  \node[panel, minimum width=22.20cm, minimum height=6.95cm, anchor=north west]
+    (p4) at ([xshift=.55cm,yshift=-8.42cm]current page.north west) {};
+  \path[fill=teal!92!black, rounded corners=3pt]
+    (p4.north west) rectangle ([yshift=-.85cm]p4.north east);
+  \node[steptitle] at ([xshift=.30cm,yshift=-.43cm]p4.north west)
+    {4\hspace{2mm}同槽位逐槽乘加：六个 $(q,t)$ 彼此独立};
+  \node[body] at ([xshift=.35cm,yshift=-1.08cm]p4.north west) {
+    \begin{minipage}{21.45cm}
+    \begin{center}
+    $\displaystyle
+      \vct z=\sum_f \enc(\vct a_f)\odot\vct b_f
+      =\enc\!\left(\sum_f \vct a_f\odot\vct b_f\right)$
+    \end{center}
+    \vspace{-1mm}
+    \begin{center}
+    $\begin{aligned}
+      \vct z
+      &=\enc([1,1,1,3,3,3])\odot[10,30,50,10,30,50]\\[-1mm]
+      &\quad+\enc([2,2,2,4,4,4])\odot[20,40,60,20,40,60]\\
+      &=\enc([\,50,110,170,\;110,250,390\,]).
+    \end{aligned}$
+    \end{center}
+
+    \vspace{1mm}
+    \begin{tikzpicture}[baseline]
+      \foreach \x/\v in {0/50,1/110,2/170,3/110,4/250,5/390}
+        \node[slotr] at (\x*.75,0) {\v};
+      \node[font=\small, text=muted, anchor=west] at (4.65,0) {$\xrightarrow{\ \reshape_{m\times T}\ }$};
+      \node[formula, anchor=west, minimum width=5.0cm] at (7.0,0) {$
+        \begin{bmatrix}50&110&170\\110&250&390\end{bmatrix}$};
+      \node[formula, anchor=west, minimum width=7.0cm, fill=lightblue, draw=blue!55] at (12.45,0) {
+        项目实际输出：$\widetilde S_{q,t}=R_{q,t}\!\left(\sum_fQ_{q,f}C_{t,f}-\tau\right)$};
+    \end{tikzpicture}
+
+    \vspace{2mm}
+    \begin{tikzpicture}[baseline]
+      \node[note, text width=20.55cm] {
+      每个 slot 从一开始就放着同一对 $(q,t)$ 的查询值与候选值，因此只需 Hadamard 乘法 $\odot$ 和逐槽加法；
+      不需要把数据搬到别的槽位，也就\textbf{不需要 slot rotation}。$R_{q,t}>0$ 为每个组合独立采样的随机掩码。};
+    \end{tikzpicture}
+    \end{minipage}
+  };
+
+  % --- Bottom right: scale and overhead ----------------------------------
+  \node[panel, minimum width=9.72cm, minimum height=6.95cm, anchor=north west]
+    (p5) at ([xshift=23.05cm,yshift=-8.42cm]current page.north west) {};
+  \path[fill=orange, rounded corners=3pt]
+    (p5.north west) rectangle ([yshift=-.85cm]p5.north east);
+  \node[steptitle] at ([xshift=.30cm,yshift=-.43cm]p5.north west)
+    {5\hspace{2mm}真实规模与代价};
+  \node[body] at ([xshift=.32cm,yshift=-1.05cm]p5.north west) {
+    \begin{minipage}{9.05cm}
+    \begin{tikzpicture}[baseline]
+      \node[formula, text width=8.25cm] {
+        $S_{\rm slots}=4096,\quad m=200$\\[1mm]
+        $T=\left\lfloor4096/200\right\rfloor=20$\\[1mm]
+        $mT=4000$ slots，利用率 $97.66\%$};
+    \end{tikzpicture}
+
+    \vspace{2mm}
+    \textbf{预处理开销}
+
+    \vspace{1mm}
+    \begin{itemize}\setlength\itemsep{1mm}
+      \item A：槽位填充量 $m\to mT$；密文数仍为 $d$。
+      \item B：每个 tile 本地展开 $O(mTd)$ 个明文数。
+      \item 固定 CKKS 参数，不增加乘法深度，不做旋转。
+    \end{itemize}
+
+    \vspace{1mm}
+    \begin{tikzpicture}[baseline]
+      \node[formula, text width=8.25cm, fill=orange!9, draw=orange] {
+      在线外层循环：$L\longrightarrow\lceil L/T\rceil$\\[1mm]
+      $483\longrightarrow\lceil483/20\rceil=25$ tiles\\[1mm]
+      \textbf{每个 tile 同时产生 $200\times20=4000$ 个分数}};
+    \end{tikzpicture}
+    \end{minipage}
+  };
+
+  % Footer conclusion
+  \node[draw=teal, line width=1pt, fill=mint, rounded corners=3pt,
+        minimum width=32.20cm, minimum height=1.42cm, anchor=south west,
+        font=\bfseries\large, text=navy, align=center]
+    at ([xshift=.55cm,yshift=.30cm]current page.south west)
+    {直观总结：复制不是重复同态计算，而是在加密前完成槽位对齐；\\[-1mm]
+     用一次本地排布，换来每轮约 $T=20$ 倍的候选并行。};
+
+\end{tikzpicture}
+\end{frame}
+\end{document}
