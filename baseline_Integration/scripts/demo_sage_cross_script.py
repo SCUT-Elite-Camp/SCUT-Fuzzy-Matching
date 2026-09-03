@@ -14,6 +14,7 @@ import sys
 import time
 import unicodedata
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 from wcwidth import wcswidth
@@ -143,7 +144,24 @@ def _resolve_hit(
     return entries[int(members[column])]
 
 
-def run_demo(config: str | Path, query_ids: tuple[str, ...]) -> dict:
+StageCallback = Callable[[int, dict], None]
+
+
+def _emit_stage(
+    callback: StageCallback | None,
+    stage: int,
+    payload: dict,
+) -> None:
+    if callback is not None:
+        callback(stage, payload)
+
+
+def run_demo(
+    config: str | Path,
+    query_ids: tuple[str, ...],
+    *,
+    on_stage_complete: StageCallback | None = None,
+) -> dict:
     preparation_start = time.perf_counter()
     prepared = build_prepared_dataset(config)
     preparation_sec = time.perf_counter() - preparation_start
@@ -162,6 +180,27 @@ def run_demo(config: str | Path, query_ids: tuple[str, ...]) -> dict:
         random_state=42,
     )
     timings["offline_index_and_clustering"] = time.perf_counter() - step_start
+    base_result = {
+        "dataset": prepared.manifest.dataset_name,
+        "full_database_records": len(prepared.database),
+        "full_matching_entries": len(prepared.matching_database_names),
+        "source_rows": prepared.manifest.source_stats.get("source_rows"),
+        "script_counts": dict(prepared.manifest.database_script_counts),
+        "demo_database_entries": entries,
+    }
+    _emit_stage(
+        on_stage_complete,
+        1,
+        {
+            **base_result,
+            "demo_queries": len(queries),
+            "protocol": {
+                "clusters": int(artifacts.centroids.shape[0]),
+                "max_cluster_size": int(artifacts.max_size),
+            },
+            "timing_sec": timings.copy(),
+        },
+    )
 
     step_start = time.perf_counter()
     secret_context = create_ckks_context()
@@ -176,6 +215,27 @@ def run_demo(config: str | Path, query_ids: tuple[str, ...]) -> dict:
     )
     wire_first_request = serialize_tiled_first_round_request(first_request)
     timings["query_encode_and_encrypt"] = time.perf_counter() - step_start
+    query_display_rows = [
+        {
+            "raw_query": query.raw_name,
+            "canonical_query": query.canonical_name,
+            "query_script": query.script,
+        }
+        for query in queries
+    ]
+    _emit_stage(
+        on_stage_complete,
+        2,
+        {
+            "rows": query_display_rows,
+            "protocol": {
+                "batch_size": len(queries),
+                "slot_tile_width": int(party_a_state.layout.tile_width),
+                "round1_ciphertexts": len(wire_first_request.encrypted_query_200),
+            },
+            "timing_sec": timings.copy(),
+        },
+    )
 
     step_start = time.perf_counter()
     encrypted_centroid_scores = compare_tiled_batch_to_centroids(
@@ -184,6 +244,16 @@ def run_demo(config: str | Path, query_ids: tuple[str, ...]) -> dict:
         serialize_output=True,
     )
     timings["encrypted_centroid_comparison"] = time.perf_counter() - step_start
+    _emit_stage(
+        on_stage_complete,
+        3,
+        {
+            "protocol": {
+                "centroid_score_ciphertexts": len(encrypted_centroid_scores),
+            },
+            "timing_sec": timings.copy(),
+        },
+    )
 
     step_start = time.perf_counter()
     second_request, cluster_debug = choose_clusters_and_build_tiled_request(
@@ -193,6 +263,24 @@ def run_demo(config: str | Path, query_ids: tuple[str, ...]) -> dict:
     )
     wire_second_request = serialize_tiled_second_round_request(second_request)
     timings["cluster_selection"] = time.perf_counter() - step_start
+    cluster_rows = [
+        {
+            "canonical_query": query.canonical_name,
+            "selected_cluster": int(cluster_debug.selected_clusters[index]),
+        }
+        for index, query in enumerate(queries)
+    ]
+    _emit_stage(
+        on_stage_complete,
+        4,
+        {
+            "rows": cluster_rows,
+            "protocol": {
+                "selector_ciphertexts": len(wire_second_request.encrypted_selectors),
+            },
+            "timing_sec": timings.copy(),
+        },
+    )
 
     step_start = time.perf_counter()
     encrypted_match_tiles = list(
@@ -205,6 +293,29 @@ def run_demo(config: str | Path, query_ids: tuple[str, ...]) -> dict:
         )
     )
     timings["masked_column_matching"] = time.perf_counter() - step_start
+    matching_rows = [
+        {
+            **row,
+            "checked_columns": int(artifacts.cluster_matrix.shape[1]),
+        }
+        for row in cluster_rows
+    ]
+    _emit_stage(
+        on_stage_complete,
+        5,
+        {
+            "rows": matching_rows,
+            "protocol": {
+                "clusters": int(artifacts.centroids.shape[0]),
+                "max_cluster_size": int(artifacts.max_size),
+                "round2_query_ciphertexts": len(
+                    wire_second_request.encrypted_query_50
+                ),
+                "match_score_ciphertexts": len(encrypted_match_tiles),
+            },
+            "timing_sec": timings.copy(),
+        },
+    )
 
     step_start = time.perf_counter()
     match_result, match_debug = check_tiled_score_batch_debug(
@@ -263,13 +374,8 @@ def run_demo(config: str | Path, query_ids: tuple[str, ...]) -> dict:
                 "time_ms": per_query_ms,
             }
         )
-    return {
-        "dataset": prepared.manifest.dataset_name,
-        "full_database_records": len(prepared.database),
-        "full_matching_entries": len(prepared.matching_database_names),
-        "source_rows": prepared.manifest.source_stats.get("source_rows"),
-        "script_counts": dict(prepared.manifest.database_script_counts),
-        "demo_database_entries": entries,
+    result = {
+        **base_result,
         "protocol": {
             "signature_dimensions": [200, 50],
             "clusters": int(artifacts.centroids.shape[0]),
@@ -294,6 +400,8 @@ def run_demo(config: str | Path, query_ids: tuple[str, ...]) -> dict:
         "rows": rows,
         "all_passed": all(row["passed"] for row in rows),
     }
+    _emit_stage(on_stage_complete, 6, result)
+    return result
 
 
 # =============================================================================
@@ -445,10 +553,9 @@ def _table(headers: list[str], rows: list[list[object]], widths: list[int]) -> N
         )
 
 
-def _print_demo(result: dict) -> None:
+def _print_stage_1(result: dict) -> None:
     timing = result["timing_sec"]
     protocol = result["protocol"]
-    rows = result["rows"]
 
     _banner("SAGE MULTILINGUAL CROSS-SCRIPT FUZZY MATCHING")
     _info(
@@ -458,7 +565,7 @@ def _print_demo(result: dict) -> None:
     _kv("Source rows", f"{result['source_rows']:,}")
     _kv("Prepared records", f"{result['full_database_records']:,}")
     _kv("Searchable names", f"{result['full_matching_entries']:,}")
-    _kv("Demo queries", len(rows))
+    _kv("Demo queries", result.get("demo_queries", len(result.get("rows", []))))
 
     _phase(1, "Clean, Transliterate & Index (Offline)", "B")
     _info("Unicode NFKC -> casefold -> punctuation cleanup -> searchable variants")
@@ -483,6 +590,12 @@ def _print_demo(result: dict) -> None:
     _kv("Cluster matrix", f"({protocol['clusters']}, {protocol['max_cluster_size']}, 50)")
     _timing("Offline indexing", timing["offline_index_and_clustering"])
 
+
+def _print_stage_2(result: dict) -> None:
+    timing = result["timing_sec"]
+    protocol = result["protocol"]
+    rows = result["rows"]
+
     _phase(2, "Query Prepare & Encrypt", "A")
     _info("All selected queries are normalized and packed into one tiled HE batch")
     _table(
@@ -503,10 +616,21 @@ def _print_demo(result: dict) -> None:
     _timing("Encode + encrypt", timing["query_encode_and_encrypt"])
     _ok("Serialized Q200 request is bytes-only before reaching Party B")
 
+
+def _print_stage_3(result: dict) -> None:
+    timing = result["timing_sec"]
+    protocol = result["protocol"]
+
     _phase(3, "Compare to Encrypted Centroids", "B")
     _kv("Centroid score ciphertexts", protocol["centroid_score_ciphertexts"])
     _timing("Encrypted centroid comparison", timing["encrypted_centroid_comparison"])
     _info("Party B sees encrypted query vectors and returns encrypted scores")
+
+
+def _print_stage_4(result: dict) -> None:
+    timing = result["timing_sec"]
+    protocol = result["protocol"]
+    rows = result["rows"]
 
     _phase(4, "Decrypt Scores & Select Clusters", "A")
     _table(
@@ -521,6 +645,12 @@ def _print_demo(result: dict) -> None:
     _kv("Selector ciphertexts", protocol["selector_ciphertexts"])
     _timing("Cluster selection", timing["cluster_selection"])
     _info("Party A re-encrypts one-hot selectors; B cannot learn the selected cluster")
+
+
+def _print_stage_5(result: dict) -> None:
+    timing = result["timing_sec"]
+    protocol = result["protocol"]
+    rows = result["rows"]
 
     _phase(5, "Selector×Matrix | Random Mask | Encrypted Similarity", "B")
     _kv("Cluster matrix", f"({protocol['clusters']}, {protocol['max_cluster_size']}, 50)")
@@ -538,6 +668,12 @@ def _print_demo(result: dict) -> None:
     _timing("Masked column matching", timing["masked_column_matching"])
     _ok("Encrypted scores ready for all queries")
     _info("Independent positive masks prevent B from learning raw similarities")
+
+
+def _print_stage_6(result: dict) -> None:
+    timing = result["timing_sec"]
+    protocol = result["protocol"]
+    rows = result["rows"]
 
     _phase(6, "Check Sim (Decrypt & Judge)", "A")
     _kv("Threshold τ", protocol["threshold"])
@@ -596,6 +732,31 @@ def _print_demo(result: dict) -> None:
     )
 
 
+_STAGE_PRINTERS = {
+    1: _print_stage_1,
+    2: _print_stage_2,
+    3: _print_stage_3,
+    4: _print_stage_4,
+    5: _print_stage_5,
+    6: _print_stage_6,
+}
+
+
+def _print_completed_stage(stage: int, result: dict) -> None:
+    try:
+        printer = _STAGE_PRINTERS[stage]
+    except KeyError as exc:
+        raise ValueError(f"Unknown demo stage: {stage}") from exc
+    printer(result)
+    sys.stdout.flush()
+
+
+def _print_demo(result: dict) -> None:
+    """Render a completed result; CLI execution streams these stages instead."""
+    for stage in range(1, 7):
+        _print_completed_stage(stage, result)
+
+
 def _save_outputs(
     result: dict,
     output_dir: str | Path,
@@ -623,8 +784,11 @@ def main() -> int:
     args = parse_args()
     if args.no_color or not sys.stdout.isatty():
         Colors.disable()
-    result = run_demo(args.config, args.query_ids)
-    _print_demo(result)
+    result = run_demo(
+        args.config,
+        args.query_ids,
+        on_stage_complete=_print_completed_stage,
+    )
     json_path, csv_path = _save_outputs(result, args.output_dir)
     if json_path is not None and csv_path is not None:
         print(f"Saved JSON: {json_path}")

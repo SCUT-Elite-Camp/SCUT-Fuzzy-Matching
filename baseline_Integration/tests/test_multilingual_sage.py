@@ -15,6 +15,7 @@ from scripts.demo_sage_cross_script import (
     _display_query,
     _pad,
     _terminal_width,
+    run_demo,
 )
 from scripts.validate_sage_multilingual import validate_prepared_dataset
 
@@ -89,6 +90,19 @@ def test_sage_demo_table_isolates_arabic_cells_from_column_layout():
     assert plain.startswith(_LRI)
     assert _PDI in plain
     assert _terminal_width(padded) == 20
+
+
+def test_sage_demo_reports_each_completed_stage_in_order():
+    completed_stages: list[int] = []
+
+    result = run_demo(
+        "config/examples/sage_pipeline.json",
+        ("zh-romanized", "negative-latin"),
+        on_stage_complete=lambda stage, _payload: completed_stages.append(stage),
+    )
+
+    assert completed_stages == [1, 2, 3, 4, 5, 6]
+    assert result["all_passed"] is True
 
 
 def test_minhash_no_longer_collapses_non_latin_names_to_empty_signature():

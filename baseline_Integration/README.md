@@ -149,7 +149,7 @@ python scripts/validate_sage_multilingual.py
 展示本次 SAGE 跨文字查询特性，运行一个约几秒的真实 HE batching demo：
 
 ```powershell
-python scripts/demo_sage_cross_script.py
+C:\Users\Dinking\miniconda3\python.exe -B scripts\demo_sage_cross_script.py
 ```
 
 默认展示全部 9 条验证查询：5 条正查询与 4 条负查询。其中最直观的新跨文字功能是 `LiaoXueGuang` 命中原生汉字姓名 `廖學廣`，以及拉丁转写查询命中阿拉伯原名。终端会按 Party A / Party B 的步骤打印清洗与转写、建库聚类、查询加密、两轮密文计算、解密判断和最终准确率，并把报告保存到：
