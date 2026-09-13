@@ -1,8 +1,14 @@
+> **注意（2026-09 更新）**：当前仓库地址为 `SCUT-Elite-Camp/SCUT-Fuzzy-Matching`。本文第三~六节描述的 module1–module5 分支流程是**阶段一（五人分模块开发期）的历史工作流**；现阶段（基线已整合进 `baseline_Integration/`）日常开发直接在 `main` 上进行，建议拉取最新代码后再提交：
+>
+> ```bash
+> git pull origin main
+> ```
+
 ## 一、先把项目拉到自己电脑
 
 ```bash
-git clone https://github.com/Dickey007s/Fuzzy_matching_2026.git
-cd Fuzzy_matching_2026
+git clone https://github.com/SCUT-Elite-Camp/SCUT-Fuzzy-Matching.git
+cd SCUT-Fuzzy-Matching
 ```
 
 ---

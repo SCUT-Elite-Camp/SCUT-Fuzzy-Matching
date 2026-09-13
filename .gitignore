@@ -11,6 +11,4 @@ env/
 .DS_Store
 Thumbs.db
 .pytest_cache/
-__pycache__/
-*.py[cod]
 node_modules/
