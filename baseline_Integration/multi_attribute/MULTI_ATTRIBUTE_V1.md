@@ -53,3 +53,9 @@ The plaintext score is only printed in the local demo for validation. The protoc
 ## Next step
 
 After the two-attribute version is validated on labeled data, extend the same encoder registry to gender/address/country and then replace the fixed 200/50 assumptions in tiled batching with dynamic feature counts.
+
+**Done — see [MULTI_ATTRIBUTE_V2.md](MULTI_ATTRIBUTE_V2.md).** The encoder registry now
+backs a declarative `AttributeSchema`, the fixed 200/50 dims are derived from the attribute
+list, and any number of attributes can be declared. `MultiAttributeConfig` and this
+document's numbers are unchanged: V2 reproduces the V1 encoding bit-for-bit, and the
+`0.889` / `0.700` reference values above still hold.

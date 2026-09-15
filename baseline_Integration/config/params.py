@@ -64,6 +64,23 @@ SIMILARITY_THRESHOLD = 0.9        # 余弦相似度阈值 τ
 ARTIFACTS_DIR = "./artifacts"
 DATA_DIR = "./data"
 
+# ==================== 多属性匹配 ====================
+# 单个密文可用的最大槽位数（CKKS 明文槽数上限）。多属性 schema 的 cluster_dim / match_dim 都必须不超过该值，否则加密阶段直接失败。
+CKKS_SLOT_LIMIT = POLY_MODULUS_DEGREE // 2
+MULTI_ATTRIBUTE_THRESHOLD = 0.80  # 多属性原型的默认阈值 τ
+ATTRIBUTE_WEIGHT_SUM_TOLERANCE = 1e-9  # 属性权重之和与 1.0 的最大允许偏差
+NAME_ATTRIBUTE = "name"  # 默认的名字属性名，用于从记录对象桥接到 schema
+DEFAULT_EXACT_HASH_BLOCKS = 2  # 精确类属性的默认哈希块数
+DEFAULT_EXACT_BUCKETS_PER_BLOCK = 128  # 每个哈希块的默认桶数
+DEFAULT_ATTRIBUTE_HASH_SEED = 20260904  # 精确类属性的默认哈希种子
+FUZZY_TEXT_CLUSTER_DIM = NUM_PERMUTATIONS_CLUSTER  # 模糊文本属性的默认聚类维度
+FUZZY_TEXT_MATCH_DIM = NUM_PERMUTATIONS_MATCH  # 模糊文本属性的默认匹配维度
+# 多属性宽向量下第二轮 ct-ct 点积的累积误差按约 √dim 增长，再乘以最大掩码 10。
+# match_dim≈1900 时实测解密误差约 2e-4，故取 1e-4 作安全下界（与 BATCH_DECRYPT_EPS 同思路）。
+MULTI_ATTRIBUTE_DECRYPT_EPS = 1e-4
+# _build_cluster_matrix 的内存告警阈值：k * max_size * match_dim 个 float64。
+CLUSTER_MATRIX_MAX_BYTES = 2 * 1024 ** 3
+
 # ==================== 其他参数 ====================
 DECRYPT_EPS = 1e-6  # 解密误差容忍度，CKKS 解密结果与原始值的最大允许差距
 # 纵向 SIMD 在第二轮累加 50 个 ct-ct 乘积，误差高于单查询路径。

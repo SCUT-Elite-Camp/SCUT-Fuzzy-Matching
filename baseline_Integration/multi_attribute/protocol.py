@@ -10,13 +10,19 @@ from sklearn.preprocessing import StandardScaler
 
 from ckks.context import create_ckks_context
 from ckks.keys import encrypt, serialize_public_context
-from ckks.operations import add_plain, dot_ct_ct, dot_ct_pt, matmul_ct_pt, mul_plain
+from ckks.operations import add_plain, dot_ct_ct, dot_ct_pt, matmul_ct_pt
 from clustering.kmeans_cosine import run_cosine_kmeans
-from config.params import KMEANS_ITERATIONS, RANDOM_MASK_MAX, RANDOM_MASK_MIN, choose_k
+from config.params import (
+    CLUSTER_MATRIX_MAX_BYTES,
+    KMEANS_ITERATIONS,
+    MULTI_ATTRIBUTE_DECRYPT_EPS,
+    RANDOM_MASK_MAX,
+    RANDOM_MASK_MIN,
+    choose_k,
+)
 
-from .config import MultiAttributeConfig
 from .encoder import encode_record_vectors
-from .model import MatchRecord
+from .schema import AttributeSchema, resolve_schema
 
 _RNG = SystemRandom()
 
@@ -29,6 +35,9 @@ class MultiOfflineArtifacts:
     scaler_scale: np.ndarray
     cluster_assignments: np.ndarray
     max_size: int
+    # 生成该组离线产物时使用的 schema。A 侧据此校验双方布局一致（见
+    # prepare_party_a_multi_query）。默认 None 以兼容手工构造的测试产物。
+    schema: AttributeSchema | None = None
 
 
 @dataclass
@@ -72,6 +81,17 @@ def _build_cluster_matrix(
 
     sizes = np.bincount(assignments, minlength=k)
     max_size = int(sizes.max()) if len(sizes) else 0
+
+    # 多属性宽向量下这块 3-D 矩阵会随 match_dim 线性膨胀，而第二轮的 HE 循环
+    # 次数等于 max_size。超限时给出明确指向 k_mode 的报错，而不是 OOM。
+    nbytes = k * max_size * matrix.shape[1] * np.dtype(np.float64).itemsize
+    if nbytes > CLUSTER_MATRIX_MAX_BYTES:
+        raise ValueError(
+            f"cluster matrix would need {nbytes / 1024 ** 3:.2f} GiB "
+            f"(k={k}, max_size={max_size}, match_dim={matrix.shape[1]}); "
+            "reduce k via k_mode or shrink the schema's match_dim"
+        )
+
     out = np.zeros((k, max_size, matrix.shape[1]), dtype=np.float64)
     for cluster_idx in range(k):
         members = matrix[assignments == cluster_idx]
@@ -80,21 +100,29 @@ def _build_cluster_matrix(
 
 
 def prepare_party_b_multi_offline(
-    records_b: Iterable[MatchRecord],
+    records_b: Iterable[Any],
     *,
-    cfg: MultiAttributeConfig | None = None,
+    cfg: Any = None,
     k_mode: str | int = "sqrt",
     random_state: int = 42,
 ) -> MultiOfflineArtifacts:
-    cfg = cfg or MultiAttributeConfig()
+    schema = resolve_schema(cfg)
     records = list(records_b)
     if not records:
         raise ValueError("records_b cannot be empty")
 
-    cluster_vectors, match_vectors = encode_record_vectors(records, cfg)
+    cluster_vectors, match_vectors = encode_record_vectors(records, schema)
 
-    scaler = StandardScaler()
-    standardized = scaler.fit_transform(cluster_vectors)
+    if schema.standardize_cluster:
+        scaler = StandardScaler()
+        standardized = scaler.fit_transform(cluster_vectors)
+        scaler_mean = scaler.mean_.astype(np.float64)
+        scaler_scale = scaler.scale_.astype(np.float64)
+    else:
+        # 不标准化：A 侧的 (v - mean)/scale 退化为恒等变换。
+        standardized = cluster_vectors
+        scaler_mean = np.zeros(schema.cluster_dim, dtype=np.float64)
+        scaler_scale = np.ones(schema.cluster_dim, dtype=np.float64)
 
     # StandardScaler may produce exact zero scale for a constant feature; sklearn
     # exposes scale_=1 for such features, so A-side division remains safe.
@@ -112,21 +140,33 @@ def prepare_party_b_multi_offline(
     return MultiOfflineArtifacts(
         centroids=centroids,
         cluster_matrix=cluster_matrix,
-        scaler_mean=scaler.mean_.astype(np.float64),
-        scaler_scale=scaler.scale_.astype(np.float64),
+        scaler_mean=scaler_mean,
+        scaler_scale=scaler_scale,
         cluster_assignments=assignments,
         max_size=max_size,
+        schema=schema,
     )
 
 
 def prepare_party_a_multi_query(
-    query: MatchRecord,
+    query: Any,
     artifacts: MultiOfflineArtifacts,
     *,
-    cfg: MultiAttributeConfig | None = None,
+    cfg: Any = None,
 ) -> tuple[MultiFirstRoundRequest, MultiPartyAState]:
-    cfg = cfg or MultiAttributeConfig()
-    cluster_vec, match_vec = encode_record_vectors([query], cfg)
+    schema = resolve_schema(cfg)
+
+    # 布局校验必须 fail closed：两个 schema 总维度相同但属性顺序/种类不同时，
+    # 点积会算出一个「看起来合理」的错值。这是引入可配置 schema 后唯一新增的
+    # 静默错误风险，所以宁可报错。
+    if artifacts.schema is not None and artifacts.schema != schema:
+        raise ValueError(
+            "schema mismatch between Party A query and Party B artifacts: "
+            f"A fingerprint {schema.fingerprint()} != B fingerprint "
+            f"{artifacts.schema.fingerprint()}"
+        )
+
+    cluster_vec, match_vec = encode_record_vectors([query], schema)
     cluster_vec = cluster_vec[0]
     match_vec = match_vec[0]
 
@@ -246,19 +286,23 @@ def column_wise_multi_matching(
     for column_idx in range(max_size):
         # Every row is one cluster; encrypted one-hot selector privately picks
         # the candidate vector from the selected cluster in this column.
-        plain_column = matrix[:, column_idx, :]  # (k, match_dim)
-        enc_candidate = matmul_ct_pt(enc_selector, plain_column)
-        enc_score = dot_ct_ct(enc_candidate, enc_query)
-        enc_score = add_plain(enc_score, -float(tau))
         mask = _RNG.uniform(RANDOM_MASK_MIN, RANDOM_MASK_MAX)
-        yield mul_plain(enc_score, mask).serialize()
+        # 掩码乘在**明文**列和明文阈值上，而不是事后去乘密文：ct-ct 点积之后
+        # CKKS 的 scale 已经到 2^80，再乘一次明文会超出模数链并抛
+        # "scale out of bounds"。数学上等价于 mask * (score - tau)，也与生产
+        # 路径 party_b/online_responder.py 的做法一致。
+        plain_column = matrix[:, column_idx, :]  # (k, match_dim)
+        enc_candidate = matmul_ct_pt(enc_selector, mask * plain_column)
+        enc_score = dot_ct_ct(enc_candidate, enc_query)
+        enc_score = add_plain(enc_score, -mask * float(tau))
+        yield enc_score.serialize()
 
 
 def decrypt_multi_match(
     encrypted_scores,
     state: MultiPartyAState,
     *,
-    eps: float = 1e-6,
+    eps: float = MULTI_ATTRIBUTE_DECRYPT_EPS,
     early_stop: bool = True,
 ) -> tuple[bool, int, int | None]:
     checked = 0
@@ -276,36 +320,61 @@ def decrypt_multi_match(
 
 
 def run_multi_attribute_protocol(
-    records_b: Iterable[MatchRecord],
-    query: MatchRecord,
+    records_b: Iterable[Any],
+    query: Any,
     *,
-    cfg: MultiAttributeConfig | None = None,
+    cfg: Any = None,
     k_mode: str | int = "sqrt",
     random_state: int = 42,
     early_stop: bool = True,
+    tau: float | None = None,
+    eps: float | None = None,
+    artifacts: MultiOfflineArtifacts | None = None,
 ) -> MultiProtocolRun:
-    """Run the complete two-round name+DOB privacy-preserving protocol."""
+    """Run the complete two-round attribute-based privacy-preserving protocol.
 
-    cfg = cfg or MultiAttributeConfig()
-    artifacts = prepare_party_b_multi_offline(
-        records_b,
-        cfg=cfg,
-        k_mode=k_mode,
-        random_state=random_state,
-    )
-    first_req, state = prepare_party_a_multi_query(query, artifacts, cfg=cfg)
+    双轮结构与 V1 完全一致，只是向量宽度由 schema 决定：
+    第一轮发 cluster 维密文选簇，第二轮发 match 维密文 + selector 逐列判定。
+
+    Args:
+        cfg: ``None`` / ``AttributeSchema`` / ``MultiAttributeConfig`` / mapping。
+        tau: 覆盖 schema 的 ``similarity_threshold``。
+        eps: 覆盖解密阈值判据的容差。
+        artifacts: 复用已经算好的 B 方离线产物。B 方离线阶段要做 k-means 并把整个
+            cluster 矩阵加密，是多查询场景下的绝对瓶颈；同一批库上跑 N 条查询时
+            应当只做一次。传进来的 artifacts 与 ``cfg`` 的 schema 不符会直接报错。
+    """
+
+    schema = resolve_schema(cfg)
+    if artifacts is None:
+        artifacts = prepare_party_b_multi_offline(
+            records_b,
+            cfg=schema,
+            k_mode=k_mode,
+            random_state=random_state,
+        )
+    elif artifacts.schema is not None and artifacts.schema != schema:
+        raise ValueError(
+            "schema mismatch between cfg and the supplied artifacts: "
+            f"cfg fingerprint {schema.fingerprint()} != "
+            f"artifacts fingerprint {artifacts.schema.fingerprint()}"
+        )
+    first_req, state = prepare_party_a_multi_query(query, artifacts, cfg=schema)
     enc_centroid_scores = compare_multi_to_centroids(first_req, artifacts.centroids)
     second_req, selected_cluster = choose_multi_cluster(enc_centroid_scores, state)
     enc_match_scores = column_wise_multi_matching(
         artifacts.cluster_matrix,
         second_req,
         first_req.public_context_bytes,
-        tau=cfg.similarity_threshold,
+        tau=schema.similarity_threshold if tau is None else tau,
     )
+    decrypt_kwargs = {"early_stop": early_stop}
+    if eps is not None:
+        decrypt_kwargs["eps"] = eps
     catch, checked, first_positive = decrypt_multi_match(
         enc_match_scores,
         state,
-        early_stop=early_stop,
+        **decrypt_kwargs,
     )
     return MultiProtocolRun(
         catch=catch,

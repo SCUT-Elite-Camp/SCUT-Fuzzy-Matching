@@ -1,0 +1,263 @@
+1. 合成数据100条查询测试（80正样本、20负样本）
+
+(.venv) (base) PS D:\Fuzzy_matching\SCUT-Fuzzy-Matching\baseline_Integration> python scripts/demo_multi_attribute_dataset.py --config config/examples/multi_attribute_schema.json --db-limit 500 --limit 100
+========================================================================================
+schema fingerprint 4a9e31a2cbf563df   threshold 0.6
+========================================================================================
+attribute     kind           weight   cluster   match   params
+name          fuzzy_text       0.30       200      50   cluster_dim=200 match_dim=50
+dob           date             0.20       256     256   blocks=2 buckets_per_block=128 seed=20260904 day_first=True
+phone         exact            0.20       256     256   blocks=2 buckets_per_block=128 normalize=digits
+email         exact            0.10       256     256   blocks=2 buckets_per_block=128 normalize=casefold
+address       fuzzy_text       0.15       100      30   cluster_dim=100 match_dim=30
+gender        exact            0.05         8       8   blocks=1 buckets_per_block=8 normalize=casefold
+TOTAL                          1.00      1076     856
+
+CKKS slots: 4096; headroom cluster 3020 / match 3240
+database 500 (truncated by --db-limit 500) -> k~22, <= 23 rows/cluster -> cluster_matrix ~3.3 MB
+
+
+query           label     true    imp  top-1         attr breakdown                          encrypted
+----------------------------------------------------------------------------------------
+q-000001        False    0.467  0.467  ent-000253    name=0.94 dob=0.00 phone=0.00 email=0.00 address=0.91 gender=1.00  no-catch  cluster=16   checked=40
+q-000002        True     0.841  0.448  ent-000001    name=0.80 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  no-catch  cluster=12   checked=40
+q-000003        True     0.900  0.448  ent-000002    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=2    checked=2
+q-000004        True     0.900  0.451  ent-000003    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=0    checked=1
+q-000005        True     1.000  0.432  ent-000004    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=9    checked=1
+q-000006        False    0.482  0.482  ent-000026    name=0.68 dob=0.50 phone=0.00 email=0.00 address=0.86 gender=1.00  no-catch  cluster=11   checked=40
+q-000007        True     1.000  0.420  ent-000005    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=18   checked=1
+q-000008        True     0.964  0.470  ent-000006    name=0.88 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=9    checked=2
+q-000009        True     1.000  0.419  ent-000007    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=19   checked=1
+q-000010        True     0.911  0.499  ent-000008    name=0.70 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=8    checked=1
+q-000011        False    0.434  0.434  ent-000203    name=0.63 dob=0.50 phone=0.00 email=0.00 address=0.63 gender=1.00  no-catch  cluster=6    checked=40
+q-000012        True     0.900  0.484  ent-000009    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  no-catch  cluster=11   checked=40
+q-000013        True     1.000  0.450  ent-000010    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=10   checked=1
+q-000014        True     1.000  0.457  ent-000011    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=6    checked=1
+q-000015        True     0.926  0.451  ent-000012    name=0.75 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=0    checked=2
+q-000016        False    0.501  0.501  ent-000498    name=0.51 dob=0.50 phone=0.50 email=0.00 address=0.65 gender=1.00  no-catch  cluster=15   checked=40
+q-000017        True     1.000  0.435  ent-000013    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=13   checked=1
+q-000018        True     0.999  0.442  ent-000014    name=1.00 dob=1.00 phone=1.00 email=1.00 address=0.99 gender=1.00  CATCH     cluster=5    checked=1
+q-000019        True     0.885  0.425  ent-000015    name=0.78 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=0.00  CATCH     cluster=18   checked=2
+q-000020        True     0.900  0.442  ent-000016    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=14   checked=1
+q-000021        False    0.408  0.408  ent-000003    name=0.52 dob=0.00 phone=0.50 email=0.00 address=0.68 gender=1.00  no-catch  cluster=21   checked=40
+q-000022        True     0.900  0.448  ent-000017    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=15   checked=1
+q-000023        True     1.000  0.455  ent-000018    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=1    checked=1
+q-000024        True     0.900  0.460  ent-000019    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=0    checked=3
+q-000025        True     1.000  0.471  ent-000020    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=2    checked=3
+q-000026        False    0.435  0.435  ent-000210    name=0.55 dob=0.00 phone=0.50 email=0.00 address=0.79 gender=1.00  no-catch  cluster=2    checked=40
+q-000027        True     0.924  0.488  ent-000021    name=0.75 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=19   checked=2
+q-000028        True     1.000  0.456  ent-000022    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=5    checked=2
+q-000029        True     0.800  0.484  ent-000023    name=1.00 dob=0.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=2    checked=4
+q-000030        True     1.000  0.439  ent-000024    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=14   checked=2
+q-000031        False    0.431  0.431  ent-000084    name=0.63 dob=0.50 phone=0.00 email=0.00 address=0.62 gender=1.00  no-catch  cluster=0    checked=40
+q-000032        True     0.900  0.436  ent-000025    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=19   checked=3
+q-000033        True     0.900  0.439  ent-000026    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=12   checked=1
+q-000034        True     0.828  0.472  ent-000027    name=0.76 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=8    checked=2
+q-000035        True     0.901  0.453  ent-000028    name=0.84 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=0.00  CATCH     cluster=4    checked=1
+q-000036        False    0.443  0.443  ent-000382    name=0.64 dob=0.00 phone=0.50 email=0.00 address=0.67 gender=1.00  no-catch  cluster=10   checked=40
+q-000037        True     1.000  0.456  ent-000029    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=2    checked=5
+q-000038        True     0.900  0.472  ent-000030    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=2    checked=6
+q-000039        True     1.000  0.441  ent-000031    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=17   checked=1
+q-000040        True     1.000  0.452  ent-000032    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=5    checked=3
+q-000041        False    0.518  0.518  ent-000257    name=0.60 dob=0.50 phone=0.50 email=0.00 address=0.58 gender=1.00  no-catch  cluster=4    checked=40
+q-000042        True     0.900  0.452  ent-000033    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=12   checked=2
+q-000043        True     0.750  0.458  ent-000034    name=1.00 dob=0.00 phone=1.00 email=1.00 address=1.00 gender=0.00  CATCH     cluster=20   checked=1
+q-000044        True     0.936  0.447  ent-000035    name=1.00 dob=1.00 phone=1.00 email=1.00 address=0.90 gender=0.00  CATCH     cluster=21   checked=1
+q-000045        True     1.000  0.525  ent-000036    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=13   checked=2
+q-000046        False    0.451  0.451  ent-000200    name=0.71 dob=0.50 phone=0.00 email=0.00 address=0.59 gender=1.00  no-catch  cluster=11   checked=40
+q-000047        True     1.000  0.444  ent-000037    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=15   checked=2
+q-000048        True     0.900  0.488  ent-000038    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=8    checked=3
+q-000049        True     1.000  0.417  ent-000039    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=12   checked=3
+q-000050        True     0.900  0.475  ent-000040    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=3    checked=1
+q-000051        False    0.441  0.441  ent-000195    name=0.60 dob=0.00 phone=0.50 email=0.00 address=0.74 gender=1.00  no-catch  cluster=10   checked=40
+q-000052        True     0.959  0.470  ent-000041    name=0.86 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=12   checked=4
+q-000053        True     1.000  0.458  ent-000042    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=6    checked=2
+q-000054        True     0.903  0.423  ent-000043    name=0.84 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=0.00  CATCH     cluster=9    checked=4
+q-000055        True     0.977  0.415  ent-000044    name=1.00 dob=1.00 phone=1.00 email=1.00 address=0.85 gender=1.00  CATCH     cluster=15   checked=3
+q-000056        False    0.467  0.467  ent-000267    name=0.74 dob=0.50 phone=0.00 email=0.00 address=0.64 gender=1.00  no-catch  cluster=4    checked=40
+q-000057        True     0.966  0.444  ent-000045    name=0.89 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=2    checked=7
+q-000058        True     1.000  0.459  ent-000046    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=14   checked=3
+q-000059        True     1.000  0.439  ent-000047    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=17   checked=2
+q-000060        True     0.900  0.460  ent-000048    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  no-catch  cluster=3    checked=40
+q-000061        False    0.499  0.499  ent-000474    name=0.69 dob=0.50 phone=0.00 email=0.50 address=0.63 gender=1.00  no-catch  cluster=21   checked=40
+q-000062        True     1.000  0.525  ent-000049    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=19   checked=4
+q-000063        True     0.900  0.445  ent-000050    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=5    checked=4
+q-000064        True     1.000  0.497  ent-000051    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=21   checked=2
+q-000065        True     1.000  0.451  ent-000052    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=20   checked=2
+q-000066        False    0.435  0.435  ent-000075    name=0.62 dob=0.50 phone=0.00 email=0.00 address=0.66 gender=1.00  no-catch  cluster=18   checked=40
+q-000067        True     0.920  0.440  ent-000053    name=0.73 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=21   checked=3
+q-000068        True     0.984  0.416  ent-000054    name=0.95 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=11   checked=1
+q-000069        True     0.900  0.442  ent-000055    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=17   checked=3
+q-000070        True     1.000  0.459  ent-000056    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=13   checked=3
+q-000071        False    0.456  0.456  ent-000349    name=0.68 dob=0.00 phone=0.50 email=0.00 address=0.68 gender=1.00  no-catch  cluster=20   checked=40
+q-000072        True     1.000  0.447  ent-000057    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=19   checked=5
+q-000073        True     1.000  0.454  ent-000058    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=15   checked=4
+q-000074        True     1.000  0.454  ent-000059    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=18   checked=3
+q-000075        True     0.875  0.445  ent-000060    name=0.92 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=17   checked=4
+q-000076        False    0.443  0.443  ent-000076    name=0.61 dob=0.50 phone=0.00 email=0.00 address=0.74 gender=1.00  no-catch  cluster=18   checked=40
+q-000077        True     0.997  0.417  ent-000061    name=1.00 dob=1.00 phone=1.00 email=1.00 address=0.98 gender=1.00  CATCH     cluster=1    checked=2
+q-000078        True     0.900  0.419  ent-000062    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=8    checked=4
+q-000079        True     0.900  0.392  ent-000063    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=13   checked=4
+q-000080        True     0.800  0.495  ent-000064    name=1.00 dob=0.00 phone=1.00 email=1.00 address=1.00 gender=1.00  no-catch  cluster=3    checked=40
+q-000081        False    0.439  0.439  ent-000060    name=0.58 dob=0.50 phone=0.00 email=0.00 address=0.76 gender=1.00  no-catch  cluster=16   checked=40
+q-000082        True     1.000  0.456  ent-000065    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=17   checked=6
+q-000083        True     1.000  0.471  ent-000066    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=18   checked=4
+q-000084        True     1.000  0.489  ent-000067    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=20   checked=3
+q-000085        True     0.900  0.424  ent-000068    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=10   checked=2
+q-000086        False    0.450  0.450  ent-000189    name=0.66 dob=0.50 phone=0.00 email=0.00 address=0.68 gender=1.00  no-catch  cluster=14   checked=40
+q-000087        True     0.900  0.469  ent-000069    name=1.00 dob=1.00 phone=1.00 email=0.00 address=1.00 gender=1.00  CATCH     cluster=8    checked=5
+q-000088        True     1.000  0.456  ent-000070    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=1    checked=3
+q-000089        True     1.000  0.409  ent-000071    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=21   checked=4
+q-000090        True     1.000  0.468  ent-000072    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=20   checked=4
+q-000091        False    0.437  0.437  ent-000244    name=0.50 dob=0.00 phone=0.50 email=0.00 address=0.91 gender=1.00  no-catch  cluster=18   checked=40
+q-000092        True     0.950  0.429  ent-000073    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=0.00  CATCH     cluster=11   checked=2
+q-000093        True     0.858  0.471  ent-000074    name=0.74 dob=1.00 phone=1.00 email=1.00 address=0.91 gender=0.00  CATCH     cluster=1    checked=4
+q-000094        True     1.000  0.446  ent-000075    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=3    checked=2
+q-000095        True     0.800  0.450  ent-000076    name=1.00 dob=0.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=4    checked=2
+q-000096        False    0.463  0.463  ent-000259    name=0.70 dob=0.00 phone=0.50 email=0.00 address=0.68 gender=1.00  no-catch  cluster=8    checked=40
+q-000097        True     1.000  0.439  ent-000077    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=11   checked=3
+q-000098        True     1.000  0.444  ent-000078    name=1.00 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=19   checked=6
+q-000099        True     0.943  0.475  ent-000079    name=0.81 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=14   checked=4
+q-000100        True     0.974  0.496  ent-000080    name=0.91 dob=1.00 phone=1.00 email=1.00 address=1.00 gender=1.00  CATCH     cluster=21   checked=5
+----------------------------------------------------------------------------------------
+queries: 100 (80 positive / 20 negative)
+plaintext top-1 recall, positives only (debug reference): 80/80 = 100.0%
+plaintext false positives at tau=0.6 (debug reference): 0/20 = 0.0%
+plaintext calibration window: lowest true-match 0.750 / highest impostor 0.525
+  -> tau must be inside (0.525, 0.750); current tau=0.6 is inside
+encrypted catch-vs-label agreement: 96/100 = 96.0%
+encrypted recall, positives only:   76/80  = 95.0%
+cluster recall (true match landed in the selected cluster): 76/80 = 95.0%
+* 准确率96%，召回率95%，簇召回率95%
+
+
+2. febri数据集100条查询测试（100正样本、0负样本）
+(.venv) (base) PS D:\Fuzzy_matching\SCUT-Fuzzy-Matching\baseline_Integration> python scripts/demo_multi_attribute_dataset.py --config config/examples/febrl_multi_attribute.json --db-limit 0 --limit 100              
+========================================================================================
+schema fingerprint 617ddbf4288b3c42   threshold 0.6
+========================================================================================
+attribute     kind           weight   cluster   match   params
+name          fuzzy_text       0.30       200      50   cluster_dim=200 match_dim=50
+address       fuzzy_text       0.20       100      30   cluster_dim=100 match_dim=30
+dob           date             0.20       256     256   blocks=2 buckets_per_block=128 seed=20260904 on_invalid=missing
+ssn           exact            0.15      1024    1024   blocks=2 buckets_per_block=512 normalize=digits
+postcode      exact            0.10       512     512   blocks=1 buckets_per_block=512 normalize=digits
+state         exact            0.05        64      64   blocks=1 buckets_per_block=64 normalize=casefold
+TOTAL                          1.00      2156    1936
+
+CKKS slots: 4096; headroom cluster 1940 / match 2160
+database 5000 -> k~71, <= 71 rows/cluster -> cluster_matrix ~74.5 MB
+
+data quality: dob: 1/5100 unparseable -> zeroed, 98 blank
+
+query           label     true    imp  top-1         attr breakdown                          encrypted
+----------------------------------------------------------------------------------------
+rec-561-dup-0   True     0.818  0.523  rec-561-org   name=0.51 address=0.82 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=19   checked=11
+rec-2642-dup-0  True     0.910  0.503  rec-2642-org  name=0.77 address=0.89 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=51   checked=26
+rec-608-dup-0   True     0.804  0.512  rec-608-org   name=0.68 address=1.00 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  no-catch  cluster=62   checked=128
+rec-3239-dup-0  True     0.852  0.488  rec-3239-org  name=0.71 address=0.69 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=41   checked=60
+rec-2886-dup-0  True     0.854  0.486  rec-2886-org  name=1.00 address=0.77 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=28   checked=77
+rec-4285-dup-0  True     0.948  0.543  rec-4285-org  name=1.00 address=0.74 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=60   checked=15
+rec-929-dup-0   True     0.988  0.512  rec-929-org   name=1.00 address=0.94 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=56   checked=43
+rec-4833-dup-0  True     0.875  0.537  rec-4833-org  name=0.67 address=0.88 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=6    checked=17
+rec-717-dup-0   True     0.755  0.459  rec-717-org   name=1.00 address=0.77 dob=0.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=18   checked=47
+rec-3984-dup-0  True     0.990  0.507  rec-3984-org  name=1.00 address=0.95 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=54   checked=35
+rec-3138-dup-0  True     1.000  0.510  rec-3138-org  name=1.00 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=43   checked=69
+rec-1424-dup-0  True     0.949  0.579  rec-1424-org  name=1.00 address=0.75 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=41   checked=15
+rec-825-dup-0   True     0.938  0.495  rec-825-org   name=0.79 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=5    checked=19
+rec-520-dup-0   True     0.810  0.487  rec-520-org   name=1.00 address=0.80 dob=1.00 ssn=0.00 postcode=1.00 state=1.00  CATCH     cluster=27   checked=33
+rec-3868-dup-0  True     0.847  0.490  rec-3868-org  name=0.92 address=0.85 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=38   checked=56
+rec-147-dup-0   True     0.951  0.474  rec-147-org   name=1.00 address=0.75 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=24   checked=17
+rec-919-dup-0   True     0.855  0.495  rec-919-org   name=0.58 address=0.91 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=0    checked=45
+rec-3156-dup-0  True     0.900  0.504  rec-3156-org  name=1.00 address=1.00 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=40   checked=64
+rec-1026-dup-0  True     0.750  0.506  rec-1026-org  name=1.00 address=1.00 dob=1.00 ssn=0.00 postcode=0.00 state=1.00  CATCH     cluster=59   checked=26
+rec-3272-dup-0  True     0.900  0.481  rec-3272-org  name=1.00 address=1.00 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=29   checked=40
+rec-4342-dup-0  True     0.816  0.526  rec-4342-org  name=0.74 address=0.97 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  no-catch  cluster=31   checked=128
+rec-4788-dup-0  True     0.826  0.482  rec-4788-org  name=1.00 address=0.88 dob=1.00 ssn=0.00 postcode=1.00 state=1.00  no-catch  cluster=66   checked=128
+rec-3978-dup-0  True     0.650  0.427  rec-3978-org  name=1.00 address=1.00 dob=0.00 ssn=0.00 postcode=1.00 state=1.00  no-catch  cluster=35   checked=128
+rec-2440-dup-0  True     0.885  0.563  rec-2440-org  name=1.00 address=0.67 dob=1.00 ssn=1.00 postcode=1.00 state=0.00  CATCH     cluster=54   checked=27
+rec-4517-dup-0  True     0.963  0.501  rec-4517-org  name=0.93 address=0.91 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=27   checked=13
+rec-4595-dup-0  True     0.973  0.492  rec-4595-org  name=1.00 address=0.87 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=20   checked=15
+rec-316-dup-0   True     0.959  0.562  rec-316-org   name=0.86 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=32   checked=20
+rec-1413-dup-0  True     0.944  0.477  rec-1413-org  name=0.86 address=0.93 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=13   checked=62
+rec-470-dup-0   True     0.873  0.497  rec-470-org   name=1.00 address=0.86 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=11   checked=105
+rec-2871-dup-0  True     0.939  0.554  rec-2871-org  name=1.00 address=0.69 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=14   checked=26
+rec-4096-dup-0  True     0.869  0.482  rec-4096-org  name=0.63 address=0.90 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=30   checked=1
+rec-567-dup-0   True     0.657  0.462  rec-567-org   name=0.61 address=0.86 dob=0.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=34   checked=38
+rec-3089-dup-0  True     0.863  0.521  rec-3089-org  name=0.71 address=0.76 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=58   checked=8
+rec-4233-dup-0  True     0.991  0.568  rec-4233-org  name=1.00 address=0.95 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=5    checked=47
+rec-3874-dup-0  True     0.903  0.503  rec-3874-org  name=0.75 address=0.88 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=31   checked=40
+rec-1168-dup-0  True     0.934  0.499  rec-1168-org  name=0.78 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=50   checked=51
+rec-4618-dup-0  True     0.542  0.473  rec-4618-org  name=0.74 address=0.85 dob=0.00 ssn=1.00 postcode=0.00 state=0.00  no-catch  cluster=21   checked=128
+rec-2896-dup-0  True     0.781  0.514  rec-2896-org  name=0.60 address=1.00 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  no-catch  cluster=53   checked=128
+rec-3044-dup-0  True     1.000  0.499  rec-3044-org  name=1.00 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=5    checked=16
+rec-2852-dup-0  True     0.691  0.521  rec-2852-org  name=0.66 address=0.97 dob=0.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=59   checked=16
+rec-1492-dup-0  True     0.937  0.518  rec-1492-org  name=0.84 address=0.92 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=49   checked=33
+rec-1108-dup-0  True     0.879  0.479  rec-1108-org  name=0.93 address=1.00 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=45   checked=64
+rec-2621-dup-0  True     0.771  0.496  rec-2621-org  name=0.76 address=0.72 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=11   checked=100
+rec-2867-dup-0  True     0.849  0.494  rec-2867-org  name=0.56 address=0.90 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=54   checked=64
+rec-2979-dup-0  True     0.928  0.459  rec-2979-org  name=1.00 address=0.64 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=51   checked=17
+rec-4466-dup-0  True     0.898  0.529  rec-4466-org  name=0.69 address=0.96 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=17   checked=78
+rec-4903-dup-0  True     0.666  0.473  rec-4903-org  name=0.74 address=0.72 dob=0.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=66   checked=65
+rec-1445-dup-0  True     0.963  0.565  rec-1445-org  name=1.00 address=0.82 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=60   checked=48
+rec-2854-dup-0  True     0.915  0.487  rec-2854-org  name=0.72 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=47   checked=40
+rec-4281-dup-0  True     0.894  0.455  rec-4281-org  name=0.98 address=1.00 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=58   checked=7
+rec-1831-dup-0  True     0.987  0.582  rec-1831-org  name=1.00 address=0.93 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=38   checked=39
+rec-172-dup-0   True     0.926  0.569  rec-172-org   name=0.76 address=0.98 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=10   checked=5
+rec-2239-dup-0  True     0.920  0.482  rec-2239-org  name=0.76 address=0.96 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=55   checked=84
+rec-2873-dup-0  True     0.826  0.486  rec-2873-org  name=1.00 address=0.88 dob=1.00 ssn=1.00 postcode=0.00 state=0.00  no-catch  cluster=62   checked=128
+rec-3040-dup-0  True     0.976  0.483  rec-3040-org  name=1.00 address=0.88 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=56   checked=58
+rec-1015-dup-0  True     0.878  0.455  rec-1015-org  name=0.59 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=32   checked=16
+rec-2154-dup-0  True     0.859  0.478  rec-2154-org  name=0.70 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=0.00  CATCH     cluster=25   checked=29
+rec-4799-dup-0  True     0.884  0.502  rec-4799-org  name=1.00 address=0.92 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  no-catch  cluster=47   checked=128
+rec-3528-dup-0  True     0.752  0.585  rec-3528-org  name=0.77 address=0.85 dob=1.00 ssn=0.00 postcode=1.00 state=1.00  no-catch  cluster=69   checked=128
+rec-2434-dup-0  True     0.949  0.531  rec-2434-org  name=1.00 address=0.75 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=27   checked=24
+rec-4382-dup-0  True     0.797  0.465  rec-4382-org  name=0.82 address=1.00 dob=1.00 ssn=0.00 postcode=1.00 state=1.00  no-catch  cluster=2    checked=128
+rec-2786-dup-0  True     0.927  0.489  rec-2786-org  name=0.84 address=0.88 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=6    checked=39
+rec-2685-dup-0  True     0.854  0.463  rec-2685-org  name=0.85 address=1.00 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=2    checked=21
+rec-3436-dup-0  True     0.906  0.504  rec-3436-org  name=0.73 address=0.94 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=53   checked=18
+rec-4668-dup-0  True     0.869  0.494  rec-4668-org  name=1.00 address=0.84 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=21   checked=21
+rec-3570-dup-0  True     0.943  0.526  rec-3570-org  name=0.81 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=47   checked=72
+rec-490-dup-0   True     1.000  0.584  rec-490-org   name=1.00 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=25   checked=11
+rec-3777-dup-0  True     0.694  0.515  rec-3777-org  name=0.90 address=0.62 dob=0.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=31   checked=58
+rec-4113-dup-0  True     0.798  0.497  rec-4113-org  name=1.00 address=0.99 dob=0.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=45   checked=52
+rec-4592-dup-0  True     0.842  0.504  rec-4592-org  name=0.89 address=0.87 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  no-catch  cluster=59   checked=128
+rec-4070-dup-0  True     0.915  0.468  rec-4070-org  name=0.85 address=0.80 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=51   checked=9
+rec-4862-dup-0  True     0.760  0.505  rec-4862-org  name=0.87 address=1.00 dob=0.00 ssn=1.00 postcode=1.00 state=1.00  no-catch  cluster=55   checked=128
+rec-629-dup-0   True     0.915  0.533  rec-629-org   name=0.85 address=0.79 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=56   checked=41
+rec-2447-dup-0  True     0.942  0.497  rec-2447-org  name=0.81 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=13   checked=41
+rec-2694-dup-0  True     0.953  0.513  rec-2694-org  name=1.00 address=0.76 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=23   checked=85
+rec-3899-dup-0  True     0.998  0.483  rec-3899-org  name=1.00 address=0.99 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=28   checked=30
+rec-4878-dup-0  True     0.894  0.586  rec-4878-org  name=1.00 address=0.72 dob=1.00 ssn=1.00 postcode=1.00 state=0.00  CATCH     cluster=65   checked=2
+rec-1503-dup-0  True     0.955  0.553  rec-1503-org  name=0.85 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=48   checked=51
+rec-4831-dup-0  True     0.818  0.560  rec-4831-org  name=0.89 address=1.00 dob=1.00 ssn=0.00 postcode=1.00 state=1.00  CATCH     cluster=9    checked=64
+rec-888-dup-0   True     0.970  0.452  rec-888-org   name=1.00 address=0.85 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=51   checked=76
+rec-3917-dup-0  True     0.960  0.488  rec-3917-org  name=1.00 address=0.80 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=19   checked=27
+rec-2713-dup-0  True     0.770  0.448  rec-2713-org  name=0.87 address=0.80 dob=1.00 ssn=1.00 postcode=0.00 state=0.00  CATCH     cluster=17   checked=39
+rec-3390-dup-0  True     0.855  0.496  rec-3390-org  name=0.63 address=0.83 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=24   checked=18
+rec-109-dup-0   True     0.736  0.531  rec-109-org   name=0.70 address=0.88 dob=1.00 ssn=0.00 postcode=1.00 state=1.00  CATCH     cluster=28   checked=33
+rec-4162-dup-0  True     0.990  0.509  rec-4162-org  name=1.00 address=0.95 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=64   checked=58
+rec-1226-dup-0  True     0.700  0.490  rec-1226-org  name=0.67 address=1.00 dob=0.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=7    checked=42
+rec-2175-dup-0  True     0.948  0.525  rec-2175-org  name=1.00 address=0.74 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=64   checked=53
+rec-2820-dup-0  True     0.998  0.486  rec-2820-org  name=1.00 address=0.99 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=61   checked=79
+rec-4051-dup-0  True     0.913  0.516  rec-4051-org  name=0.87 address=0.76 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=8    checked=25
+rec-4486-dup-0  True     0.876  0.541  rec-4486-org  name=0.72 address=0.80 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=51   checked=23
+rec-3316-dup-0  True     0.949  0.511  rec-3316-org  name=1.00 address=0.75 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=0    checked=14
+rec-687-dup-0   True     0.830  0.586  rec-687-org   name=0.93 address=0.76 dob=1.00 ssn=1.00 postcode=0.00 state=1.00  CATCH     cluster=49   checked=17
+rec-1552-dup-0  True     0.955  0.500  rec-1552-org  name=0.92 address=0.90 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=11   checked=89
+rec-802-dup-0   True     0.739  0.486  rec-802-org   name=1.00 address=0.69 dob=0.00 ssn=1.00 postcode=1.00 state=1.00  no-catch  cluster=59   checked=128
+rec-1880-dup-0  True     0.908  0.461  rec-1880-org  name=1.00 address=0.54 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=66   checked=33
+rec-2306-dup-0  True     1.000  0.535  rec-2306-org  name=1.00 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=51   checked=5
+rec-394-dup-0   True     1.000  0.582  rec-394-org   name=1.00 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=62   checked=3
+rec-2963-dup-0  True     1.000  0.518  rec-2963-org  name=1.00 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=11   checked=44
+rec-4451-dup-0  True     0.913  0.487  rec-4451-org  name=0.71 address=1.00 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=67   checked=34
+rec-8-dup-0     True     0.994  0.529  rec-8-org     name=1.00 address=0.97 dob=1.00 ssn=1.00 postcode=1.00 state=1.00  CATCH     cluster=7    checked=39
+----------------------------------------------------------------------------------------
+queries: 100 (100 positive / 0 negative)
+plaintext top-1 recall, positives only (debug reference): 100/100 = 100.0%
+plaintext calibration window: lowest true-match 0.542 / highest impostor 0.586
+  -> true matches and impostors OVERLAP here; no tau separates them. Add attributes, raise weights, or accept errors.
+encrypted catch-vs-label agreement: 87/100 = 87.0%
+encrypted recall, positives only:   87/100 = 87.0%
+cluster recall (true match landed in the selected cluster): 87/100 = 87.0%
+* 准确率87%、召回率87%、簇召回率87%
