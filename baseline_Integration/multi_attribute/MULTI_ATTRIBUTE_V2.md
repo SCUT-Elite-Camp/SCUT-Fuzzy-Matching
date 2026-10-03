@@ -9,6 +9,13 @@ vectors and the way they are assembled become configurable.
 V1's closing note ("extend the same encoder registry to gender/address/country and then
 replace the fixed 200/50 assumptions") is what this implements.
 
+Three follow-ups on top of the schema layer are covered at the end of this document, all
+of them **measured rather than asserted**: [weights and tau are derived from labelled
+data](#calibrating-weights-and-tau-from-labelled-data) instead of hand-written,
+[round 2 probes](#round-2-probe-policy-and-k-selection) more than one cluster, and the
+[k policy](#round-2-probe-policy-and-k-selection) is picked from a measured cost curve.
+Read the numbers before changing any of the three defaults.
+
 ## Core score (unchanged from V1)
 
 ```
@@ -59,7 +66,7 @@ asserts `assert_array_equal` against the original implementation).
 | kind | params | (cluster, match) dims | implementation |
 |---|---|---|---|
 | `fuzzy_text` | `cluster_dim` (≤200), `match_dim` | `(cd, md)` | `minhash.encoder.batch_encode` + `l2_normalize` |
-| `exact` | `blocks`, `buckets_per_block`, `seed`, `normalize` | `(D, D)`, `D = blocks·buckets` | `hashing.exact_hash_vector` |
+| `exact` | `blocks`, `buckets_per_block`, `seed`, `normalize`, `tolerate` | `(D, D)`, `D = blocks·buckets` | `hashing.exact_hash_vector` |
 | `date` | as `exact`, plus `day_first`, `on_invalid` | `(D, D)` | `normalize_dob` + `exact_hash_vector` |
 
 Aliases: `text`/`name` → `fuzzy_text`, `categorical`/`category` → `exact`, `dob` → `date`.
@@ -68,6 +75,50 @@ Kind names are canonicalized on construction, so JSON round-trips are stable.
 `normalize` modes for `exact`: `strip` | `casefold` | `digits`. **`digits`** strips all
 non-digit characters, so `+1 (555) 010-0199` and `15550100199` land in the same bucket —
 that is what makes phone numbers usable as an exact attribute.
+
+### `tolerate`: aligned-character encoding (opt-in, measured net-negative)
+
+`exact` and `date` default to a **cliff**: the whole string goes into one hash, so one
+changed character takes the similarity from 1.0 straight to 0.0. `tolerate` replaces that
+with an **aligned per-position** encoding — similarity becomes the fraction of positions
+carrying the same character, so `5304218` vs `5304219` is 6/7 instead of 0.
+
+```json
+{"name": "ssn", "kind": "exact", "weight": 0.15, "normalize": "digits",
+ "tolerate": {"max_length": 8, "buckets": 64}}
+```
+
+`max_length` and `buckets` are **mandatory and explicit**: the dim is
+`max_length · buckets`, and it must not depend on the batch (Party A encodes one query,
+Party B encodes the whole database — a batch-derived width would make the two sides
+disagree). `blocks`/`buckets_per_block` are rejected alongside `tolerate` rather than
+silently ignored. Values longer than `max_length` are truncated, which is lossy: set
+`max_length` to the longest value present in your data.
+
+**It is off by default because it measured worse, not because it is untested.** FEBRL
+500 queries / 5000 database rows, V1's hand-written weights:
+
+| encoding | combined AUC | weakest true match | median impostor | false-positive rate at recall 1.0 |
+|---|---|---|---|---|
+| cliff (default) | 0.9994 | 0.5391 | 0.5036 | **14.6%** |
+| `tolerate` L7/B64 | 0.9934 | 0.5605 | 0.6339 | 95.0% |
+| `tolerate` L10/B32 | 0.9945 | 0.5605 | 0.6270 | 94.8% |
+| `tolerate` L16/B16 | 0.9923 | 0.5605 | 0.6410 | 94.8% |
+
+All four rows go through `calibration.attribute_score_samples` + `roc_auc`, so the cliff row
+is the same 0.9994 as the calibration table above; the false-positive rate is measured at
+each variant's own `recall_first` threshold.
+
+The tell is the **median impostor** column, not the max. Partial credit raises the weakest
+true match by 0.02 — and raises the *typical* impostor by 0.13, pushing the bulk of the
+impostor distribution up into the positive range. Attributes like SSN and postcode are
+supposed to be "all of it or none of it as evidence"; awarding partial credit for
+`5304218` vs `5304219` hands that credit to unrelated records too. A one-character error
+in an SSN is far more likely to be a different person than a typo.
+
+It remains available because the measurement is dataset-specific — for a fixed-width
+identifier corrupted by a known single-character OCR error channel, the tradeoff could
+reverse. Measure the median impostor before enabling it.
 
 ## Two deliberate policy knobs on `date`
 
@@ -128,6 +179,168 @@ non-finite or negative weights; weights not summing to 1.0; all-zero weights; a
 `fuzzy_text` attribute; and `cluster_dim`/`match_dim` exceeding `CKKS_SLOT_LIMIT` (4096).
 `from_dict` also rejects unknown top-level keys.
 
+## Calibrating weights and tau from labelled data
+
+`similarity_threshold` and the per-attribute weights used to be numbers someone wrote down
+(`0.3/0.2/0.2/0.15/0.1/0.05` and `tau=0.6` for FEBRL, with a comment saying they came from
+measurement). `multi_attribute/calibration.py` derives both from labelled pairs instead:
+
+```powershell
+python scripts/calibrate_multi_attribute.py --config config/examples/febrl_multi_attribute.json --output config/examples/febrl_multi_attribute.calibrated.json
+python scripts/demo_multi_attribute_dataset.py --config config/examples/febrl_multi_attribute.calibrated.json --db-limit 0 --limit 20
+```
+
+The output is a **drop-in job file** — same keys, calibrated `schema` block, plus a
+`_calibration` report — so a calibrated run is reproducible without re-running the fit.
+
+### Why the obvious rule is wrong
+
+Weighting each attribute by its own `AUC − 0.5` is the first thing anyone tries and it is
+**measurably worse**. FEBRL, 500 queries:
+
+| rule | combined AUC | weakest true match | strongest impostor |
+|---|---|---|---|
+| hand-written (V1) | 0.9994 | 0.539 | 0.618 |
+| proportional to per-attribute AUC | 0.9824 | **0.214** | 0.609 |
+| separability (default) | 0.9997 | 0.513 | 0.598 |
+
+`ssn` has the highest standalone AUC (0.911), so the proportional rule puts 44.7% of the
+weight on it — but `ssn` is nearly binary. The moment FEBRL damages one duplicate's SSN,
+that query's true-match score collapses to zero and the weakest true match falls from
+0.539 to 0.214. **A high AUC can just mean "usually redundant".** The rule is kept as
+`--weight-policy auc` so the claim stays falsifiable, but it is not the default.
+
+### What the default does
+
+`--weight-policy separability` runs coordinate ascent directly on the *combined* score
+against a **soft-AUC / pairwise-sigmoid** objective:
+
+```
+objective(w) = mean_i  sigmoid( (score_i(true match) − score_i(hardest impostor)) / T )
+```
+
+That is exactly the quantity the threshold test needs — the probability that a true match
+outranks its own strongest impostor — and small `T` concentrates on the hardest pairs, so
+weights are chosen *jointly* and complementary attributes earn their share. Candidates are
+restricted to a per-attribute top-K union (`_CandidateSet`) so it never materialises an
+`(n_query, n_database, n_attribute)` tensor.
+
+Negatives are each query's **strongest impostor**, not random database records: those are
+what tau actually has to reject, and on FEBRL random records are beaten by essentially
+every true match, which would report an uninformative AUC of 1.0.
+
+Threshold criteria: `recall_first` (default — sits just below the weakest true match),
+`youden`, `target_recall`.
+
+### The fit generalizes (and the temperature is load-bearing)
+
+A weight vector fitted on the same queries it is scored on proves nothing, so the same
+objective was fitted on half the labelled queries and scored on the other half (250/250,
+seed 0):
+
+| weights | held-out AUC | held-out weakest true match | held-out strongest impostor |
+|---|---|---|---|
+| hand-written (V1) | 0.9994 | 0.5417 | 0.6182 |
+| fitted, `T=0.05` | 0.9999 | 0.5323 | **0.5724** |
+| fitted, `T=0.15` | 0.9922 | 0.2784 | 0.4839 |
+
+The fitted weights **narrow the interleave** out of sample: the strongest impostor drops
+0.618 → 0.572 while the weakest true match moves only 0.542 → 0.532. That is the trade the
+threshold actually wants.
+
+`T=0.15` is in the table to show the temperature is not a free knob. A large `T` makes the
+sigmoid nearly linear, so the objective rewards average separation instead of the hard
+pairs, and it collapses the fit onto four attributes — worst held-out weakest-true-match
+0.278. Small `T` is what keeps the optimizer on the queries that decide recall.
+
+### Reading the separation verdict
+
+Three states, and the middle one is the one that gets misread:
+
+- **separable** — `highest_impostor < lowest_true_match`; one tau covers everything.
+- **overlap** — some query loses to *its own* strongest impostor. No tau fixes those;
+  more attributes or better field quality is the fix.
+- **ranges interleave** — every query beats its own impostors, but the weakest true match
+  still sits below the strongest impostor. FEBRL is exactly this (0.5132 vs 0.5982). No
+  global tau gets both recall and a clean boundary; `recall_first` spends false positives
+  to buy recall, and the report prints the exchange rate rather than hiding it.
+
+## Round-2 probe policy and k selection
+
+### Multi-cluster probing
+
+Round 2 used to examine exactly one cluster. The true match sitting in another cluster was
+therefore never checked — and since round 1's job is a k-way classification over centroids,
+that happens for ~12% of FEBRL queries. The fix is not a smarter single choice; it is
+`probes=`:
+
+```powershell
+python scripts/demo_multi_attribute_dataset.py --config ... --probes all      # default
+python scripts/demo_multi_attribute_dataset.py --config ... --probes 6        # hard cost cap
+```
+
+A sends one one-hot selector per probed cluster, ordered by **descending centroid score**.
+That ordering is what makes exhaustive probing cheap: the true cluster's mean rank is only
+~0.3, so early stop fires in the first cluster or two for most queries.
+
+Measured on FEBRL, 500 queries / 5000 database rows. Cost is round-2 scan columns
+(ciphertext-ciphertext dots — the expensive resource); a full linear scan is 5000. These
+are the **deployment** numbers: B computes every column of every probed cluster up to and
+including the true one. A generator that stops mid-cluster when A's early stop fires pays
+less — that is the number the demo prints, so a 40-query encrypted run at `--probes all
+--k-mode auto` (k=99) reports mean 34.2 columns where this table's k=100 row says 69. The
+gap is the tail of the true cluster after the match, which the lazy rule never builds.
+
+| k | policy | cluster recall | mean columns | p95 | selectors |
+|---|---|---|---|---|---|
+| 12 (log2) | exhaustive | 1.0000 | 621 | 1399 | 12 |
+| 70 (sqrt) | exhaustive | 1.0000 | 105 | 238 | 70 |
+| 100 | top-1 | 0.887 | 53 | — | 1 |
+| 100 | top-8 | 0.988 | 406 | — | 8 |
+| 100 | **exhaustive** | **1.0000** | **72** | **163** | 100 |
+| 150 | top-1 | 0.885 | 36 | — | 1 |
+| 150 | top-8 | 0.987 | 271 | — | 8 |
+| 150 | **exhaustive** | **1.0000** | **49** | **114** | 150 |
+
+Means over k-means seeds 7/13/42; top-1 and top-8 pay a fixed number of clusters so their
+column count is near-constant and p95 is not informative. The single-seed table this
+replaced had a `max` column; it is dropped because a max over 500 queries from one
+initialization is not a stable number.
+
+Exhaustive probing costs ~36% more columns than top-1 (72 vs 53 at k=100) and removes
+top-1's entire 11% miss rate; measured against top-8 it is cheaper *and* more accurate. So
+the real choice is not recall-versus-cost, it is whether k selectors are worth it.
+
+**Top-m can never reach 1.0** — it stops at 0.987/0.988 and the residue is a genuine tail of
+the true-cluster rank (8, 9, 12, 20 at seed 7), because top-m always pays for m full
+clusters while exhaustive stops at the true one. That is why exhaustive beats top-8 on both
+axes at every k. What exhaustive does cost is k selectors: 100 one-hot ciphertexts instead
+of 8, ≈13 MB at 131 KB each.
+
+V1's `single probe` behavior is preserved as `--probes 1`, and `probes=1` remains the
+library default so existing callers and tests are unchanged.
+
+**The honest limit:** exhaustive probing can only early-stop on a query that *hits*. A
+query whose record is absent scans the entire database — no speedup at all, and the demo
+reports the mean scan columns for hit and blank queries separately for exactly this
+reason. The sublinear cost is a property of matching queries, not of the protocol.
+
+### k policy
+
+`--k-mode` accepts `sqrt` (k = ⌊√n⌋, the V1 baseline), `log2` (k = ⌊log₂n⌋), `auto`
+(k = ⌊1.4·√n⌋), an integer, or `fixed:<k>`. `auto` is the default in the tables above.
+
+`log2` loses decisively and it is not close: at n=5000 it gives k=12, i.e. ~417 records per
+cluster, so every probed cluster is enormous (621 mean columns against sqrt's 105). Its only
+advantage — 12 selectors instead of 70 — is dwarfed by the column blowup.
+
+Above sqrt the columns keep falling roughly as 1/k while the selector payload grows as k,
+which puts the optimum near 1.4·√n across a wide range of network-vs-compute weightings.
+The curve is flat enough between k=70 and k=150 that anything in that band is defensible.
+
+Cluster recall does **not** distinguish these k's — top-1 recall is 0.84–0.89 in every row.
+What k changes is how much a miss costs once probing is exhaustive.
+
 ## Data layer
 
 `multi_attribute/dataset.py` is a plain CSV → `AttributeRecord` bridge. It deliberately does
@@ -151,18 +364,25 @@ by design, and V1 states the multi-attribute module doesn't change the productio
 python scripts/fetch_dataset.py --dataset all
 python scripts/generate_synthetic_attributes.py --records 5000 --seed 42
 
-python scripts/demo_multi_attribute_dataset.py --config config/examples/febrl_multi_attribute.json --db-limit 0 --limit 20
+# derive weights + tau from labelled pairs, then run the calibrated job
+python scripts/calibrate_multi_attribute.py --config config/examples/febrl_multi_attribute.json --output config/examples/febrl_multi_attribute.calibrated.json
+python scripts/demo_multi_attribute_dataset.py --config config/examples/febrl_multi_attribute.calibrated.json --db-limit 0 --limit 20 --k-mode auto --probes all
+
 python scripts/demo_multi_attribute_dataset.py --config config/examples/multi_attribute_schema.json --db-limit 500 --limit 20
 
-python -m pytest tests/test_multi_attribute_schema.py tests/test_multi_attribute_dataset.py -q
+python -m pytest tests/test_multi_attribute_schema.py tests/test_multi_attribute_dataset.py tests/test_multi_attribute_probing.py -q
 ```
 
 Both demo runs also write a JSON + CSV report to
 `artifacts/demo/multi_attribute_dataset/` (override with `--output-dir`), the same layout
-as `demo_ncvr_matches.py` and `demo_sage_cross_script.py`. One CSV row per query, carrying
-the true-match score, the impostor score, the per-attribute breakdown (`sim_<attribute>`
-columns), and the encrypted verdict. That CSV is the file to plot when calibrating tau —
-the terminal report scrolls away, the CSV does not. `--no-encrypted` skips the CKKS rounds
+as `demo_ncvr_matches.py` and `demo_sage_cross_script.py`. One CSV row per query, carrying the
+**true-match score `expected_score`** (looked up by the true id — *not* `top1_score`, which is
+the plaintext argmax and silently becomes the impostor's score if argmax lands on one), `tau`,
+`should_catch`, `expected_score_margin`, the impostor score, the per-attribute breakdown
+(`sim_<attribute>` columns), the encrypted verdict, `enc_miss_cause` attributing each miss
+(`round1_cluster` / `boundary` / `unexplained`), and the probe bookkeeping —
+`enc_probed_clusters`, `enc_true_match_cluster_rank`, `enc_cluster_hit_top1_only`. That CSV is the file to plot when calibrating
+tau — the terminal report scrolls away, the CSV does not. `--no-encrypted` skips the CKKS rounds
 and leaves the encrypted columns blank, which makes the plaintext calibration sweep cheap.
 
 `fetch_dataset.py` and `generate_synthetic_attributes.py` are the **only** way to populate
@@ -174,27 +394,73 @@ they stay visible and documented rather than hidden.
 
 The protocol returns only three things: the **sign** of the threshold test, the **selected
 cluster index**, and the **column index** reached. It never returns the id of the matched
-record, and a CATCH means "some record in the database scores above tau" — *not* "the right
-record was found". So the encrypted path can only yield a catch-vs-label agreement rate;
-precision and recall are not computable from protocol output.
+record, and a CATCH means "some record in the selected cluster scores above tau" — *not* "the
+right record was found". So what the encrypted path yields is a **detection rate**, not
+identification precision/recall.
 
-Two limits on that agreement rate, both measured on FEBRL (40 queries):
+The demo reports that rate as
 
-- **Cluster recall 34/40 = 85%.** Round 2 examines exactly one cluster, so a true match
-  sitting in another cluster is never checked. This is a hard ceiling, not a bug.
-- **Threshold overlap.** FEBRL's most heavily damaged duplicates score 0.542 while the
-  best impostor scores 0.579 — they overlap, so no tau separates them. That is an
-  information problem to fix with more attributes or better weights, not a tuning problem.
+```
+should_catch = plaintext score of the TRUE MATCH > tau      (strict >, same as round 2)
+recall       = #{catch and should_catch} / #{should_catch}
+```
 
-The demo prints the observed calibration window (lowest true-match / highest impostor) and
-says whether the configured `similarity_threshold` falls inside it. **Recalibrate on your
-own data**; the values in `config/examples/` are calibration results for those two datasets,
-not defaults to copy.
+The denominator is `should_catch`, **not** "the label is true". A duplicate perturbed below
+tau is not supposed to catch under the protocol's own criterion, so counting it in the
+denominator charges the recall rate with a debt the protocol never took on. Under this
+definition "an unperturbed query (plaintext score exactly 1.0) must catch" becomes an
+assertable invariant, and the demo asserts it.
+
+Three limits, all measured on FEBRL:
+
+- **Round 1 is a k-way classification, and it used to be the whole gap.** A single probe
+  scans one cluster, so a true match sitting anywhere else is never checked: on the original
+  100-query run 13 positives were lost that way, with `boundary` 0 / `unexplained` 0 — the
+  *entire* gap (the 500-query top-1 miss rate is 11%, same story). This
+  is not a bug, and it is *independent of tau*, so no threshold can move it. It was fixed
+  where it lives, in the probe policy: `--probes all` measures **1.0000** cluster recall at a
+  *lower* mean scan cost than top-8 (see the probe table above). What remains, and what the
+  report now leads with, is **top-1-only cluster recall** (0.84–0.89 on FEBRL) — the quality
+  of round 1's own decision, as opposed to how much round 2 pays to insure against it.
+  Neither number is tau-dependent. Raising `probes` saturates the first by construction, so
+  the report says so and points at the second.
+- **The calibration window interleaves.** FEBRL's weakest true match (0.5132 over 500
+  queries) sits below the strongest impostor (0.5982). Every query beats *its own* impostors,
+  but no single global tau gets both full recall and a clean boundary — that is an information
+  problem to fix with more attributes or better weights, not a tuning problem. The report
+  separates this from the sharper failure (`overlap`: a query that loses to its own strongest
+  impostor, which no tau can save) because the two look similar in a histogram and have
+  different fixes.
+- **The denominator itself contains tau.** This is the one to watch. Raising tau deletes the
+  *hardest* queries from the denominator and pushes the rate toward 100% **without fixing
+  anything**: on FEBRL, tau 0.60 → 0.90 takes the denominator from 99 to 50 and the printed
+  rate to 100.0%, while the cluster counts do not move at all. The miss count is
+  tau-dependent too — it fell 12 → 0 in that same move, because its denominator is the
+  should-catch set, not because anything was fixed — so the report labels it `tau-DEPENDENT`
+  and prints the tau-free cluster counts next to it. A recall figure whose denominator you can
+  shrink is not a target. So every ratio is printed with its raw `n/d`, the old all-positives
+  recall is kept alongside for contrast, and a tau guard fires when the threshold sits above
+  the impostor ceiling while still costing positives.
+
+`top-1-only cluster recall` and the calibration window (lowest true-match / highest impostor)
+are the numbers in the report that tau cannot move. Judge a run by those.
+
+The demo prints whether the configured `similarity_threshold` falls inside the observed
+calibration window. **Recalibrate on your own data**; the values in `config/examples/` are
+calibration results for those two datasets, not defaults to copy.
 
 ## Added files
 
-- `multi_attribute/schema.py`, `registry.py`, `kinds.py`, `hashing.py`, `dataset.py`
+- `multi_attribute/schema.py`, `registry.py`, `kinds.py`, `hashing.py`, `dataset.py`,
+  `jobfile.py`, `calibration.py`
 - `scripts/fetch_dataset.py`, `scripts/generate_synthetic_attributes.py`,
-  `scripts/demo_multi_attribute_dataset.py`
+  `scripts/demo_multi_attribute_dataset.py`, `scripts/calibrate_multi_attribute.py`
 - `config/examples/febrl_multi_attribute.json`, `config/examples/multi_attribute_schema.json`
-- `tests/test_multi_attribute_schema.py`, `tests/test_multi_attribute_dataset.py`
+- `tests/test_multi_attribute_schema.py`, `tests/test_multi_attribute_dataset.py`,
+  `tests/test_multi_attribute_probing.py`
+
+`jobfile.py` holds only the job/data loading the demo and the calibrator share. It was split
+out so the calibrator does not import the demo (and therefore `tenseal`): plaintext
+calibration runs in an environment without TenSEAL installed, which is also why
+`tests/test_multi_attribute_probing.py` guards its two encrypted cases with
+`pytest.importorskip`.

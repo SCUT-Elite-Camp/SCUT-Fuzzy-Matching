@@ -257,6 +257,158 @@ def test_date_kind_fails_closed_on_garbage():
         encode_record_vectors([AttributeRecord({"dob": "not-a-date"})], schema)
 
 
+# --- exact/date 的容错（tolerate）编码 -----------------------------------------
+#
+# 默认关闭。它有明确用处（改一位不该掉成 0），但在 FEBRL 上实测是净负：冒充者拿到的
+# 部分分比真匹配还多。详情与实测表见 kinds._tolerate_params 与 hashing.aligned_char_vector。
+
+
+def _tolerant_exact(**tolerate):
+    return AttributeSchema.from_weights(
+        {"code": 1.0},
+        kinds={"code": "exact"},
+        params={"code": {"normalize": "digits", "tolerate": dict(tolerate)}},
+    )
+
+
+def test_exact_without_tolerate_is_a_cliff():
+    """对照组：默认编码下改一个字符，相似度直接归零。"""
+
+    schema = AttributeSchema.from_weights(
+        {"code": 1.0},
+        kinds={"code": "exact"},
+        params={"code": {"normalize": "digits", "blocks": 1, "buckets_per_block": 512}},
+    )
+    sim = plaintext_similarity(
+        AttributeRecord({"code": "5304218"}), AttributeRecord({"code": "5304219"}), schema
+    )
+    assert sim == 0.0
+
+
+def test_tolerate_gives_partial_credit_for_one_changed_character():
+    schema = _tolerant_exact(max_length=8, buckets=32)
+    sim = plaintext_similarity(
+        AttributeRecord({"code": "5304218"}), AttributeRecord({"code": "5304219"}), schema
+    )
+    # 7 位里 6 位对齐。
+    assert sim == pytest.approx(6 / 7, abs=1e-9)
+
+
+def test_tolerate_keeps_exact_matches_at_one():
+    schema = _tolerant_exact(max_length=8, buckets=32)
+    sim = plaintext_similarity(
+        AttributeRecord({"code": "5304218"}), AttributeRecord({"code": "5304218"}), schema
+    )
+    assert sim == pytest.approx(1.0)
+
+
+def test_tolerate_dimension_is_declared_geometry_not_batch_dependent():
+    """A 侧编 1 条、B 侧编 1000 条，维度必须一样 —— 否则两边的密文对不上。"""
+
+    schema = _tolerant_exact(max_length=8, buckets=32)
+    assert schema.match_dim == 8 * 32
+    one, _ = encode_record_vectors([AttributeRecord({"code": "5304218"})], schema)
+    many, _ = encode_record_vectors(
+        [AttributeRecord({"code": str(i)}) for i in range(1000)], schema
+    )
+    assert one.shape[1] == many.shape[1] == 8 * 32
+
+
+def test_tolerate_truncates_longer_values():
+    """超出 max_length 的部分不参与相似度 —— 这是有损的，所以要能测出来。"""
+
+    schema = _tolerant_exact(max_length=4, buckets=32)
+    # 前 4 位相同、第 5 位不同 -> 截断后仍然完全一致。这是设计上的代价，不是 bug：
+    # max_length 必须按数据里最长的那种取值来设，否则尾巴上的差异会被静默抹掉。
+    assert plaintext_similarity(
+        AttributeRecord({"code": "12345"}), AttributeRecord({"code": "12346"}), schema
+    ) == pytest.approx(1.0)
+    # 差异落在窗口内就照常扣分。
+    assert plaintext_similarity(
+        AttributeRecord({"code": "12345"}), AttributeRecord({"code": "12995"}), schema
+    ) == pytest.approx(0.5)
+
+
+def test_tolerate_rejects_conflicting_hash_geometry():
+    """blocks/buckets_per_block 与 tolerate 同时出现 -> 报错，别静默忽略一个。"""
+
+    with pytest.raises(ValueError, match="cannot be combined with 'tolerate'"):
+        AttributeSchema.from_weights(
+            {"code": 1.0},
+            kinds={"code": "exact"},
+            params={"code": {"blocks": 2, "buckets_per_block": 64,
+                             "tolerate": {"max_length": 8, "buckets": 32}}},
+        )
+
+
+def test_tolerate_requires_explicit_geometry():
+    with pytest.raises(ValueError, match="needs explicit geometry"):
+        AttributeSchema.from_weights(
+            {"code": 1.0}, kinds={"code": "exact"}, params={"code": {"tolerate": True}}
+        )
+    with pytest.raises(ValueError, match="missing"):
+        AttributeSchema.from_weights(
+            {"code": 1.0}, kinds={"code": "exact"}, params={"code": {"tolerate": {"max_length": 8}}}
+        )
+    with pytest.raises(ValueError, match="unknown tolerate keys"):
+        AttributeSchema.from_weights(
+            {"code": 1.0},
+            kinds={"code": "exact"},
+            params={"code": {"tolerate": {"max_length": 8, "buckets": 32, "typo": 1}}},
+        )
+
+
+def test_tolerate_works_on_dates_too():
+    """日期归一化后是定长 YYYY-MM-DD，容错编码衡量的是"哪几位对得上"。"""
+
+    schema = AttributeSchema.from_weights(
+        {"dob": 1.0},
+        kinds={"dob": "date"},
+        params={"dob": {"on_invalid": "missing", "tolerate": {"max_length": 10, "buckets": 32}}},
+    )
+    assert schema.match_dim == 320
+    same = plaintext_similarity(
+        AttributeRecord({"dob": "1945-04-03"}), AttributeRecord({"dob": "1945/04/03"}), schema
+    )
+    assert same == pytest.approx(1.0)
+    # 只错日的那一位：9/10。
+    near = plaintext_similarity(
+        AttributeRecord({"dob": "1945-04-03"}), AttributeRecord({"dob": "1945-04-13"}), schema
+    )
+    assert near == pytest.approx(0.9, abs=1e-9)
+
+
+@pytest.mark.skipif(not HAS_TENSEAL, reason="TenSEAL not installed")
+def test_tolerant_near_match_catches_where_the_cliff_does_not():
+    """容错编码在密文路径上确实多了这个能力 —— 否则这个参数没有存在理由。"""
+
+    from multi_attribute.protocol import run_multi_attribute_protocol
+
+    records = [AttributeRecord({"code": "5304218"}), AttributeRecord({"code": "1111111"})]
+    query = AttributeRecord({"code": "5304219"})
+
+    tolerant = _tolerant_exact(max_length=8, buckets=32)
+    tolerant = AttributeSchema(
+        attributes=tolerant.attributes, similarity_threshold=0.5
+    )
+    assert run_multi_attribute_protocol(
+        records, query, cfg=tolerant, k_mode=1, random_state=1
+    ).catch is True
+
+    cliff = AttributeSchema.from_dict(
+        {
+            "attributes": [
+                {"name": "code", "kind": "exact", "weight": 1.0,
+                 "blocks": 1, "buckets_per_block": 512, "normalize": "digits"}
+            ],
+            "similarity_threshold": 0.5,
+        }
+    )
+    assert run_multi_attribute_protocol(
+        records, query, cfg=cliff, k_mode=1, random_state=1
+    ).catch is False
+
+
 def test_registry_custom_kind_is_pluggable():
     """注册一个新 kind 后协议层无需任何改动即可使用。"""
 

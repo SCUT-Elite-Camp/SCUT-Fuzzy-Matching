@@ -30,7 +30,7 @@ from config.params import (
 from minhash.encoder import batch_encode
 from preprocessing.normalizer import l2_normalize
 
-from .hashing import exact_hash_vector, normalize_dob
+from .hashing import aligned_char_vector, exact_hash_vector, normalize_dob
 from .registry import AttributeBlock, register_encoder
 
 _DIGITS_ONLY = re.compile(r"\D")
@@ -131,17 +131,78 @@ def _encode_fuzzy_text(values: Sequence[Any], spec: Any) -> AttributeBlock:
 # ---------------------------------------------------------------------------
 
 
+def _tolerate_params(spec: Any) -> tuple[int, int] | None:
+    """取出 ``tolerate`` 的 ``(max_length, buckets)``；没配就返回 ``None``。"""
+
+    raw = spec.params.get("tolerate")
+    if raw is None or raw is False:
+        return None
+    if raw is True:
+        raise ValueError(
+            f"attribute {spec.name!r}: tolerate=True needs explicit geometry; "
+            'write {"tolerate": {"max_length": N, "buckets": M}} instead'
+        )
+    if not isinstance(raw, Mapping):
+        raise ValueError(
+            f"attribute {spec.name!r}: tolerate must be a mapping with "
+            f"max_length/buckets, got {raw!r}"
+        )
+    unknown = sorted(set(raw) - {"max_length", "buckets"})
+    if unknown:
+        raise ValueError(
+            f"attribute {spec.name!r}: unknown tolerate keys {unknown}; "
+            "allowed: ['buckets', 'max_length']"
+        )
+    missing = sorted({"max_length", "buckets"} - set(raw))
+    if missing:
+        raise ValueError(
+            f"attribute {spec.name!r}: tolerate is missing {missing}"
+        )
+    return int(raw["max_length"]), int(raw["buckets"])
+
+
 def _exact_dims(spec: Any) -> tuple[int, int]:
+    tolerating = _tolerate_params(spec)
+    if tolerating is not None:
+        max_length, buckets = tolerating
+        dim = max_length * buckets
+        return dim, dim
     blocks, buckets, _ = _blocks(spec)
     dim = blocks * buckets
     return dim, dim
 
 
+def _validate_tolerate(spec: Any) -> None:
+    tolerating = _tolerate_params(spec)
+    if tolerating is None:
+        return
+    max_length, buckets = tolerating
+    if max_length < 1:
+        raise ValueError(f"attribute {spec.name!r}: tolerate.max_length must be >= 1")
+    if buckets < 2:
+        raise ValueError(f"attribute {spec.name!r}: tolerate.buckets must be >= 2")
+    # blocks/buckets_per_block 不参与容错编码的维度。留着它们会让人以为两者都在
+    # 起作用，而实际上维度只由 tolerate 决定 —— 静默忽略配置是最坏的一种。
+    conflicting = sorted({"blocks", "buckets_per_block"} & set(spec.params))
+    if conflicting:
+        raise ValueError(
+            f"attribute {spec.name!r}: {conflicting} cannot be combined with "
+            "'tolerate' — the tolerant encoding's dim is max_length * buckets"
+        )
+
+
 def _validate_exact(spec: Any) -> None:
     _reject_unknown_params(
         spec,
-        {"blocks": None, "buckets_per_block": None, "seed": None, "normalize": None},
+        {
+            "blocks": None,
+            "buckets_per_block": None,
+            "seed": None,
+            "normalize": None,
+            "tolerate": None,
+        },
     )
+    _validate_tolerate(spec)
     _validate_hash_params(spec)
     mode = _param(spec, "normalize", "casefold")
     if mode not in _NORMALIZE_MODES:
@@ -168,15 +229,27 @@ def _apply_normalize(value: Any, mode: str) -> str | None:
 def _encode_exact(values: Sequence[Any], spec: Any) -> AttributeBlock:
     blocks, buckets, seed = _blocks(spec)
     mode = _param(spec, "normalize", "casefold")
-    rows = [
-        exact_hash_vector(
-            None if _is_missing(v) else _apply_normalize(v, mode),
-            blocks=blocks,
-            buckets_per_block=buckets,
-            seed=seed,
-        )
-        for v in values
-    ]
+    normalized = [None if _is_missing(v) else _apply_normalize(v, mode) for v in values]
+
+    tolerating = _tolerate_params(spec)
+    if tolerating is not None:
+        max_length, tolerant_buckets = tolerating
+        rows = [
+            aligned_char_vector(
+                value,
+                max_length=max_length,
+                buckets=tolerant_buckets,
+                seed=seed,
+            )
+            for value in normalized
+        ]
+    else:
+        rows = [
+            exact_hash_vector(
+                value, blocks=blocks, buckets_per_block=buckets, seed=seed
+            )
+            for value in normalized
+        ]
     matrix = np.stack(rows, axis=0)
     return AttributeBlock(cluster=matrix, match=matrix)
 
@@ -198,8 +271,10 @@ def _validate_date(spec: Any) -> None:
             "seed": None,
             "day_first": None,
             "on_invalid": None,
+            "tolerate": None,
         },
     )
+    _validate_tolerate(spec)
     _validate_hash_params(spec)
     mode = _param(spec, "on_invalid", "raise")
     if mode not in _INVALID_MODES:
@@ -242,13 +317,23 @@ def _encode_date(values: Sequence[Any], spec: Any) -> AttributeBlock:
             'Set on_invalid="missing" to treat them as missing.'
         )
 
-    matrix = np.stack(
-        [
+    tolerating = _tolerate_params(spec)
+    if tolerating is not None:
+        max_length, tolerant_buckets = tolerating
+        # 日期归一化后定长 10（YYYY-MM-DD），所以这里的容错编码实际是"哪几位年月日
+        # 对得上"，对 1945-04-03 vs 1945-04-13 这类只错一位的脏值给部分分。
+        rows = [
+            aligned_char_vector(
+                value, max_length=max_length, buckets=tolerant_buckets, seed=seed
+            )
+            for value in normalized_values
+        ]
+    else:
+        rows = [
             exact_hash_vector(value, blocks=blocks, buckets_per_block=buckets, seed=seed)
             for value in normalized_values
-        ],
-        axis=0,
-    )
+        ]
+    matrix = np.stack(rows, axis=0)
     return AttributeBlock(cluster=matrix, match=matrix)
 
 

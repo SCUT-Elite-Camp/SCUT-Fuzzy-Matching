@@ -5,3 +5,6 @@ __pycache__/
 dataset/
 artifacts/
 node_modules/
+
+# 由 scripts/calibrate_multi_attribute.py 生成的调参结果，根据数据集与查询数据的不同而变化，故ignore
+*.calibrated.json
