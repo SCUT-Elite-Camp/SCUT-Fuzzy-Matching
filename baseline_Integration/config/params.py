@@ -17,6 +17,19 @@ KMEANS_ITERATIONS = 20
 K_CLUSTERS_AUTO_FACTOR = 1.4
 
 
+# 多属性路径第二轮默认探测的簇数。
+#
+# 只影响 multi_attribute/ —— 姓名单属性路径（party_a / party_b）走的是
+# 纯 argmax 的 top-1，没有探测逻辑，不受这个值影响。
+#
+# 为什么是 3 而不是穷举：穷举把簇召回推到 1.0000，但它的省法建立在 early stop
+# 上，而 early stop 需要一个**命中的列**才能停。库里没有对应记录的查询永远撞不到，
+# 于是穷举对它退化成整库线性扫描（实测：库 500 大小时 20 条负查询条条扫满 500 列）。
+# 固定 top-3 给这类查询一个硬上限——最多 3 个簇的列数——代价是召回从 1.0000 退到
+# top-3 的水平。这个交换是刻意的：没有成本上限，穷举在生产上就不可用。
+DEFAULT_MULTI_ATTRIBUTE_PROBES = 3
+
+
 def _k_log2(n: int) -> int:
     return max(1, int(n).bit_length() - 1)
 

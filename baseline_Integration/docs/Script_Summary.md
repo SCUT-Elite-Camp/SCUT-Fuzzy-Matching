@@ -16,7 +16,7 @@
 | `validate_sage_multilingual.py` | SAGE 多语言真实 HE 小规模验证 | `config/examples/sage_pipeline.json` → `data/sage/` | 可选 `--output` JSON | `--config config/examples/sage_pipeline.json` |
 | `demo_sage_cross_script.py` | 跨文字系统（拉丁/中文/阿拉伯…）姓名匹配的演示 | `config/examples/sage_pipeline.json` → `data/sage/` | `artifacts/demo/sage_cross_script/` | `--config config/examples/sage_pipeline.json`、`--query-ids DEFAULT_QUERY_IDS` |
 | `demo_multi_attribute.py` | 多属性（姓名 + 出生日期）双轮协议最小可跑示例 | **纯合成**：脚本内硬编码 5 条库记录 + 3 条查询 | 仅终端 | 无 CLI 参数 |
-| `demo_multi_attribute_dataset.py` | 真实 CSV 上的多属性匹配，schema 驱动 | `--config` 指定的 job JSON → 指向 `dataset/` 下的 CSV | `artifacts/demo/multi_attribute_dataset/`（JSON + CSV）+ 终端 | `--config`（必填）、`--limit 20`、`--db-limit 500`、`--k-mode sqrt`、`--probes all`、`--no-encrypted`、`--output-dir artifacts/demo/multi_attribute_dataset` |
+| `demo_multi_attribute_dataset.py` | 真实 CSV 上的多属性匹配，schema 驱动 | `--config` 指定的 job JSON → 指向 `dataset/` 下的 CSV | `artifacts/demo/multi_attribute_dataset/`（JSON + CSV）+ 终端 | `--config`（必填）、`--limit 20`、`--db-limit 500`、`--k-mode sqrt`、`--probes 3`、`--no-encrypted`、`--output-dir artifacts/demo/multi_attribute_dataset` |
 | `calibrate_multi_attribute.py` | 从带标签样本反推 schema 的权重与 tau，产出可直接当 job 文件用的 JSON | `--config` 指定的 job JSON → 指向 `dataset/` 下的 CSV（同 demo） | 终端标定说明 + `<config>.calibrated.json` | `--config`（必填）、`--limit 500`、`--db-limit 0`（不限制）、`--weight-policy separability`、`--criterion recall_first` |
 | `fetch_dataset.py` | 下载公开数据集到 `dataset/` | jsdelivr / gcore / raw.githubusercontent 三个镜像依次回退 | `dataset/febrl/*.csv`、`dataset/fake_1000.csv` | `--dataset febrl`、`--output dataset/` |
 | `generate_synthetic_attributes.py` | 生成带电话/邮箱/地址的合成数据及真值 | 姓名池复用 `data/common-forenames-by-country.csv`，其余为内置词表 | `dataset/synthetic/{entities,queries,labels}.csv` | `--records 5000 --seed 42 --negative-ratio 0.25` |
@@ -111,24 +111,27 @@ SAGE 的两级数字容易搞混：**123479 是源表行数，43206 才是适配
 FEBRL，500 条查询 / 5000 条库记录实测：
 
 - 明文 top-1 召回（整库）：**100%**
-- **召回率（分母是 `should_catch`）**：分母内漏检的原因已被 `--probes all` 消除（见下）
-- **簇召回（tau 无关）**：`--probes all` 下 **1.0000**。曾经的 87% 缺口全部来自第二轮
+- **召回率（分母是 `should_catch`）**：分母内漏检的原因已被多簇探测消除大半（见下）
+- **簇召回（tau 无关）**：默认 `--probes 3` 下 **0.96**。曾经的 87% 缺口全部来自第二轮
   只看一个簇：13 条正例的真匹配落在别的簇里，**根本没有被检查的机会**（`boundary` 0 /
-  `unexplained` 0，这就是缺口的全部来源）。
+  `unexplained` 0，这就是缺口的全部来源）。top-3 修回 9 条，剩下 4 条仍是同一个原因。
 - **top-1-only 簇召回（tau 无关、与 probe 数无关）**：**0.84 ~ 0.89**。这是第一轮自身
   的判别质量 —— 即"最近质心是否就是真匹配所在簇"。`--probes` 调大只会让上面的簇召回归
   1，动不了这一项，所以脚本把它作为真正的 tau 无关锚点单独打印。
 
-**多簇探测同时改善召回和成本。** 按质心分降序逐个探测并提前停止（k-means 种子
-7/13/42 平均）：k=150 时簇召回 **1.0000**，平均只扫 **49** 列（p95 114；部署口径 =
-把探测到的整簇列都算完，实现里按列提前停止会更少），top-1 要扫 36 列但只到 0.885，
-top-8 要扫 271 列才到 0.987 —— 因为 top-m 无论命不命中都要付 m 个簇的钱，穷举探测命中
-即停。真匹配簇的平均排名只有 ~0.3，这是它能便宜的原因。代价是 A 方要发 k 个 one-hot
-选择子密文（≈131 KB/个）。
+**多簇探测同时改善召回和成本。** 按质心分降序逐个探测并提前停止。加密实测
+（FEBRL 100 查询 / 5000 记录 / k=71 / tau=0.513）：top-1 簇召回 0.87、平均扫 41.5 列；
+top-3 簇召回 **0.96**、平均扫 53.3 列、最坏 207 列。真匹配簇的平均排名只有 0.15，这是
+它便宜的原因。更早的 500 查询 sweep（k-means 种子平均，部署口径）在 k=150 穷举下能到
+簇召回 1.0000 / 平均 49 列，top-8 要扫 271 列才到 0.987 —— top-m 无论命不命中都要付 m
+个簇的钱，穷举按列命中即停。代价是 A 方要发的 one-hot 选择子密文数正比于探测数。
 
-**但这只对"命得中"的查询成立。** 库中根本没有对应记录的查询无法提前停止，必须扫完
-整个库 —— 没有任何加速。所以脚本把命中的平均列数和空查询的平均列数**分开打印**，
-不把"平均 1%" 冒充成对所有查询都成立。
+**默认是 top-3 而不是穷举：early stop 只对"命得中"的查询成立。** 库中根本没有对应记录
+的查询撞不到命中列，停不下来，穷举对它退化成整库线性扫描（实测：库 500 条时 20 条负
+查询条条扫满 500 列）。固定 top-3 给这类查询一个硬上限——最多 3 个簇的列数——代价是簇
+召回从穷举的 1.0000 让到 0.96。**这条流程只对多维属性输入开启**；姓名单属性路径
+（`party_a/party_b`）仍是纯 argmax 的 top-1。脚本把命中的平均列数和空查询的平均列数
+**分开打印**，不把"平均 1%" 冒充成对所有查询都成立。
 
 **召回率的分母是 `should_catch`（真匹配那条记录的明文分 > tau），不是"标签为真"。**
 被扰动到低于阈值的副本算进分母，等于让召回率背上一份协议不负责的债。代价是这个分母
@@ -216,10 +219,10 @@ python scripts/calibrate_multi_attribute.py \
     --config config/examples/febrl_multi_attribute.json \
     --output config/examples/febrl_multi_attribute.calibrated.json
 
-# 3. FEBRL：真实数据上的多属性双轮协议（穷举探测 + 实测最优 k）
+# 3. FEBRL：真实数据上的多属性双轮协议（top-3 探测 + 实测最优 k）
 python scripts/demo_multi_attribute_dataset.py \
     --config config/examples/febrl_multi_attribute.calibrated.json \
-    --db-limit 0 --limit 20 --k-mode auto --probes all
+    --db-limit 0 --limit 20 --k-mode auto
 
 # 4. 合成数据：带电话号码的那一路
 python scripts/demo_multi_attribute_dataset.py --config config/examples/multi_attribute_schema.json --db-limit 500 --limit 20

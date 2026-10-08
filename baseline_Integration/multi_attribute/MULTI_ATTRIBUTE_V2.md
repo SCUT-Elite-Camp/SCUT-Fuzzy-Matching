@@ -275,55 +275,65 @@ that happens for ~12% of FEBRL queries. The fix is not a smarter single choice; 
 `probes=`:
 
 ```powershell
-python scripts/demo_multi_attribute_dataset.py --config ... --probes all      # default
-python scripts/demo_multi_attribute_dataset.py --config ... --probes 6        # hard cost cap
+python scripts/demo_multi_attribute_dataset.py --config ...                # default: 3
+python scripts/demo_multi_attribute_dataset.py --config ... --probes 1     # V1 behavior
+python scripts/demo_multi_attribute_dataset.py --config ... --probes all   # exhaustive
 ```
 
 A sends one one-hot selector per probed cluster, ordered by **descending centroid score**.
-That ordering is what makes exhaustive probing cheap: the true cluster's mean rank is only
-~0.3, so early stop fires in the first cluster or two for most queries.
+That ordering is what makes probing cheap: the true cluster's mean rank is only ~0.15, so
+early stop fires in the first cluster or two for most queries.
 
-Measured on FEBRL, 500 queries / 5000 database rows. Cost is round-2 scan columns
-(ciphertext-ciphertext dots — the expensive resource); a full linear scan is 5000. These
-are the **deployment** numbers: B computes every column of every probed cluster up to and
-including the true one. A generator that stops mid-cluster when A's early stop fires pays
-less — that is the number the demo prints, so a 40-query encrypted run at `--probes all
---k-mode auto` (k=99) reports mean 34.2 columns where this table's k=100 row says 69. The
-gap is the tail of the true cluster after the match, which the lazy rule never builds.
+**The default is 3, not exhaustive.** Exhaustive reaches cluster recall 1.0000, but its
+saving is built entirely on early stop, and early stop needs a *hitting column* to stop at.
+A query whose record is absent from the database never hits one, so exhaustive degenerates
+into a full linear scan for exactly that query class (measured: with 500 database rows, all
+20 blank queries scanned all 500 columns). A fixed probe count gives that class a hard cost
+ceiling — at most the columns of 3 clusters. The trade is cluster recall 1.0000 → 0.96,
+made deliberately: without a cost ceiling, exhaustive is not deployable.
+
+Measured on FEBRL, 100 queries / 5000 database rows / k=71 / calibrated tau=0.513, one
+encrypted run per row, only `--probes` changed:
+
+| policy | cluster recall | encrypted agreement | mean columns | worst-case columns |
+|---|---|---|---|---|
+| top-1 | 0.87 | 0.87 | 41.5 | 105 |
+| **top-3 (default)** | **0.96** | **0.96** | **53.3** | **207** |
+| exhaustive | 1.0000 | — | — | **5000 (= full DB)** |
+
+Cost is round-2 scan columns (ciphertext-ciphertext dots — the expensive resource); a full
+linear scan is 5000. An earlier 500-query sweep at other k (seeds 7/13/42 averaged,
+**deployment** accounting: B computes every column of every probed cluster up to and
+including the true one) agrees in direction:
 
 | k | policy | cluster recall | mean columns | p95 | selectors |
 |---|---|---|---|---|---|
-| 12 (log2) | exhaustive | 1.0000 | 621 | 1399 | 12 |
-| 70 (sqrt) | exhaustive | 1.0000 | 105 | 238 | 70 |
 | 100 | top-1 | 0.887 | 53 | — | 1 |
 | 100 | top-8 | 0.988 | 406 | — | 8 |
-| 100 | **exhaustive** | **1.0000** | **72** | **163** | 100 |
+| 100 | exhaustive | 1.0000 | 72 | 163 | 100 |
 | 150 | top-1 | 0.885 | 36 | — | 1 |
 | 150 | top-8 | 0.987 | 271 | — | 8 |
-| 150 | **exhaustive** | **1.0000** | **49** | **114** | 150 |
+| 150 | exhaustive | 1.0000 | 49 | 114 | 150 |
 
-Means over k-means seeds 7/13/42; top-1 and top-8 pay a fixed number of clusters so their
-column count is near-constant and p95 is not informative. The single-seed table this
-replaced had a `max` column; it is dropped because a max over 500 queries from one
-initialization is not a stable number.
-
-Exhaustive probing costs ~36% more columns than top-1 (72 vs 53 at k=100) and removes
-top-1's entire 11% miss rate; measured against top-8 it is cheaper *and* more accurate. So
-the real choice is not recall-versus-cost, it is whether k selectors are worth it.
+The deployment rule pays more than the demo's lazy generator, which stops mid-cluster when
+A's early stop fires — a 40-query encrypted run at `--probes all --k-mode auto` (k=99)
+reports mean 34.2 columns where the k=100 row above says 72. The gap is the tail of the true
+cluster after the match, which the lazy rule never builds.
 
 **Top-m can never reach 1.0** — it stops at 0.987/0.988 and the residue is a genuine tail of
-the true-cluster rank (8, 9, 12, 20 at seed 7), because top-m always pays for m full
-clusters while exhaustive stops at the true one. That is why exhaustive beats top-8 on both
-axes at every k. What exhaustive does cost is k selectors: 100 one-hot ciphertexts instead
-of 8, ≈13 MB at 131 KB each.
+the true-cluster rank, because top-m always pays for m full clusters while exhaustive stops
+at the true one. But exhaustive buys that last 1.2% with an unbounded worst case, which is
+the wrong trade.
 
-V1's `single probe` behavior is preserved as `--probes 1`, and `probes=1` remains the
-library default so existing callers and tests are unchanged.
+**This policy is opt-in per call site.** `probes=1` (pure argmax) remains the library
+default in `multi_attribute/protocol.py` so existing callers and tests are unchanged.
+`DEFAULT_MULTI_ATTRIBUTE_PROBES = 3` is the demo's default, and the name-only path
+(`party_a` / `party_b`) has no probing logic at all — it stays top-1.
 
-**The honest limit:** exhaustive probing can only early-stop on a query that *hits*. A
-query whose record is absent scans the entire database — no speedup at all, and the demo
-reports the mean scan columns for hit and blank queries separately for exactly this
-reason. The sublinear cost is a property of matching queries, not of the protocol.
+**The honest limit:** probing can only early-stop on a query that *hits*. The demo reports
+the mean scan columns for hit and blank queries separately for exactly this reason. The
+sublinear cost is a property of matching queries, not of the protocol; for the rest, top-3
+is a ceiling rather than a speedup.
 
 ### k policy
 
@@ -366,7 +376,7 @@ python scripts/generate_synthetic_attributes.py --records 5000 --seed 42
 
 # derive weights + tau from labelled pairs, then run the calibrated job
 python scripts/calibrate_multi_attribute.py --config config/examples/febrl_multi_attribute.json --output config/examples/febrl_multi_attribute.calibrated.json
-python scripts/demo_multi_attribute_dataset.py --config config/examples/febrl_multi_attribute.calibrated.json --db-limit 0 --limit 20 --k-mode auto --probes all
+python scripts/demo_multi_attribute_dataset.py --config config/examples/febrl_multi_attribute.calibrated.json --db-limit 0 --limit 20 --k-mode auto
 
 python scripts/demo_multi_attribute_dataset.py --config config/examples/multi_attribute_schema.json --db-limit 500 --limit 20
 
@@ -418,12 +428,13 @@ Three limits, all measured on FEBRL:
   100-query run 13 positives were lost that way, with `boundary` 0 / `unexplained` 0 — the
   *entire* gap (the 500-query top-1 miss rate is 11%, same story). This
   is not a bug, and it is *independent of tau*, so no threshold can move it. It was fixed
-  where it lives, in the probe policy: `--probes all` measures **1.0000** cluster recall at a
-  *lower* mean scan cost than top-8 (see the probe table above). What remains, and what the
-  report now leads with, is **top-1-only cluster recall** (0.84–0.89 on FEBRL) — the quality
-  of round 1's own decision, as opposed to how much round 2 pays to insure against it.
-  Neither number is tau-dependent. Raising `probes` saturates the first by construction, so
-  the report says so and points at the second.
+  where it lives, in the probe policy: top-3 recovers 9 of the 13, and the residual 4 are
+  still the same failure mode. What remains, and what the report leads with, is
+  **top-1-only cluster recall** (0.84–0.89 on FEBRL) — the quality of round 1's own decision,
+  as opposed to how much round 2 pays to insure against it. Neither number is tau-dependent.
+  Raising `probes` saturates the first by construction (exhaustive reaches 1.0000), so the
+  report says so and points at the second — and caps `probes` at 3 anyway, because exhaustive's
+  worst case is a full-database scan for every query whose record is absent.
 - **The calibration window interleaves.** FEBRL's weakest true match (0.5132 over 500
   queries) sits below the strongest impostor (0.5982). Every query beats *its own* impostors,
   but no single global tau gets both full recall and a clean boundary — that is an information

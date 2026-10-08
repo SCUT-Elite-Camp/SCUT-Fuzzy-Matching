@@ -51,6 +51,7 @@ if str(ROOT) not in sys.path:
 
 from config.params import (  # noqa: E402
     CKKS_SLOT_LIMIT,
+    DEFAULT_MULTI_ATTRIBUTE_PROBES,
     MULTI_ATTRIBUTE_DECRYPT_EPS,
 )
 
@@ -449,7 +450,8 @@ def _summarize(
     )
     # 只探 top-1 时真匹配会落在哪。**这才是那个 tau 无关又有区分度的锚点**：
     # probes="all" 下 cluster_recall 按构造恒为 1.0，报它等于什么都没说；而
-    # top-1 命中率完全由数据决定，改 tau、改探针数都动不了它。
+    # top-1 命中率完全由数据决定，改 tau、改探针数都动不了它 —— 所以簇召回要跟
+    # top-1 那条线一起读，才知道当前探针数到底买回了多少漏检。
     summary["cluster_hits_top1_only"] = sum(
         1 for row in positives if row["encrypted"].get("cluster_hit_top1_only")
     )
@@ -827,9 +829,10 @@ def main() -> int:
     )
     parser.add_argument(
         "--probes",
-        default="all",
+        default=str(DEFAULT_MULTI_ATTRIBUTE_PROBES),
         help="round-2 clusters to probe, in descending centroid score: an integer, "
-        "or 'all' for exhaustive-with-early-stop (default all)",
+        "or 'all' for exhaustive-with-early-stop (default %s)"
+        % DEFAULT_MULTI_ATTRIBUTE_PROBES,
     )
     parser.add_argument("--random-state", type=int, default=42)
     parser.add_argument(
