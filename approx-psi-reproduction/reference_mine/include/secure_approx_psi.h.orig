@@ -1,0 +1,36 @@
+#pragma once
+#include <emp-sh2pc/emp-sh2pc.h>
+#include <vector>
+#include <cstdint>
+#include "types.h"
+#include "params.h"
+
+using namespace emp;
+
+class SecureApproxPSI {
+public:
+    using Ctx = SH2PCSession::ctx_t;
+    using B   = Bit_T<Ctx>;
+    using U32 = UInt_T<Ctx, 32>;
+
+    SecureApproxPSI(SH2PCSession& sess, Parameters params);
+
+    std::vector<PairMatch> run(
+        const std::vector<Element>& A,
+        const std::vector<Element>& B);
+
+private:
+    SH2PCSession& sess_;
+    Parameters params_;
+
+    B secureHammingCompare(
+        const BitVector& a_local,
+        const BitVector& b_local,
+        std::size_t threshold);
+
+    std::vector<B> secureVMult(
+        const B& c,
+        const BitVector& v_local);
+
+    U32 securePopCount(const std::vector<B>& v);
+};
