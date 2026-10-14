@@ -1,0 +1,42 @@
+{
+  "repo_name": "SCUT-Fuzzy-Matching",
+  "last_updated": "2026-10-14T00:00:00+08:00",
+  "domains": [
+    {
+      "domain_id": "MATCH",
+      "domain_name": "隐私保护模糊匹配域",
+      "dir_path": "specs/matching"
+    }
+  ],
+  "registered_specs": [
+    {
+      "req_id": "REQ-MATCH.FUZZY-001",
+      "title": "两方隐私保护模糊匹配核心协议",
+      "file_path": "specs/matching/matching_fuzzy_match.req.md",
+      "status": "明确",
+      "template_type": "STANDARD_SPEC"
+    },
+    {
+      "req_id": "REQ-MATCH.FUZZY-002",
+      "title": "多属性加权匹配（声明式 Attribute Schema）",
+      "file_path": "specs/matching/matching_fuzzy_match.req.md",
+      "status": "明确",
+      "template_type": "STANDARD_SPEC"
+    },
+    {
+      "req_id": "REQ-MATCH.FUZZY-003",
+      "title": "多语言与跨文字系统归一化",
+      "file_path": "specs/matching/matching_fuzzy_match.req.md",
+      "status": "明确",
+      "template_type": "STANDARD_SPEC"
+    },
+    {
+      "req_id": "REQ-MATCH.FUZZY-004",
+      "title": "CKKS 二维 query x candidate SIMD 批处理",
+      "file_path": "specs/matching/matching_fuzzy_match.req.md",
+      "status": "明确",
+      "template_type": "STANDARD_SPEC"
+    }
+  ],
+  "global_route_registry": []
+}

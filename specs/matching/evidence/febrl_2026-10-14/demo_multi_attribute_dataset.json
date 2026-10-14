@@ -1,0 +1,1870 @@
+{
+  "config_path": "config/examples/febrl_multi_attribute.json",
+  "schema": {
+    "fingerprint": "617ddbf4288b3c42",
+    "similarity_threshold": 0.6,
+    "name_attribute": "name",
+    "cluster_dim": 2156,
+    "match_dim": 1936,
+    "ckks_slot_limit": 4096,
+    "attributes": [
+      {
+        "name": "name",
+        "kind": "fuzzy_text",
+        "weight": 0.3,
+        "cluster_dim": 200,
+        "match_dim": 50,
+        "params": {
+          "cluster_dim": 200,
+          "match_dim": 50
+        }
+      },
+      {
+        "name": "address",
+        "kind": "fuzzy_text",
+        "weight": 0.2,
+        "cluster_dim": 100,
+        "match_dim": 30,
+        "params": {
+          "cluster_dim": 100,
+          "match_dim": 30
+        }
+      },
+      {
+        "name": "dob",
+        "kind": "date",
+        "weight": 0.2,
+        "cluster_dim": 256,
+        "match_dim": 256,
+        "params": {
+          "blocks": 2,
+          "buckets_per_block": 128,
+          "seed": 20260904,
+          "on_invalid": "missing"
+        }
+      },
+      {
+        "name": "ssn",
+        "kind": "exact",
+        "weight": 0.15,
+        "cluster_dim": 1024,
+        "match_dim": 1024,
+        "params": {
+          "blocks": 2,
+          "buckets_per_block": 512,
+          "normalize": "digits"
+        }
+      },
+      {
+        "name": "postcode",
+        "kind": "exact",
+        "weight": 0.1,
+        "cluster_dim": 512,
+        "match_dim": 512,
+        "params": {
+          "blocks": 1,
+          "buckets_per_block": 512,
+          "normalize": "digits"
+        }
+      },
+      {
+        "name": "state",
+        "kind": "exact",
+        "weight": 0.05,
+        "cluster_dim": 64,
+        "match_dim": 64,
+        "params": {
+          "blocks": 1,
+          "buckets_per_block": 64,
+          "normalize": "casefold"
+        }
+      }
+    ]
+  },
+  "data": {
+    "database_path": "D:\\Projects\\SCUT-Fuzzy-Matching\\baseline_Integration\\dataset\\febrl\\dataset4a.csv",
+    "queries_path": "D:\\Projects\\SCUT-Fuzzy-Matching\\baseline_Integration\\dataset\\febrl\\dataset4b.csv",
+    "database_size": 500,
+    "database_limit": 500,
+    "query_limit": 50
+  },
+  "data_quality_notes": [
+    "dob: 1/550 unparseable -> zeroed, 21 blank"
+  ],
+  "run": {
+    "encrypted": true,
+    "k_mode": "sqrt",
+    "probes": "3",
+    "random_state": 42
+  },
+  "summary": {
+    "queries": 50,
+    "positives": 50,
+    "negatives": 0,
+    "tau": 0.6,
+    "recall_definition": "should_catch = plaintext true-match score > tau; recall = #{catch and should_catch} / #{should_catch}",
+    "plaintext_top1_hits": 50,
+    "plaintext_top1_recall_positives_only": 1.0,
+    "plaintext_false_positives_at_tau": 0,
+    "should_catch_positives": 48,
+    "positives_below_tau": 2,
+    "positives_below_tau_ids": [
+      "rec-4618-dup-0",
+      "rec-2666-dup-0"
+    ],
+    "positives_missing_true_match_in_db": 0,
+    "positives_missing_true_match_in_db_ids": [],
+    "identical_queries": 4,
+    "lowest_expected_match_score": 0.539057,
+    "highest_impostor_score": 0.525457,
+    "calibration_window": {
+      "low": 0.525457,
+      "high": 0.539057
+    },
+    "tau_inside_calibration_window": false,
+    "tau_guard": {
+      "tau": 0.6,
+      "max_impostor": 0.525457,
+      "tau_exceeds_max_impostor": true,
+      "tau_at_or_above_one": false,
+      "positives_dropped_by_tau": 2,
+      "verdict": "above_ceiling_with_cost"
+    },
+    "positives_scored": 50,
+    "encrypted_catches_positives": 48,
+    "recall_should_catch": 1.0,
+    "should_catch_misses": 0,
+    "should_catch_miss_ids": [],
+    "misses_round1_cluster": 0,
+    "misses_boundary": 0,
+    "misses_unexplained": 0,
+    "misses_unexplained_ids": [],
+    "identical_caught": 4,
+    "identical_violations": [],
+    "encrypted_catches_all_positives": 48,
+    "encrypted_recall_all_positives": 0.96,
+    "cluster_hits": 50,
+    "cluster_recall": 1.0,
+    "cluster_hits_top1_only": 50,
+    "cluster_recall_top1_only": 1.0,
+    "cluster_rank_mean": 0.0,
+    "cluster_rank_p95": 0.0,
+    "cluster_rank_max": 0,
+    "probes_per_query": 3,
+    "scan_columns_mean": 15.18,
+    "scan_columns_median": 12.0,
+    "scan_columns_p95": 31.0,
+    "scan_columns_max": 88,
+    "scan_columns_mean_positives": 15.18,
+    "scan_columns_mean_negatives": null,
+    "full_scan_columns": 500,
+    "scan_columns_fraction": 0.030359999999999998,
+    "cluster_misses": 0,
+    "agreements": 48,
+    "encrypted_agreement": 0.96,
+    "over_reports": 0,
+    "over_report_rate": null
+  },
+  "rows": [
+    {
+      "query_id": "rec-4096-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4096-org"
+      ],
+      "top1_record_id": "rec-4096-org",
+      "top1_score": 0.868521,
+      "expected_score": 0.868521,
+      "expected_score_margin": 0.268521,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.438152,
+      "similarities": {
+        "name": 0.62876,
+        "address": 0.899463,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 7,
+        "checked_columns": 13,
+        "probed_clusters": 3,
+        "true_match_cluster": 7,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3089-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3089-org"
+      ],
+      "top1_record_id": "rec-3089-org",
+      "top1_score": 0.863298,
+      "expected_score": 0.863298,
+      "expected_score_margin": 0.263298,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.481153,
+      "similarities": {
+        "name": 0.706991,
+        "address": 0.756001,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 1,
+        "checked_columns": 22,
+        "probed_clusters": 3,
+        "true_match_cluster": 1,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4618-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4618-org"
+      ],
+      "top1_record_id": "rec-4618-org",
+      "top1_score": 0.541713,
+      "expected_score": 0.541713,
+      "expected_score_margin": -0.058287,
+      "tau": 0.6,
+      "should_catch": false,
+      "impostor_score": 0.432263,
+      "similarities": {
+        "name": 0.742266,
+        "address": 0.845165,
+        "dob": 0.0,
+        "ssn": 1.0,
+        "postcode": 0.0,
+        "state": 0.0
+      },
+      "encrypted": {
+        "catch": false,
+        "agrees_with_label": false,
+        "selected_cluster": 5,
+        "checked_columns": 66,
+        "probed_clusters": 3,
+        "true_match_cluster": 5,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4281-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4281-org"
+      ],
+      "top1_record_id": "rec-4281-org",
+      "top1_score": 0.893732,
+      "expected_score": 0.893732,
+      "expected_score_margin": 0.293732,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.455424,
+      "similarities": {
+        "name": 0.979105,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 0.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 9,
+        "checked_columns": 17,
+        "probed_clusters": 3,
+        "true_match_cluster": 9,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-172-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-172-org"
+      ],
+      "top1_record_id": "rec-172-org",
+      "top1_score": 0.925815,
+      "expected_score": 0.925815,
+      "expected_score_margin": 0.325815,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.47459,
+      "similarities": {
+        "name": 0.763988,
+        "address": 0.983094,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 11,
+        "checked_columns": 30,
+        "probed_clusters": 3,
+        "true_match_cluster": 11,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-2873-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-2873-org"
+      ],
+      "top1_record_id": "rec-2873-org",
+      "top1_score": 0.825764,
+      "expected_score": 0.825764,
+      "expected_score_margin": 0.225764,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.44776,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.878821,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 0.0,
+        "state": 0.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 11,
+        "checked_columns": 21,
+        "probed_clusters": 3,
+        "true_match_cluster": 11,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3528-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3528-org"
+      ],
+      "top1_record_id": "rec-3528-org",
+      "top1_score": 0.751519,
+      "expected_score": 0.751519,
+      "expected_score_margin": 0.151519,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.483703,
+      "similarities": {
+        "name": 0.77327,
+        "address": 0.84769,
+        "dob": 1.0,
+        "ssn": 0.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 4,
+        "checked_columns": 8,
+        "probed_clusters": 3,
+        "true_match_cluster": 4,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4070-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4070-org"
+      ],
+      "top1_record_id": "rec-4070-org",
+      "top1_score": 0.915406,
+      "expected_score": 0.915406,
+      "expected_score_margin": 0.315406,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.421487,
+      "similarities": {
+        "name": 0.854334,
+        "address": 0.79553,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 20,
+        "checked_columns": 17,
+        "probed_clusters": 3,
+        "true_match_cluster": 20,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4878-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4878-org"
+      ],
+      "top1_record_id": "rec-4878-org",
+      "top1_score": 0.89377,
+      "expected_score": 0.89377,
+      "expected_score_margin": 0.29377,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.465018,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.718848,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 0.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 11,
+        "checked_columns": 3,
+        "probed_clusters": 3,
+        "true_match_cluster": 11,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-2306-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-2306-org"
+      ],
+      "top1_record_id": "rec-2306-org",
+      "top1_score": 1.0,
+      "expected_score": 1.0,
+      "expected_score_margin": 0.4,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.469072,
+      "similarities": {
+        "name": 1.0,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 9,
+        "checked_columns": 11,
+        "probed_clusters": 3,
+        "true_match_cluster": 9,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-1054-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-1054-org"
+      ],
+      "top1_record_id": "rec-1054-org",
+      "top1_score": 0.849249,
+      "expected_score": 0.849249,
+      "expected_score_margin": 0.249249,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.466605,
+      "similarities": {
+        "name": 0.696518,
+        "address": 0.701467,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 3,
+        "checked_columns": 2,
+        "probed_clusters": 3,
+        "true_match_cluster": 3,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3780-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3780-org"
+      ],
+      "top1_record_id": "rec-3780-org",
+      "top1_score": 0.647886,
+      "expected_score": 0.647886,
+      "expected_score_margin": 0.047886,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.481607,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.989428,
+        "dob": 0.0,
+        "ssn": 0.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 1,
+        "checked_columns": 16,
+        "probed_clusters": 3,
+        "true_match_cluster": 1,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-683-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-683-org"
+      ],
+      "top1_record_id": "rec-683-org",
+      "top1_score": 0.858764,
+      "expected_score": 0.858764,
+      "expected_score_margin": 0.258764,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.458858,
+      "similarities": {
+        "name": 0.733942,
+        "address": 0.692908,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 13,
+        "checked_columns": 11,
+        "probed_clusters": 3,
+        "true_match_cluster": 13,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3327-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3327-org"
+      ],
+      "top1_record_id": "rec-3327-org",
+      "top1_score": 0.908157,
+      "expected_score": 0.908157,
+      "expected_score_margin": 0.308157,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.46857,
+      "similarities": {
+        "name": 0.712903,
+        "address": 0.971429,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 7,
+        "checked_columns": 8,
+        "probed_clusters": 3,
+        "true_match_cluster": 7,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3661-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3661-org"
+      ],
+      "top1_record_id": "rec-3661-org",
+      "top1_score": 0.901656,
+      "expected_score": 0.901656,
+      "expected_score_margin": 0.301656,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.406408,
+      "similarities": {
+        "name": 0.727297,
+        "address": 0.917336,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 20,
+        "checked_columns": 8,
+        "probed_clusters": 3,
+        "true_match_cluster": 20,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-299-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-299-org"
+      ],
+      "top1_record_id": "rec-299-org",
+      "top1_score": 0.8,
+      "expected_score": 0.8,
+      "expected_score_margin": 0.2,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.439907,
+      "similarities": {
+        "name": 1.0,
+        "address": 1.0,
+        "dob": 0.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 8,
+        "checked_columns": 1,
+        "probed_clusters": 3,
+        "true_match_cluster": 8,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-1741-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-1741-org"
+      ],
+      "top1_record_id": "rec-1741-org",
+      "top1_score": 0.999548,
+      "expected_score": 0.999548,
+      "expected_score_margin": 0.399548,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.451499,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.99774,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 0,
+        "checked_columns": 8,
+        "probed_clusters": 3,
+        "true_match_cluster": 0,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-198-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-198-org"
+      ],
+      "top1_record_id": "rec-198-org",
+      "top1_score": 0.953469,
+      "expected_score": 0.953469,
+      "expected_score_margin": 0.353469,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.510897,
+      "similarities": {
+        "name": 0.844896,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 15,
+        "checked_columns": 10,
+        "probed_clusters": 3,
+        "true_match_cluster": 15,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-2461-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-2461-org"
+      ],
+      "top1_record_id": "rec-2461-org",
+      "top1_score": 0.870204,
+      "expected_score": 0.870204,
+      "expected_score_margin": 0.270204,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.460877,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.851022,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 0.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 2,
+        "checked_columns": 4,
+        "probed_clusters": 3,
+        "true_match_cluster": 2,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4152-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4152-org"
+      ],
+      "top1_record_id": "rec-4152-org",
+      "top1_score": 0.811672,
+      "expected_score": 0.811672,
+      "expected_score_margin": 0.211672,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.525457,
+      "similarities": {
+        "name": 0.873783,
+        "address": 0.747685,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 0.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 18,
+        "checked_columns": 12,
+        "probed_clusters": 3,
+        "true_match_cluster": 18,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-1463-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-1463-org"
+      ],
+      "top1_record_id": "rec-1463-org",
+      "top1_score": 0.788136,
+      "expected_score": 0.788136,
+      "expected_score_margin": 0.188136,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.513567,
+      "similarities": {
+        "name": 0.793786,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 0.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 7,
+        "checked_columns": 14,
+        "probed_clusters": 3,
+        "true_match_cluster": 7,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3603-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3603-org"
+      ],
+      "top1_record_id": "rec-3603-org",
+      "top1_score": 0.851873,
+      "expected_score": 0.851873,
+      "expected_score_margin": 0.251873,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.471026,
+      "similarities": {
+        "name": 0.860154,
+        "address": 0.469137,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 14,
+        "checked_columns": 11,
+        "probed_clusters": 3,
+        "true_match_cluster": 14,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4178-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4178-org"
+      ],
+      "top1_record_id": "rec-4178-org",
+      "top1_score": 1.0,
+      "expected_score": 1.0,
+      "expected_score_margin": 0.4,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.485814,
+      "similarities": {
+        "name": 1.0,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 17,
+        "checked_columns": 2,
+        "probed_clusters": 3,
+        "true_match_cluster": 17,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-1377-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-1377-org"
+      ],
+      "top1_record_id": "rec-1377-org",
+      "top1_score": 0.942659,
+      "expected_score": 0.942659,
+      "expected_score_margin": 0.342659,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.442836,
+      "similarities": {
+        "name": 0.808864,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 13,
+        "checked_columns": 19,
+        "probed_clusters": 3,
+        "true_match_cluster": 13,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-2666-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-2666-org"
+      ],
+      "top1_record_id": "rec-2666-org",
+      "top1_score": 0.539057,
+      "expected_score": 0.539057,
+      "expected_score_margin": -0.060943,
+      "tau": 0.6,
+      "should_catch": false,
+      "impostor_score": 0.42868,
+      "similarities": {
+        "name": 0.863865,
+        "address": 0.649487,
+        "dob": 0.0,
+        "ssn": 0.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": false,
+        "agrees_with_label": false,
+        "selected_cluster": 12,
+        "checked_columns": 88,
+        "probed_clusters": 3,
+        "true_match_cluster": 12,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-485-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-485-org"
+      ],
+      "top1_record_id": "rec-485-org",
+      "top1_score": 0.929848,
+      "expected_score": 0.929848,
+      "expected_score_margin": 0.329848,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.508653,
+      "similarities": {
+        "name": 0.802624,
+        "address": 0.945302,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 12,
+        "checked_columns": 4,
+        "probed_clusters": 3,
+        "true_match_cluster": 12,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-1148-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-1148-org"
+      ],
+      "top1_record_id": "rec-1148-org",
+      "top1_score": 0.885254,
+      "expected_score": 0.885254,
+      "expected_score_margin": 0.285254,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.504397,
+      "similarities": {
+        "name": 0.739392,
+        "address": 0.817183,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 12,
+        "checked_columns": 17,
+        "probed_clusters": 3,
+        "true_match_cluster": 12,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3813-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3813-org"
+      ],
+      "top1_record_id": "rec-3813-org",
+      "top1_score": 0.666201,
+      "expected_score": 0.666201,
+      "expected_score_margin": 0.066201,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.421547,
+      "similarities": {
+        "name": 0.738804,
+        "address": 0.9728,
+        "dob": 0.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 0.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 5,
+        "checked_columns": 20,
+        "probed_clusters": 3,
+        "true_match_cluster": 5,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4365-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4365-org"
+      ],
+      "top1_record_id": "rec-4365-org",
+      "top1_score": 1.0,
+      "expected_score": 1.0,
+      "expected_score_margin": 0.4,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.426136,
+      "similarities": {
+        "name": 1.0,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 2,
+        "checked_columns": 11,
+        "probed_clusters": 3,
+        "true_match_cluster": 2,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4478-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4478-org"
+      ],
+      "top1_record_id": "rec-4478-org",
+      "top1_score": 0.765262,
+      "expected_score": 0.765262,
+      "expected_score_margin": 0.165262,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.522689,
+      "similarities": {
+        "name": 0.940114,
+        "address": 0.916138,
+        "dob": 0.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 15,
+        "checked_columns": 16,
+        "probed_clusters": 3,
+        "true_match_cluster": 15,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4818-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4818-org"
+      ],
+      "top1_record_id": "rec-4818-org",
+      "top1_score": 0.786312,
+      "expected_score": 0.786312,
+      "expected_score_margin": 0.186312,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.451568,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.681562,
+        "dob": 1.0,
+        "ssn": 0.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 21,
+        "checked_columns": 12,
+        "probed_clusters": 3,
+        "true_match_cluster": 21,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-515-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-515-org"
+      ],
+      "top1_record_id": "rec-515-org",
+      "top1_score": 0.8,
+      "expected_score": 0.8,
+      "expected_score_margin": 0.2,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.443281,
+      "similarities": {
+        "name": 1.0,
+        "address": 1.0,
+        "dob": 0.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 3,
+        "checked_columns": 6,
+        "probed_clusters": 3,
+        "true_match_cluster": 3,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-2755-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-2755-org"
+      ],
+      "top1_record_id": "rec-2755-org",
+      "top1_score": 0.893773,
+      "expected_score": 0.893773,
+      "expected_score_margin": 0.293773,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.507242,
+      "similarities": {
+        "name": 0.682338,
+        "address": 0.945356,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 4,
+        "checked_columns": 23,
+        "probed_clusters": 3,
+        "true_match_cluster": 4,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4500-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4500-org"
+      ],
+      "top1_record_id": "rec-4500-org",
+      "top1_score": 0.95,
+      "expected_score": 0.95,
+      "expected_score_margin": 0.35,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.412487,
+      "similarities": {
+        "name": 1.0,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 0.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 15,
+        "checked_columns": 15,
+        "probed_clusters": 3,
+        "true_match_cluster": 15,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-655-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-655-org"
+      ],
+      "top1_record_id": "rec-655-org",
+      "top1_score": 0.861731,
+      "expected_score": 0.861731,
+      "expected_score_margin": 0.261731,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.464249,
+      "similarities": {
+        "name": 0.936682,
+        "address": 0.903632,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 0.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 15,
+        "checked_columns": 6,
+        "probed_clusters": 3,
+        "true_match_cluster": 15,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3715-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3715-org"
+      ],
+      "top1_record_id": "rec-3715-org",
+      "top1_score": 0.950382,
+      "expected_score": 0.950382,
+      "expected_score_margin": 0.350382,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.440211,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.751908,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 6,
+        "checked_columns": 11,
+        "probed_clusters": 3,
+        "true_match_cluster": 6,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-468-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-468-org"
+      ],
+      "top1_record_id": "rec-468-org",
+      "top1_score": 0.932222,
+      "expected_score": 0.932222,
+      "expected_score_margin": 0.332222,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.447916,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.661108,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 7,
+        "checked_columns": 31,
+        "probed_clusters": 3,
+        "true_match_cluster": 7,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-1641-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-1641-org"
+      ],
+      "top1_record_id": "rec-1641-org",
+      "top1_score": 0.955585,
+      "expected_score": 0.955585,
+      "expected_score_margin": 0.355585,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.428293,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.777926,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 11,
+        "checked_columns": 25,
+        "probed_clusters": 3,
+        "true_match_cluster": 11,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4275-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4275-org"
+      ],
+      "top1_record_id": "rec-4275-org",
+      "top1_score": 0.963265,
+      "expected_score": 0.963265,
+      "expected_score_margin": 0.363265,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.499663,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.816323,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 8,
+        "checked_columns": 12,
+        "probed_clusters": 3,
+        "true_match_cluster": 8,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4627-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4627-org"
+      ],
+      "top1_record_id": "rec-4627-org",
+      "top1_score": 0.997069,
+      "expected_score": 0.997069,
+      "expected_score_margin": 0.397069,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.438064,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.985346,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 5,
+        "checked_columns": 14,
+        "probed_clusters": 3,
+        "true_match_cluster": 5,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3615-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3615-org"
+      ],
+      "top1_record_id": "rec-3615-org",
+      "top1_score": 0.778111,
+      "expected_score": 0.778111,
+      "expected_score_margin": 0.178111,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.460101,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.890555,
+        "dob": 0.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 9,
+        "checked_columns": 12,
+        "probed_clusters": 3,
+        "true_match_cluster": 9,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3754-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3754-org"
+      ],
+      "top1_record_id": "rec-3754-org",
+      "top1_score": 0.992792,
+      "expected_score": 0.992792,
+      "expected_score_margin": 0.392792,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.442892,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.963962,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 12,
+        "checked_columns": 12,
+        "probed_clusters": 3,
+        "true_match_cluster": 12,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4348-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4348-org"
+      ],
+      "top1_record_id": "rec-4348-org",
+      "top1_score": 0.912024,
+      "expected_score": 0.912024,
+      "expected_score_margin": 0.312024,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.488096,
+      "similarities": {
+        "name": 0.706748,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 2,
+        "checked_columns": 7,
+        "probed_clusters": 3,
+        "true_match_cluster": 2,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-741-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-741-org"
+      ],
+      "top1_record_id": "rec-741-org",
+      "top1_score": 1.0,
+      "expected_score": 1.0,
+      "expected_score_margin": 0.4,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.437434,
+      "similarities": {
+        "name": 1.0,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 16,
+        "checked_columns": 9,
+        "probed_clusters": 3,
+        "true_match_cluster": 16,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-3188-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-3188-org"
+      ],
+      "top1_record_id": "rec-3188-org",
+      "top1_score": 0.725667,
+      "expected_score": 0.725667,
+      "expected_score_margin": 0.125667,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.463159,
+      "similarities": {
+        "name": 0.752224,
+        "address": 1.0,
+        "dob": 0.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 11,
+        "checked_columns": 19,
+        "probed_clusters": 3,
+        "true_match_cluster": 11,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-30-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-30-org"
+      ],
+      "top1_record_id": "rec-30-org",
+      "top1_score": 0.992087,
+      "expected_score": 0.992087,
+      "expected_score_margin": 0.392087,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.506249,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.960433,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 6,
+        "checked_columns": 21,
+        "probed_clusters": 3,
+        "true_match_cluster": 6,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-1384-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-1384-org"
+      ],
+      "top1_record_id": "rec-1384-org",
+      "top1_score": 0.914523,
+      "expected_score": 0.914523,
+      "expected_score_margin": 0.314523,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.51214,
+      "similarities": {
+        "name": 1.0,
+        "address": 0.572614,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 0,
+        "checked_columns": 13,
+        "probed_clusters": 3,
+        "true_match_cluster": 0,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4663-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4663-org"
+      ],
+      "top1_record_id": "rec-4663-org",
+      "top1_score": 0.938109,
+      "expected_score": 0.938109,
+      "expected_score_margin": 0.338109,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.485364,
+      "similarities": {
+        "name": 0.793698,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 15,
+        "checked_columns": 3,
+        "probed_clusters": 3,
+        "true_match_cluster": 15,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-4392-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-4392-org"
+      ],
+      "top1_record_id": "rec-4392-org",
+      "top1_score": 0.966588,
+      "expected_score": 0.966588,
+      "expected_score_margin": 0.366588,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.437653,
+      "similarities": {
+        "name": 0.900561,
+        "address": 0.982097,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 8,
+        "checked_columns": 15,
+        "probed_clusters": 3,
+        "true_match_cluster": 8,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    },
+    {
+      "query_id": "rec-1362-dup-0",
+      "label": true,
+      "expected_record_ids": [
+        "rec-1362-org"
+      ],
+      "top1_record_id": "rec-1362-org",
+      "top1_score": 0.96602,
+      "expected_score": 0.96602,
+      "expected_score_margin": 0.36602,
+      "tau": 0.6,
+      "should_catch": true,
+      "impostor_score": 0.465894,
+      "similarities": {
+        "name": 0.886734,
+        "address": 1.0,
+        "dob": 1.0,
+        "ssn": 1.0,
+        "postcode": 1.0,
+        "state": 1.0
+      },
+      "encrypted": {
+        "catch": true,
+        "agrees_with_label": true,
+        "selected_cluster": 5,
+        "checked_columns": 3,
+        "probed_clusters": 3,
+        "true_match_cluster": 5,
+        "cluster_rank": 0,
+        "cluster_hit": true,
+        "cluster_hit_top1_only": true,
+        "miss_cause": null
+      }
+    }
+  ]
+}
