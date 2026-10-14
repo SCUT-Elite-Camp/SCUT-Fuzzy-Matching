@@ -78,3 +78,31 @@ city/dob/phone 用 512 桶（仿 FEBRL 的 ssn 惯例）压低哈希块碰撞给
 python scripts/demo_multi_attribute_dataset.py \
     --config config/examples/fused_multilingual_multi_attribute.json
 ```
+
+## demo10 演示子集（demo10/）
+
+`demo10/queries.csv` + `demo10/labels.csv`：从 50 条查询里策划出的 10 条（7 正 3 负），
+配套 `config/examples/fused_multilingual_demo10.json`（数据库仍指父集 300 条），
+全量 HE 双轮约几十秒，是现场演示的推荐入口。
+
+选样原则（`scripts/build_fused_multilingual_demo10.py` 生成，清单显式人工策划并带
+expect 断言，父集重建导致不再满足原则时脚本直接报错退出）：
+
+- **文字系统多样性**：拉丁重音（q02 为去重音罗马化查询）、汉字（q27/q06）、
+  汉罗混合（q34）、阿拉伯（q47 本地文字 + neg-arabic-01 负例）、缅甸（q16 +
+  neg-myanmar-01 负例）、拉丁负例 q15 —— 3 条负例分属拉丁/阿拉伯/缅甸。父集的
+  10 条负例恰好全是拉丁文，凑不出三个文字系统，故阿拉伯/缅甸负例由脚本用构建
+  管线同款逻辑从 SAGE 姓名池新造（固定种子、逐字节可复现、逐个校验冒充者分
+  低于安全线）。
+- **扰动多样性**：姓名 typo（q34/q16/q06）、dob 留空（q02/q27）、phone 留空
+  （q06）、dob 年份对调（q47）、dob 格式变换（q13/q16）、城市大小写（q13/q47）。
+- **true 分有讲头**：q13 满分（1.000）基线；q27（0.573）/q47（0.636）是
+  0.5–0.7 区间"姓名单科不到线、靠 dob/city/phone 互补拉回阈值上"的讲解案例；
+  q16（0.899）/q34（0.837）展示 typo + 跨文字下的稳定命中。
+
+重新生成（`--report` 先看全部 50 条统计）：
+
+```bash
+python scripts/build_fused_multilingual_demo10.py --report
+python scripts/build_fused_multilingual_demo10.py
+```
