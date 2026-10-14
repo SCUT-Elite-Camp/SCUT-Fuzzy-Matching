@@ -1,14 +1,43 @@
-.claude/
-dataset/
-artifacts/
+# ========== Python ==========
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
 venv/
 env/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ========== C / C++ 构建产出 ==========
+# CMake 生成物
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/CTestTestfile.cmake
+# 编译产物
+*.o
+*.obj
+*.o.d
+*.a
+*.lib
+*.so
+*.dll
+*.exe
+*.out
+# 构建目录（整目录忽略）
+approx-psi-reproduction/build*/
+approx-psi-reproduction/*.dir/
+
+# ========== 项目大数据目录（按需重新生成，不入库） ==========
+dataset/
+artifacts/
+
+# ========== 前端 ==========
+node_modules/
+
+# ========== 编辑器 / 系统 ==========
 .vscode/
 .idea/
+.claude/
 .DS_Store
 Thumbs.db
-.pytest_cache/
-node_modules/
