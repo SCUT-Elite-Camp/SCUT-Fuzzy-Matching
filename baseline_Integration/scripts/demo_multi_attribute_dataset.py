@@ -11,6 +11,10 @@
     python scripts/generate_synthetic_attributes.py --records 5000 --seed 42
     python scripts/demo_multi_attribute_dataset.py --config config/examples/multi_attribute_schema.json --limit 50
 
+终端报告是 presentation 风格（与 ``demo_sage_cross_script.py`` 共用同一套 Colors /
+wcwidth 对齐 / 阶段横幅）：默认带 ANSI 颜色，管道或重定向时自动降级为无色纯文本，
+也可以用 ``--no-color`` 强制关闭。
+
 **关于能报什么指标**：协议本身只回传三样东西 —— 是否catch、选中的簇号、检查到第几列。
 
 **召回率的分母**取的是 ``should_catch``，即**真匹配那条记录的明文相似度 > tau**，
@@ -40,6 +44,7 @@ import csv
 import json
 import math
 import sys
+import time
 from pathlib import Path
 from typing import Mapping, NamedTuple
 
@@ -69,6 +74,22 @@ from multi_attribute.protocol import (  # noqa: E402
     run_multi_attribute_protocol,
 )
 from multi_attribute.schema import AttributeSchema  # noqa: E402
+
+# 终端渲染与 demo_sage_cross_script.py 共用同一份实现（Colors、wcwidth 对齐、
+# 横幅/阶段分隔），不在 scripts/ 下维护第二份 Colors 类。放在本模块自己的
+# import 之后，增量代价只有 wcwidth（pandas / sklearn / tenseal 等此时均已加载）。
+from scripts.demo_sage_cross_script import (  # noqa: E402
+    Colors,
+    _banner,
+    _c,
+    _info,
+    _kv,
+    _ok,
+    _pad,
+    _phase,
+    _table,
+    _timing,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -104,34 +125,272 @@ def _audit_dates(database, queries, schema: AttributeSchema) -> list[str]:
     return notes
 
 
-def print_schema(schema: AttributeSchema, database_size: int, limit: int | None) -> None:
-    print("=" * 88)
-    print(f"schema fingerprint {schema.fingerprint()}   threshold {schema.similarity_threshold}")
-    print("=" * 88)
-    print(f"{'attribute':<14}{'kind':<13}{'weight':>8}{'cluster':>10}{'match':>8}   params")
+# ---------------------------------------------------------------------------
+# 终端呈现（渲染层：只负责着色与对齐，数值一律由调用方算好再传进来）
+# ---------------------------------------------------------------------------
+
+_QUERY_HEADERS = [
+    "query",
+    "label",
+    "true",
+    "imp",
+    "top-1",
+    "attr breakdown",
+    "encrypted",
+    "cluster",
+    "checked",
+    "rank",
+]
+_QUERY_WIDTHS = [22, 6, 6, 6, 14, 42, 9, 10, 11, 8]
+# --no-encrypted 模式只打明文参考列（前 6 列），与旧版逐查询行一致。
+_QUERY_PLAIN_COLUMNS = 6
+
+
+def _load_query_display_names(job: dict) -> dict[str, str]:
+    """从查询 CSV 取每条查询的屏幕展示姓名：name 属性映射列里第一个非空值。
+
+    qxx / rec_id 代号只用于内部关联（labels / JSON / CSV 产物），逐查询表显示
+    真实姓名。列名从 ``job["attribute_columns"][schema.name_attribute]`` 解析
+    （fused 数据集即 name_local 优先、name_romanized 兜底），不硬编码列名。
+    行的键按 loader 的编号口径镜像：link_mode=febrl 用 ``id_column``（默认
+    rec_id），否则用 ``query_id_column``，缺省按 CSV 行号编 ``query-{n}``。
+    任何一步对不上（列缺失、文件读不了）都安静退回 record_id —— 展示层绝不拖垮 demo。
+    """
+
+    columns = job["attribute_columns"].get(job["schema_object"].name_attribute)
+    if isinstance(columns, str):
+        columns = [columns]
+    if not columns or not job.get("queries"):
+        return {}
+    if job.get("link_mode") == "febrl":
+        id_column: str | None = job.get("id_column") or "rec_id"
+    else:
+        id_column = job.get("query_id_column")
+    display: dict[str, str] = {}
+    try:
+        with _resolve(job["queries"]).open(newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle, skipinitialspace=True)
+            reader.fieldnames = [name.strip() for name in reader.fieldnames or []]
+            for index, row in enumerate(reader):
+                qid = (row.get(id_column) or "").strip() if id_column else f"query-{index + 1}"
+                if not qid:
+                    continue
+                name = next(
+                    (row[column].strip() for column in columns if (row.get(column) or "").strip()),
+                    "",
+                )
+                if name:
+                    display[qid] = name
+    except OSError:
+        return {}
+    return display
+
+def _paint(value: object, color: str) -> str:
+    """条件着色：color 为空串时原样返回，避免裸 END 码泄漏进输出。"""
+
+    if not color:
+        return str(value)
+    return _c(value, color)
+
+
+def _score_color(value: float) -> str:
+    if value >= 0.99:
+        return Colors.GREEN
+    if value >= 0.5:
+        return Colors.YELLOW
+    return Colors.RED
+
+
+def _top_score_color(score: float, tau: float) -> str:
+    if score > tau + _BOUNDARY_EPS:
+        return Colors.GREEN
+    if score > tau:
+        return Colors.YELLOW
+    return Colors.RED
+
+
+def _attr_color(index: int) -> str:
+    """属性名轮换色。必须在调用时读 Colors —— 模块级快照会让 --no-color 失效。"""
+
+    return (Colors.BLUE, Colors.CYAN, Colors.YELLOW, Colors.GREEN, Colors.RED)[index % 5]
+
+
+def _format_breakdown(similarities: Mapping[str, float]) -> str:
+    """``name=0.85 dob=1.00 ...`` —— 属性名按属性轮换颜色，分数按高低着色。
+
+    颜色关闭时必须与旧版 ``" ".join(f"{k}={v:.2f}" ...)`` 逐字符一致。
+    """
+
+    parts = []
+    for index, (name, value) in enumerate(similarities.items()):
+        parts.append(f"{_c(name, _attr_color(index))}={_c(f'{value:.2f}', _score_color(value))}")
+    return " ".join(parts)
+
+
+def _query_table_column_count(encrypted: bool) -> int:
+    return len(_QUERY_WIDTHS) if encrypted else _QUERY_PLAIN_COLUMNS
+
+
+def _print_query_table_header(encrypted: bool) -> None:
+    count = _query_table_column_count(encrypted)
+    widths = _QUERY_WIDTHS[:count]
+    print(
+        "    "
+        + " ".join(
+            _c(_pad(header, width), Colors.DIM)
+            for header, width in zip(_QUERY_HEADERS[:count], widths)
+        ).rstrip()
+    )
+    _print_query_table_rule(encrypted)
+
+
+def _print_query_table_rule(encrypted: bool) -> None:
+    count = _query_table_column_count(encrypted)
+    widths = _QUERY_WIDTHS[:count]
+    print("    " + "-" * (sum(widths) + len(widths) - 1))
+
+
+def _query_cells(
+    query,
+    match: PlaintextMatch,
+    best_score: float,
+    impostor: float,
+    tau: float,
+    should_catch: bool | None,
+    run,
+    rank: int | None,
+    display_name: str | None = None,
+) -> list[str]:
+    """逐查询行的单元格列表。纯渲染 —— 明文/协议数值都由调用方算好再传进来。
+
+    颜色语义：CATCH 绿色；负例被 catch（假正例）与应 catch 却没 catch（漏）红色；
+    正确拒绝的 no-catch 灰色；top-1 落在真匹配上绿色。query 列显示查询样本的
+    真实姓名（``_load_query_display_names``），qxx 代号只留在内部关联里。
+    """
+
+    widths = _QUERY_WIDTHS
+    label_cell = (
+        _c("True", Colors.BOLD + Colors.GREEN) if query.label else _c("False", Colors.DIM)
+    )
+    top1_id = str(match.top1_record_id or "-")
+    if (
+        match.top1_record_id is not None
+        and match.top1_record_id in query.expected_record_ids
+    ):
+        top1_cell = _c(top1_id, Colors.GREEN)
+    else:
+        top1_cell = top1_id
+    cells = [
+        _pad(_c(display_name or str(query.record.record_id), Colors.BOLD), widths[0]),
+        _pad(label_cell, widths[1]),
+        _pad(_paint(f"{best_score:.3f}", _top_score_color(best_score, tau)), widths[2]),
+        _pad(_paint(f"{impostor:.3f}", Colors.RED if impostor > tau else ""), widths[3]),
+        _pad(top1_cell, widths[4]),
+        _pad(_format_breakdown(match.similarities), widths[5]),
+    ]
+    if run is None:
+        return cells
+    if run.catch:
+        verdict_cell = (
+            _c("CATCH", Colors.BOLD + Colors.GREEN)
+            if query.label
+            else _c("CATCH", Colors.BOLD + Colors.RED)
+        )
+    elif should_catch is True:
+        verdict_cell = _c("no-catch", Colors.RED)
+    else:
+        verdict_cell = _c("no-catch", Colors.DIM)
+    rank_cell = (
+        _paint(f"rank={rank}", Colors.GREEN if rank == 0 else Colors.YELLOW)
+        if rank is not None
+        else ""
+    )
+    cells += [
+        _pad(verdict_cell, widths[6]),
+        _pad(_c(f"cluster={run.selected_cluster}", Colors.CYAN), widths[7]),
+        _pad(_c(f"checked={run.checked_columns}", Colors.DIM), widths[8]),
+        _pad(rank_cell, widths[9]),
+    ]
+    return cells
+
+
+def print_schema(
+    schema: AttributeSchema,
+    database_size: int,
+    limit: int | None,
+    config_path: str | None = None,
+) -> None:
+    """Schema 汇总段：指纹/阈值、各属性向量布局、slot 余量与第二轮矩阵内存预估。"""
+
+    _banner("MULTI-ATTRIBUTE FUZZY MATCHING — REAL DATASET")
+    _info(
+        "Each attribute is encoded into its own MinHash blocks and concatenated "
+        "into one vector; Party B builds the encrypted index once, and every query "
+        "runs the same two-round CKKS protocol on top of it."
+    )
+    if config_path is not None:
+        _kv("job config", config_path)
+    _kv("schema fingerprint", schema.fingerprint())
+    _kv("threshold", schema.similarity_threshold)
+
     cluster_layout, match_layout = schema.layout(), schema.match_layout()
-    for spec in schema.attributes:
+    params = [
+        " ".join(f"{k}={v}" for k, v in spec.params.items()) for spec in schema.attributes
+    ]
+    widths = [
+        max(
+            len("attribute"),
+            max((len(spec.name) for spec in schema.attributes), default=0),
+            len("TOTAL"),
+        ),
+        max(len("kind"), max((len(spec.kind) for spec in schema.attributes), default=0)),
+        len("weight"),
+        len("cluster"),
+        len("match"),
+        min(max([len("params"), *(len(p) for p in params)]), 64),
+    ]
+    table_rows = []
+    for spec, param_text in zip(schema.attributes, params):
         c = cluster_layout[spec.name]
         m = match_layout[spec.name]
-        params = " ".join(f"{k}={v}" for k, v in spec.params.items())
-        print(
-            f"{spec.name:<14}{spec.kind:<13}{spec.weight:>8.2f}"
-            f"{c.stop - c.start:>10}{m.stop - m.start:>8}   {params}"
+        table_rows.append(
+            [
+                _c(spec.name, Colors.CYAN),
+                spec.kind,
+                f"{spec.weight:.2f}",
+                c.stop - c.start,
+                m.stop - m.start,
+                param_text,
+            ]
         )
-    print(
-        f"{'TOTAL':<14}{'':<13}{sum(schema.weights):>8.2f}"
-        f"{schema.cluster_dim:>10}{schema.match_dim:>8}"
+    table_rows.append(
+        [
+            _c("TOTAL", Colors.BOLD),
+            "",
+            f"{sum(schema.weights):.2f}",
+            schema.cluster_dim,
+            schema.match_dim,
+            "",
+        ]
     )
-    print(
-        f"\nCKKS slots: {CKKS_SLOT_LIMIT}; headroom cluster {CKKS_SLOT_LIMIT - schema.cluster_dim} / "
-        f"match {CKKS_SLOT_LIMIT - schema.match_dim}"
+    _table(
+        ["attribute", "kind", "weight", "cluster", "match", "params"],
+        table_rows,
+        widths,
+    )
+
+    print()
+    _kv(
+        "CKKS slots",
+        f"{CKKS_SLOT_LIMIT}; headroom cluster {CKKS_SLOT_LIMIT - schema.cluster_dim} / "
+        f"match {CKKS_SLOT_LIMIT - schema.match_dim}",
     )
 
     # 第二轮的 cluster_matrix 形状是 (k, cluster_size, match_dim)，是全流程最吃内存的地方。
     k = int(round(np.sqrt(database_size)))
     size = max(1, -(-database_size // k))
     est_mb = k * size * schema.match_dim * 8 / 1024**2
-    print(
+    _info(
         f"database {database_size}"
         + (f" (truncated by --db-limit {limit})" if limit else "")
         + f" -> k~{k}, <= {size} rows/cluster -> cluster_matrix ~{est_mb:.1f} MB"
@@ -520,6 +779,9 @@ def print_summary(summary: dict) -> None:
     漏掉条数（``misses among those``）**不是** tau 无关的：它的分母就是 should-catch
     集合，抬 tau 会把这批查询整批移出分母，于是显示 0。屏幕上必须写明这一点，否则
     "0 misses" 会被读成"没有错误"。
+
+    着色以整块为单位包裹（``--no-color`` 或非 TTY 时退化为逐字符相同的纯文本），
+    不把 ANSI 码插进一行中间，保证任何子串断言不受颜色影响。
     """
 
     tau = summary["tau"]
@@ -532,70 +794,107 @@ def print_summary(summary: dict) -> None:
         else f"   round-2 probes/query={probed}"
     )
     print(
-        f"queries: {summary['queries']} ({positives} positive / {negatives} negative)"
-        f"   tau={tau:.3f}{policy}"
+        _c(
+            f"queries: {summary['queries']} ({positives} positive / {negatives} negative)"
+            f"   tau={tau:.3f}{policy}",
+            Colors.BOLD,
+        )
     )
 
     if positives:
         print(
-            "plaintext top-1 recall, positives only (debug reference): "
-            + _pct(summary["plaintext_top1_hits"], positives)
+            _c(
+                "plaintext top-1 recall, positives only (debug reference): "
+                + _pct(summary["plaintext_top1_hits"], positives),
+                Colors.DIM,
+            )
         )
     if negatives:
         print(
-            f"plaintext false positives at tau={tau:g} (debug reference): "
-            + _pct(summary["plaintext_false_positives_at_tau"], negatives)
+            _c(
+                f"plaintext false positives at tau={tau:g} (debug reference): "
+                + _pct(summary["plaintext_false_positives_at_tau"], negatives),
+                Colors.RED if summary["plaintext_false_positives_at_tau"] else Colors.DIM,
+            )
         )
 
     # 分母的定义必须写在数字旁边，否则这个数会被读成"识别召回率"。
-    print("\nrecall denominator: should_catch = plaintext true-match score > tau")
+    print()
+    print(
+        _c(
+            "recall denominator: should_catch = plaintext true-match score > tau",
+            Colors.BOLD + Colors.YELLOW,
+        )
+    )
     print(f"  identical queries (expected score = 1.000): {summary['identical_queries']}")
     dropped = summary["positives_below_tau_ids"]
     excluded = f" (below tau, excluded: {', '.join(dropped)})" if dropped else ""
     print(
-        f"  should-catch positives: {summary['should_catch_positives']}/{positives}{excluded}"
+        _c(
+            f"  should-catch positives: {summary['should_catch_positives']}/{positives}{excluded}",
+            Colors.YELLOW if dropped else Colors.GREEN,
+        )
     )
     if summary["positives_missing_true_match_in_db"]:
         print(
-            f"  WARNING: {summary['positives_missing_true_match_in_db']} positive(s) have no "
-            "true match in the loaded database and are NOT in the denominator: "
-            + ", ".join(summary["positives_missing_true_match_in_db_ids"])
+            _c(
+                f"  WARNING: {summary['positives_missing_true_match_in_db']} positive(s) have no "
+                "true match in the loaded database and are NOT in the denominator: "
+                + ", ".join(summary["positives_missing_true_match_in_db_ids"]),
+                Colors.RED,
+            )
         )
 
     if summary.get("positives_scored"):
+        print()
         print(
-            "\nencrypted recall, should-catch only : "
-            + _pct(summary["encrypted_catches_positives"], summary["should_catch_positives"])
+            _c(
+                "encrypted recall, should-catch only : "
+                + _pct(summary["encrypted_catches_positives"], summary["should_catch_positives"]),
+                Colors.GREEN if summary["should_catch_misses"] == 0 else Colors.YELLOW,
+            )
         )
         print(
-            f"  misses among those: {summary['should_catch_misses']}   "
-            f"[round-1 cluster miss {summary['misses_round1_cluster']} / "
-            f"boundary {summary['misses_boundary']} / "
-            f"unexplained {summary['misses_unexplained']}]"
+            _paint(
+                f"  misses among those: {summary['should_catch_misses']}   "
+                f"[round-1 cluster miss {summary['misses_round1_cluster']} / "
+                f"boundary {summary['misses_boundary']} / "
+                f"unexplained {summary['misses_unexplained']}]",
+                Colors.RED if summary["misses_unexplained"] else "",
+            )
         )
         # 这一项**不是** tau 无关的：它的分母就是上面那个 should-catch 集合，抬 tau 会把
         # 第一轮漏掉的查询整批移出分母，于是这里显示 0。FEBRL tau=0.9 就是 12 -> 0，而
         # 那 12 条错误一条没修。真正 tau 无关的是紧跟着的 cluster recall。
         print(
-            f"  ^ tau-DEPENDENT: the denominator is the should-catch set, so raising tau moves\n"
-            f"    round-1 misses out of it and this count drops. tau-free: "
-            f"{summary['cluster_misses']} of {positives}\n"
-            "    positives were never checked at all -- that is the line below."
+            _c(
+                "  ^ tau-DEPENDENT: the denominator is the should-catch set, so raising tau moves\n"
+                "    round-1 misses out of it and this count drops. tau-free: "
+                f"{summary['cluster_misses']} of {positives}\n"
+                "    positives were never checked at all -- that is the line below.",
+                Colors.DIM,
+            )
         )
         probed = summary["probes_per_query"]
         exhaustive = summary["cluster_hits"] >= positives and probed and probed > 1
         print(
-            f"cluster recall (true match landed in the {probed} probed cluster(s), tau-free): "
-            + _pct(summary["cluster_hits"], positives)
+            _c(
+                f"cluster recall (true match landed in the {probed} probed cluster(s), tau-free): "
+                + _pct(summary["cluster_hits"], positives),
+                Colors.CYAN,
+            )
         )
         # 探针数 > 1 时上面这个数会趋近 100%，于是它不再是"数据有多难"的读数，而是
         # "我们探了多少"的读数。真正没被调参动过的是只探 top-1 的命中率 —— 它由簇
         # 几何决定，改 tau、改探针数都不动。两个一起打，读者才知道成本买到了什么。
         if probed and probed > 1:
             print(
-                "  ^ with more than one probe this saturates by construction; the "
-                "tau-free anchor\n    is the top-1-only line below, which the probe count "
-                "cannot move."
+                _c(
+                    "  ^ with more than one probe this saturates by construction; the "
+                    "tau-free anchor\n    is the top-1-only line below, which the probe count "
+                    "cannot move.",
+                    Colors.DIM,
+                )
             )
             print(
                 "  top-1-only cluster recall (what a single probe would have caught): "
@@ -614,108 +913,152 @@ def print_summary(summary: dict) -> None:
             )
             if summary["scan_columns_mean_negatives"] is not None:
                 print(
-                    f"  same cost on queries with NO true match: "
-                    f"{summary['scan_columns_mean_negatives']:.0f} columns -- exhaustive\n"
-                    "    probing cannot early-stop on an absent record, so those queries "
-                    "pay the\n    whole database. The sublinear saving is real only for "
-                    "queries that hit."
+                    _c(
+                        f"  same cost on queries with NO true match: "
+                        f"{summary['scan_columns_mean_negatives']:.0f} columns -- exhaustive\n"
+                        "    probing cannot early-stop on an absent record, so those queries "
+                        "pay the\n    whole database. The sublinear saving is real only for "
+                        "queries that hit.",
+                        Colors.DIM,
+                    )
                 )
         if summary["misses_unexplained"]:
             print(
-                f"  !! {summary['misses_unexplained']} UNEXPLAINED miss(es): the true match "
-                "was in the selected cluster and scored clear of tau, so round 2 had no "
-                "reason to miss it. Protocol bug, not a tuning issue: "
-                + ", ".join(summary["misses_unexplained_ids"])
+                _c(
+                    f"  !! {summary['misses_unexplained']} UNEXPLAINED miss(es): the true match "
+                    "was in the selected cluster and scored clear of tau, so round 2 had no "
+                    "reason to miss it. Protocol bug, not a tuning issue: "
+                    + ", ".join(summary["misses_unexplained_ids"]),
+                    Colors.BOLD + Colors.RED,
+                )
             )
         print(
-            "encrypted recall, all positives (whole population, for contrast): "
-            + _pct(summary["encrypted_catches_all_positives"], positives)
+            _c(
+                "encrypted recall, all positives (whole population, for contrast): "
+                + _pct(summary["encrypted_catches_all_positives"], positives),
+                Colors.DIM,
+            )
         )
         if negatives:
             print(
-                "over-reports (negatives caught above tau): "
-                + _pct(summary["over_reports"], negatives)
+                _paint(
+                    "over-reports (negatives caught above tau): "
+                    + _pct(summary["over_reports"], negatives),
+                    Colors.GREEN if summary["over_reports"] == 0 else Colors.RED,
+                )
             )
 
         total_identical = summary["identical_queries"]
         if total_identical:
             verdict = "OK" if not summary["identical_violations"] else "VIOLATED"
             print(
-                f"identical-query invariant: {summary['identical_caught']}/{total_identical} "
-                f"caught [{verdict}]"
+                _c(
+                    f"identical-query invariant: {summary['identical_caught']}/{total_identical} "
+                    f"caught [{verdict}]",
+                    Colors.GREEN if verdict == "OK" else Colors.RED,
+                )
             )
             if summary["identical_violations"]:
                 print(
-                    "  !! identical queries MUST catch: "
-                    + ", ".join(summary["identical_violations"])
+                    _c(
+                        "  !! identical queries MUST catch: "
+                        + ", ".join(summary["identical_violations"]),
+                        Colors.RED,
+                    )
                 )
         else:
             # 没被触发过 ≠ 通过。这个状态要说出来，否则绿灯是空跑的。
-            print("identical-query invariant: not exercised (no identical queries)")
+            print(
+                _c(
+                    "identical-query invariant: not exercised (no identical queries)",
+                    Colors.DIM,
+                )
+            )
 
     # ---- tau 的标定依据：全报告里唯一与 tau 无关的锚点 ----
     lo = summary["lowest_expected_match_score"]
     hi = summary["highest_impostor_score"]
     if lo is not None and hi is not None:
+        print()
         print(
-            "\nplaintext calibration (tau anchoring only, not an evaluation metric): "
+            "plaintext calibration (tau anchoring only, not an evaluation metric): "
             f"lowest expected-match {lo:.3f} / highest impostor {hi:.3f}"
         )
         if summary.get("true_matches_overlap_impostors"):
             print(
-                "  -> true matches and impostors OVERLAP here; no tau separates them. "
-                "Add attributes, raise weights, or accept errors."
+                _c(
+                    "  -> true matches and impostors OVERLAP here; no tau separates them. "
+                    "Add attributes, raise weights, or accept errors.",
+                    Colors.RED,
+                )
             )
         elif "tau_inside_calibration_window" in summary:
+            inside = summary["tau_inside_calibration_window"]
             print(
                 f"  -> tau must be inside ({hi:.3f}, {lo:.3f}); current tau={tau:g} "
-                + (
-                    "is inside"
-                    if summary["tau_inside_calibration_window"]
-                    else "is OUTSIDE"
-                )
+                + _c("is inside" if inside else "is OUTSIDE", Colors.GREEN if inside else Colors.RED)
             )
 
     guard = summary["tau_guard"]
     verdict = guard["verdict"]
     if verdict == "below_ceiling":
+        print()
         print(
-            f"\ntau guard: tau={tau:.3f} is BELOW the highest impostor score {hi:.3f}.\n"
-            "  An impostor can score above tau, so the protocol can report CATCH for a\n"
-            "  query whose record is not in the database at all. Raise tau into "
-            f"({hi:.3f}, {lo:.3f}]."
+            _c(
+                f"tau guard: tau={tau:.3f} is BELOW the highest impostor score {hi:.3f}.\n"
+                "  An impostor can score above tau, so the protocol can report CATCH for a\n"
+                "  query whose record is not in the database at all. Raise tau into "
+                f"({hi:.3f}, {lo:.3f}].",
+                Colors.RED,
+            )
         )
     elif verdict == "above_ceiling_with_cost":
+        print()
         print(
-            f"\ntau guard: tau={tau:.3f} sits above the impostor ceiling {hi:.3f}, and it "
-            f"cost\n  {guard['positives_dropped_by_tau']} positive(s) to get there "
-            f"({positives} -> {summary['should_catch_positives']}).\n"
-            f"  Everything above {hi:.3f} suppresses nothing -- no impostor can reach it --\n"
-            "  so that entire span is pure subtraction from the recall denominator. Judge a\n"
-            "  run by the tau-free cluster recall line, which this cannot move."
+            _c(
+                f"tau guard: tau={tau:.3f} sits above the impostor ceiling {hi:.3f}, and it "
+                f"cost\n  {guard['positives_dropped_by_tau']} positive(s) to get there "
+                f"({positives} -> {summary['should_catch_positives']}).\n"
+                f"  Everything above {hi:.3f} suppresses nothing -- no impostor can reach it --\n"
+                "  so that entire span is pure subtraction from the recall denominator. Judge a\n"
+                "  run by the tau-free cluster recall line, which this cannot move.",
+                Colors.YELLOW,
+            )
         )
     elif verdict == "above_ceiling_no_cost":
         # 健康形态：盖住冒充者上限且一条正例没删。必须说"没问题"，否则真出事的
         # 那次会淹没在一贯的警告里。
+        print()
         print(
-            f"\ntau guard: tau={tau:.3f} is above the impostor ceiling {hi:.3f} and drops no\n"
-            "  positive from the denominator. Calibrated correctly -- nothing to flag."
+            _c(
+                f"tau guard: tau={tau:.3f} is above the impostor ceiling {hi:.3f} and drops no\n"
+                "  positive from the denominator. Calibrated correctly -- nothing to flag.",
+                Colors.GREEN,
+            )
         )
     if guard["tau_at_or_above_one"]:
+        print()
         print(
-            f"\ntau guard: tau={tau:g} >= 1.0. An identical query scores exactly 1.0 and the\n"
-            "  protocol's test is a STRICT >, so every identical query must miss -- the\n"
-            "  identical-query invariant cannot hold at this tau."
+            _c(
+                f"tau guard: tau={tau:g} >= 1.0. An identical query scores exactly 1.0 and the\n"
+                "  protocol's test is a STRICT >, so every identical query must miss -- the\n"
+                "  identical-query invariant cannot hold at this tau.",
+                Colors.RED,
+            )
         )
 
+    print()
     print(
-        "\nNOTE: the protocol returns only the sign of the threshold test, the selected\n"
-        "cluster index, and the column index -- never the id of the matched record. So a\n"
-        "CATCH means \"some record in the selected cluster scored above tau\", not \"the\n"
-        "right record was found\": the recall above is a DETECTION rate, not identification\n"
-        "precision/recall. It also has tau in its own denominator, so raising tau moves the\n"
-        "hardest queries out of the denominator and pushes the number toward 100% without\n"
-        "fixing anything. It reports agreement with the threshold; it is not a target."
+        _c(
+            "NOTE: the protocol returns only the sign of the threshold test, the selected\n"
+            "cluster index, and the column index -- never the id of the matched record. So a\n"
+            "CATCH means \"some record in the selected cluster scored above tau\", not \"the\n"
+            "right record was found\": the recall above is a DETECTION rate, not identification\n"
+            "precision/recall. It also has tau in its own denominator, so raising tau moves the\n"
+            "hardest queries out of the denominator and pushes the number toward 100% without\n"
+            "fixing anything. It reports agreement with the threshold; it is not a target.",
+            Colors.DIM,
+        )
     )
 
 
@@ -808,7 +1151,7 @@ def main() -> int:
         "--limit",
         type=int,
         default=20,
-        help="max queries to run (default 20; each query is a full two-round HE run)",
+        help="max queries to run (default 20; 0 = all; each query is a full two-round HE run)",
     )
     parser.add_argument(
         "--db-limit",
@@ -841,7 +1184,14 @@ def main() -> int:
         help="where to write the JSON + CSV report (default artifacts/demo/%s)"
         % _ARTIFACT_DIR_NAME,
     )
+    parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="disable ANSI colors (auto-disabled when stdout is not a TTY)",
+    )
     args = parser.parse_args()
+    if args.no_color or not sys.stdout.isatty():
+        Colors.disable()
 
     job = load_job(args.config)
     schema: AttributeSchema = job["schema_object"]
@@ -849,42 +1199,64 @@ def main() -> int:
     database_limit = None if args.db_limit <= 0 else args.db_limit
     database, queries = load_data(job, limit, database_limit)
 
-    print_schema(schema, len(database), database_limit)
+    print_schema(schema, len(database), database_limit, config_path=str(args.config))
     quality_notes = _audit_dates(database, queries, schema)
     for note in quality_notes:
-        print(f"data quality: {note}")
+        print(_c(f"data quality: {note}", Colors.YELLOW))
     if any(spec.kind == "date" for spec in schema.attributes):
         print()
 
     # 库只编码一次，后续每条查询就是一次矩阵-向量乘。
+    _phase(1, "Build Database Vectors & Party-B Offline Index", "B")
+    step_start = time.perf_counter()
     db_matrix = encode_record_vectors(database, schema)[1]
+    _timing("Database vector encode", time.perf_counter() - step_start)
+    _kv("database rows", len(database))
 
     # 真匹配分明文算，`--no-encrypted` 的便宜 sweep 也要用，所以放在加密分支之外。
     db_index = {record.record_id: i for i, record in enumerate(database)}
     if len(db_index) != len(database):
         # 整套 expected_score 机制以 record_id 为键，上游并不保证 id 唯一。
         print(
-            f"Warning: {len(database) - len(db_index)} duplicate record_id(s) in the "
-            "database; expected-score lookup keeps the last occurrence"
+            _c(
+                f"Warning: {len(database) - len(db_index)} duplicate record_id(s) in the "
+                "database; expected-score lookup keeps the last occurrence",
+                Colors.RED,
+            )
         )
 
     # B 方离线阶段（k-means + 加密整个 cluster 矩阵）只做一次，N 条查询共用。
     artifacts = None
     cluster_of: dict[str, int] = {}
     if not args.no_encrypted:
+        step_start = time.perf_counter()
         artifacts = prepare_party_b_multi_offline(
             database, cfg=schema, k_mode=args.k_mode, random_state=args.random_state
         )
+        _timing(
+            "Party-B offline (k-means + encrypted cluster matrix)",
+            time.perf_counter() - step_start,
+        )
+        _kv("k-means policy", args.k_mode)
+        _kv("clusters", int(artifacts.centroids.shape[0]))
+        _kv("max cluster size", int(artifacts.max_size))
         cluster_of = {
             record.record_id: int(cluster)
             for record, cluster in zip(database, artifacts.cluster_assignments)
         }
+        _ok("offline artifacts ready — all queries share this one index")
 
     rows: list[dict] = []
     tau = float(schema.similarity_threshold)
 
-    print(f"{'query':<16}{'label':<7}{'true':>7}{'imp':>7}  {'top-1':<14}{'attr breakdown':<40}{'encrypted'}")
-    print("-" * 88)
+    encrypted_run = not args.no_encrypted
+    if encrypted_run:
+        _phase(2, "Encrypt Each Query & Run the Two-Round Protocol", "A")
+    else:
+        _phase(2, "Plaintext Reference Only (--no-encrypted)", "A")
+    _print_query_table_header(encrypted=encrypted_run)
+    display_names = _load_query_display_names(job)
+    loop_start = time.perf_counter()
     for query in queries:
         match = _best_plaintext_match(database, db_matrix, query, schema, db_index)
         # 一律转成 Python float —— numpy 标量 json.dumps 序列化不了。
@@ -892,8 +1264,6 @@ def main() -> int:
         impostor = float(match.impostor_score)
         expected_score = None if match.expected_score is None else float(match.expected_score)
         should_catch = _should_catch(expected_score, tau)
-
-        breakdown = " ".join(f"{k}={v:.2f}" for k, v in match.similarities.items())
 
         row: dict = {
             "query_id": query.record.record_id,
@@ -914,9 +1284,9 @@ def main() -> int:
             "encrypted": None,
         }
 
-        if args.no_encrypted:
-            tail = ""
-        else:
+        run = None
+        rank: int | None = None
+        if not args.no_encrypted:
             run = run_multi_attribute_protocol(
                 database,
                 query.record,
@@ -926,7 +1296,6 @@ def main() -> int:
                 artifacts=artifacts,
                 probes=args.probes,
             )
-            verdict = "CATCH" if run.catch else "no-catch"
             # 真匹配的簇落在第一轮质心排序的第几位。下面两个不同的量都由它决定：
             # ``cluster_hit`` 看的是**探测过**的集合（probes="all" 时恒为真，没有
             # 区分度），``cluster_rank`` 看的是**只探 top-1** 时会怎样 —— 后者才是
@@ -962,22 +1331,38 @@ def main() -> int:
                     tau,
                 )
             row["encrypted"] = encrypted
-            rank_note = "" if rank is None else f" rank={rank}"
-            tail = (
-                f"  {verdict:<9} cluster={run.selected_cluster:<4} "
-                f"checked={run.checked_columns}{rank_note}"
-            )
 
         rows.append(row)
         print(
-            f"{str(query.record.record_id):<16}{str(query.label):<7}{best_score:>7.3f}"
-            f"{impostor:>7.3f}  {(match.top1_record_id or '-'):<14}{breakdown:<40}{tail}"
+            "    "
+            + " ".join(
+                _query_cells(
+                    query,
+                    match,
+                    best_score,
+                    impostor,
+                    tau,
+                    should_catch,
+                    run,
+                    rank,
+                    display_names.get(query.record.record_id),
+                )
+            ).rstrip()
         )
 
-    print("-" * 88)
+    _print_query_table_rule(encrypted=encrypted_run)
+    if encrypted_run:
+        _timing(
+            "Encrypted two-round protocol, all queries",
+            time.perf_counter() - loop_start,
+        )
+    else:
+        _timing("Plaintext reference, all queries", time.perf_counter() - loop_start)
+
     summary = _summarize(
-        rows, tau, encrypted=not args.no_encrypted, database_size=len(database)
+        rows, tau, encrypted=encrypted_run, database_size=len(database)
     )
+    _banner("FINAL RESULTS SUMMARY")
     print_summary(summary)
 
     cluster_layout, match_layout = schema.layout(), schema.match_layout()
@@ -1011,7 +1396,7 @@ def main() -> int:
         },
         "data_quality_notes": quality_notes,
         "run": {
-            "encrypted": not args.no_encrypted,
+            "encrypted": encrypted_run,
             "k_mode": args.k_mode,
             "probes": args.probes,
             "random_state": args.random_state,
