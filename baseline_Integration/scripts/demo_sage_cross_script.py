@@ -574,9 +574,11 @@ def _print_stage_1(result: dict) -> None:
         grouped.setdefault(entry["record_id"], []).append(entry)
     for entries in grouped.values():
         first = entries[0]
+        src = first["source_script"]
+        ctry = first["country"]
         print(
             f"\n    {_c(first['source_name'], Colors.BOLD)} "
-            f"{_c(f'({first["source_script"]}, {first["country"]})', Colors.DIM)}"
+            f"{_c(f'({src}, {ctry})', Colors.DIM)}"
         )
         for entry in entries:
             print(
