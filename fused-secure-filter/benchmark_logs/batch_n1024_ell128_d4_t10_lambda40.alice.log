@@ -1,0 +1,913 @@
+connected
+[alice-main] entering run_alice
+[alice] starting rounds, k=89, p=0.226246
+[alice-round 0] enter, local_size=1024
+[alice-round 0] RsCpsi start
+[alice-round 0] RsCpsi done, secure_bins=1305
+[alice-round 0] psi sizes: my_input=1024, bins=1305, local_valid=1189
+STAGE_TIMING party=alice round=0 projection_ms=0.971558 psi_ms=95.45 emp_batch_ms=350.542 bins=1305 compared_bits=103
+[alice-round 0] batch_emp_ms=350.542 batch_bins=1305
+[alice-round 0] secureFilterBin done
+[alice-round 0] done, matches=1
+[alice] round 0/89 done
+[alice] between round 0 and 1
+[alice-round 1] enter, local_size=1024
+[alice-round 1] RsCpsi start
+[alice-round 1] RsCpsi done, secure_bins=1305
+[alice-round 1] psi sizes: my_input=1024, bins=1305, local_valid=1182
+STAGE_TIMING party=alice round=1 projection_ms=0.387 psi_ms=77.620 emp_batch_ms=347.118 bins=1305 compared_bits=103
+[alice-round 1] batch_emp_ms=347.118 batch_bins=1305
+[alice-round 1] secureFilterBin done
+[alice-round 1] done, matches=1
+[alice] round 1/89 done
+[alice] between round 1 and 2
+[alice-round 2] enter, local_size=1024
+[alice-round 2] RsCpsi start
+[alice-round 2] RsCpsi done, secure_bins=1305
+[alice-round 2] psi sizes: my_input=1023, bins=1305, local_valid=1178
+STAGE_TIMING party=alice round=2 projection_ms=0.677 psi_ms=77.438 emp_batch_ms=361.459 bins=1305 compared_bits=104
+[alice-round 2] batch_emp_ms=361.459 batch_bins=1305
+[alice-round 2] secureFilterBin done
+[alice-round 2] done, matches=1
+[alice] round 2/89 done
+[alice] between round 2 and 3
+[alice-round 3] enter, local_size=1024
+[alice-round 3] RsCpsi start
+[alice-round 3] RsCpsi done, secure_bins=1305
+[alice-round 3] psi sizes: my_input=1024, bins=1305, local_valid=1183
+STAGE_TIMING party=alice round=3 projection_ms=0.396 psi_ms=78.807 emp_batch_ms=351.037 bins=1305 compared_bits=99
+[alice-round 3] batch_emp_ms=351.037 batch_bins=1305
+[alice-round 3] secureFilterBin done
+[alice-round 3] done, matches=2
+[alice] round 3/89 done
+[alice] between round 3 and 4
+[alice-round 4] enter, local_size=1024
+[alice-round 4] RsCpsi start
+[alice-round 4] RsCpsi done, secure_bins=1305
+[alice-round 4] psi sizes: my_input=1024, bins=1305, local_valid=1187
+STAGE_TIMING party=alice round=4 projection_ms=0.405 psi_ms=74.724 emp_batch_ms=351.972 bins=1305 compared_bits=92
+[alice-round 4] batch_emp_ms=351.972 batch_bins=1305
+[alice-round 4] secureFilterBin done
+[alice-round 4] done, matches=2
+[alice] round 4/89 done
+[alice] between round 4 and 5
+[alice-round 5] enter, local_size=1024
+[alice-round 5] RsCpsi start
+[alice-round 5] RsCpsi done, secure_bins=1305
+[alice-round 5] psi sizes: my_input=1024, bins=1305, local_valid=1179
+STAGE_TIMING party=alice round=5 projection_ms=0.401 psi_ms=71.586 emp_batch_ms=366.799 bins=1305 compared_bits=104
+[alice-round 5] batch_emp_ms=366.799 batch_bins=1305
+[alice-round 5] secureFilterBin done
+[alice-round 5] done, matches=2
+[alice] round 5/89 done
+[alice] between round 5 and 6
+[alice-round 6] enter, local_size=1024
+[alice-round 6] RsCpsi start
+[alice-round 6] RsCpsi done, secure_bins=1305
+[alice-round 6] psi sizes: my_input=1024, bins=1305, local_valid=1189
+STAGE_TIMING party=alice round=6 projection_ms=0.457 psi_ms=77.589 emp_batch_ms=335.857 bins=1305 compared_bits=104
+[alice-round 6] batch_emp_ms=335.857 batch_bins=1305
+[alice-round 6] secureFilterBin done
+[alice-round 6] done, matches=2
+[alice] round 6/89 done
+[alice] between round 6 and 7
+[alice-round 7] enter, local_size=1024
+[alice-round 7] RsCpsi start
+[alice-round 7] RsCpsi done, secure_bins=1305
+[alice-round 7] psi sizes: my_input=1024, bins=1305, local_valid=1185
+STAGE_TIMING party=alice round=7 projection_ms=0.473 psi_ms=78.368 emp_batch_ms=321.852 bins=1305 compared_bits=87
+[alice-round 7] batch_emp_ms=321.852 batch_bins=1305
+[alice-round 7] secureFilterBin done
+[alice-round 7] done, matches=2
+[alice] round 7/89 done
+[alice] between round 7 and 8
+[alice-round 8] enter, local_size=1024
+[alice-round 8] RsCpsi start
+[alice-round 8] RsCpsi done, secure_bins=1305
+[alice-round 8] psi sizes: my_input=1024, bins=1305, local_valid=1185
+STAGE_TIMING party=alice round=8 projection_ms=0.413 psi_ms=79.472 emp_batch_ms=326.362 bins=1305 compared_bits=98
+[alice-round 8] batch_emp_ms=326.362 batch_bins=1305
+[alice-round 8] secureFilterBin done
+[alice-round 8] done, matches=3
+[alice] round 8/89 done
+[alice] between round 8 and 9
+[alice-round 9] enter, local_size=1024
+[alice-round 9] RsCpsi start
+[alice-round 9] RsCpsi done, secure_bins=1305
+[alice-round 9] psi sizes: my_input=1024, bins=1305, local_valid=1173
+STAGE_TIMING party=alice round=9 projection_ms=0.468 psi_ms=72.253 emp_batch_ms=312.462 bins=1305 compared_bits=100
+[alice-round 9] batch_emp_ms=312.462 batch_bins=1305
+[alice-round 9] secureFilterBin done
+[alice-round 9] done, matches=3
+[alice] round 9/89 done
+[alice] between round 9 and 10
+[alice-round 10] enter, local_size=1024
+[alice-round 10] RsCpsi start
+[alice-round 10] RsCpsi done, secure_bins=1305
+[alice-round 10] psi sizes: my_input=1024, bins=1305, local_valid=1170
+STAGE_TIMING party=alice round=10 projection_ms=0.387 psi_ms=72.780 emp_batch_ms=310.371 bins=1305 compared_bits=103
+[alice-round 10] batch_emp_ms=310.371 batch_bins=1305
+[alice-round 10] secureFilterBin done
+[alice-round 10] done, matches=3
+[alice] round 10/89 done
+[alice] between round 10 and 11
+[alice-round 11] enter, local_size=1024
+[alice-round 11] RsCpsi start
+[alice-round 11] RsCpsi done, secure_bins=1305
+[alice-round 11] psi sizes: my_input=1024, bins=1305, local_valid=1167
+STAGE_TIMING party=alice round=11 projection_ms=0.387 psi_ms=77.781 emp_batch_ms=340.495 bins=1305 compared_bits=99
+[alice-round 11] batch_emp_ms=340.495 batch_bins=1305
+[alice-round 11] secureFilterBin done
+[alice-round 11] done, matches=3
+[alice] round 11/89 done
+[alice] between round 11 and 12
+[alice-round 12] enter, local_size=1024
+[alice-round 12] RsCpsi start
+[alice-round 12] RsCpsi done, secure_bins=1305
+[alice-round 12] psi sizes: my_input=1024, bins=1305, local_valid=1178
+STAGE_TIMING party=alice round=12 projection_ms=0.407 psi_ms=75.912 emp_batch_ms=322.144 bins=1305 compared_bits=99
+[alice-round 12] batch_emp_ms=322.144 batch_bins=1305
+[alice-round 12] secureFilterBin done
+[alice-round 12] done, matches=3
+[alice] round 12/89 done
+[alice] between round 12 and 13
+[alice-round 13] enter, local_size=1024
+[alice-round 13] RsCpsi start
+[alice-round 13] RsCpsi done, secure_bins=1305
+[alice-round 13] psi sizes: my_input=1024, bins=1305, local_valid=1200
+STAGE_TIMING party=alice round=13 projection_ms=0.413 psi_ms=77.328 emp_batch_ms=334.246 bins=1305 compared_bits=89
+[alice-round 13] batch_emp_ms=334.246 batch_bins=1305
+[alice-round 13] secureFilterBin done
+[alice-round 13] done, matches=3
+[alice] round 13/89 done
+[alice] between round 13 and 14
+[alice-round 14] enter, local_size=1024
+[alice-round 14] RsCpsi start
+[alice-round 14] RsCpsi done, secure_bins=1305
+[alice-round 14] psi sizes: my_input=1024, bins=1305, local_valid=1179
+STAGE_TIMING party=alice round=14 projection_ms=0.893 psi_ms=72.851 emp_batch_ms=324.361 bins=1305 compared_bits=95
+[alice-round 14] batch_emp_ms=324.361 batch_bins=1305
+[alice-round 14] secureFilterBin done
+[alice-round 14] done, matches=3
+[alice] round 14/89 done
+[alice] between round 14 and 15
+[alice-round 15] enter, local_size=1024
+[alice-round 15] RsCpsi start
+[alice-round 15] RsCpsi done, secure_bins=1305
+[alice-round 15] psi sizes: my_input=1024, bins=1305, local_valid=1186
+STAGE_TIMING party=alice round=15 projection_ms=0.408 psi_ms=71.859 emp_batch_ms=283.484 bins=1305 compared_bits=101
+[alice-round 15] batch_emp_ms=283.484 batch_bins=1305
+[alice-round 15] secureFilterBin done
+[alice-round 15] done, matches=3
+[alice] round 15/89 done
+[alice] between round 15 and 16
+[alice-round 16] enter, local_size=1024
+[alice-round 16] RsCpsi start
+[alice-round 16] RsCpsi done, secure_bins=1305
+[alice-round 16] psi sizes: my_input=1024, bins=1305, local_valid=1166
+STAGE_TIMING party=alice round=16 projection_ms=0.392 psi_ms=75.998 emp_batch_ms=302.462 bins=1305 compared_bits=105
+[alice-round 16] batch_emp_ms=302.462 batch_bins=1305
+[alice-round 16] secureFilterBin done
+[alice-round 16] done, matches=3
+[alice] round 16/89 done
+[alice] between round 16 and 17
+[alice-round 17] enter, local_size=1024
+[alice-round 17] RsCpsi start
+[alice-round 17] RsCpsi done, secure_bins=1305
+[alice-round 17] psi sizes: my_input=1024, bins=1305, local_valid=1189
+STAGE_TIMING party=alice round=17 projection_ms=0.422 psi_ms=72.166 emp_batch_ms=308.721 bins=1305 compared_bits=94
+[alice-round 17] batch_emp_ms=308.721 batch_bins=1305
+[alice-round 17] secureFilterBin done
+[alice-round 17] done, matches=3
+[alice] round 17/89 done
+[alice] between round 17 and 18
+[alice-round 18] enter, local_size=1024
+[alice-round 18] RsCpsi start
+[alice-round 18] RsCpsi done, secure_bins=1305
+[alice-round 18] psi sizes: my_input=1024, bins=1305, local_valid=1194
+STAGE_TIMING party=alice round=18 projection_ms=0.674 psi_ms=73.820 emp_batch_ms=271.904 bins=1305 compared_bits=96
+[alice-round 18] batch_emp_ms=271.904 batch_bins=1305
+[alice-round 18] secureFilterBin done
+[alice-round 18] done, matches=3
+[alice] round 18/89 done
+[alice] between round 18 and 19
+[alice-round 19] enter, local_size=1024
+[alice-round 19] RsCpsi start
+[alice-round 19] RsCpsi done, secure_bins=1305
+[alice-round 19] psi sizes: my_input=1024, bins=1305, local_valid=1176
+STAGE_TIMING party=alice round=19 projection_ms=0.387 psi_ms=72.040 emp_batch_ms=274.763 bins=1305 compared_bits=105
+[alice-round 19] batch_emp_ms=274.763 batch_bins=1305
+[alice-round 19] secureFilterBin done
+[alice-round 19] done, matches=3
+[alice] round 19/89 done
+[alice] between round 19 and 20
+[alice-round 20] enter, local_size=1024
+[alice-round 20] RsCpsi start
+[alice-round 20] RsCpsi done, secure_bins=1305
+[alice-round 20] psi sizes: my_input=1024, bins=1305, local_valid=1176
+STAGE_TIMING party=alice round=20 projection_ms=0.430 psi_ms=74.177 emp_batch_ms=316.097 bins=1305 compared_bits=100
+[alice-round 20] batch_emp_ms=316.097 batch_bins=1305
+[alice-round 20] secureFilterBin done
+[alice-round 20] done, matches=3
+[alice] round 20/89 done
+[alice] between round 20 and 21
+[alice-round 21] enter, local_size=1024
+[alice-round 21] RsCpsi start
+[alice-round 21] RsCpsi done, secure_bins=1305
+[alice-round 21] psi sizes: my_input=1024, bins=1305, local_valid=1183
+STAGE_TIMING party=alice round=21 projection_ms=0.384 psi_ms=71.707 emp_batch_ms=322.580 bins=1305 compared_bits=98
+[alice-round 21] batch_emp_ms=322.580 batch_bins=1305
+[alice-round 21] secureFilterBin done
+[alice-round 21] done, matches=3
+[alice] round 21/89 done
+[alice] between round 21 and 22
+[alice-round 22] enter, local_size=1024
+[alice-round 22] RsCpsi start
+[alice-round 22] RsCpsi done, secure_bins=1305
+[alice-round 22] psi sizes: my_input=1024, bins=1305, local_valid=1176
+STAGE_TIMING party=alice round=22 projection_ms=0.379 psi_ms=72.362 emp_batch_ms=334.060 bins=1305 compared_bits=101
+[alice-round 22] batch_emp_ms=334.060 batch_bins=1305
+[alice-round 22] secureFilterBin done
+[alice-round 22] done, matches=3
+[alice] round 22/89 done
+[alice] between round 22 and 23
+[alice-round 23] enter, local_size=1024
+[alice-round 23] RsCpsi start
+[alice-round 23] RsCpsi done, secure_bins=1305
+[alice-round 23] psi sizes: my_input=1024, bins=1305, local_valid=1175
+STAGE_TIMING party=alice round=23 projection_ms=0.591 psi_ms=70.421 emp_batch_ms=337.128 bins=1305 compared_bits=101
+[alice-round 23] batch_emp_ms=337.128 batch_bins=1305
+[alice-round 23] secureFilterBin done
+[alice-round 23] done, matches=3
+[alice] round 23/89 done
+[alice] between round 23 and 24
+[alice-round 24] enter, local_size=1024
+[alice-round 24] RsCpsi start
+[alice-round 24] RsCpsi done, secure_bins=1305
+[alice-round 24] psi sizes: my_input=1024, bins=1305, local_valid=1184
+STAGE_TIMING party=alice round=24 projection_ms=0.431 psi_ms=70.902 emp_batch_ms=332.660 bins=1305 compared_bits=95
+[alice-round 24] batch_emp_ms=332.660 batch_bins=1305
+[alice-round 24] secureFilterBin done
+[alice-round 24] done, matches=3
+[alice] round 24/89 done
+[alice] between round 24 and 25
+[alice-round 25] enter, local_size=1024
+[alice-round 25] RsCpsi start
+[alice-round 25] RsCpsi done, secure_bins=1305
+[alice-round 25] psi sizes: my_input=1024, bins=1305, local_valid=1166
+STAGE_TIMING party=alice round=25 projection_ms=0.409 psi_ms=72.935 emp_batch_ms=331.626 bins=1305 compared_bits=100
+[alice-round 25] batch_emp_ms=331.626 batch_bins=1305
+[alice-round 25] secureFilterBin done
+[alice-round 25] done, matches=3
+[alice] round 25/89 done
+[alice] between round 25 and 26
+[alice-round 26] enter, local_size=1024
+[alice-round 26] RsCpsi start
+[alice-round 26] RsCpsi done, secure_bins=1305
+[alice-round 26] psi sizes: my_input=1024, bins=1305, local_valid=1182
+STAGE_TIMING party=alice round=26 projection_ms=0.469 psi_ms=76.484 emp_batch_ms=320.428 bins=1305 compared_bits=92
+[alice-round 26] batch_emp_ms=320.428 batch_bins=1305
+[alice-round 26] secureFilterBin done
+[alice-round 26] done, matches=3
+[alice] round 26/89 done
+[alice] between round 26 and 27
+[alice-round 27] enter, local_size=1024
+[alice-round 27] RsCpsi start
+[alice-round 27] RsCpsi done, secure_bins=1305
+[alice-round 27] psi sizes: my_input=1024, bins=1305, local_valid=1175
+STAGE_TIMING party=alice round=27 projection_ms=0.407 psi_ms=71.730 emp_batch_ms=334.594 bins=1305 compared_bits=94
+[alice-round 27] batch_emp_ms=334.594 batch_bins=1305
+[alice-round 27] secureFilterBin done
+[alice-round 27] done, matches=3
+[alice] round 27/89 done
+[alice] between round 27 and 28
+[alice-round 28] enter, local_size=1024
+[alice-round 28] RsCpsi start
+[alice-round 28] RsCpsi done, secure_bins=1305
+[alice-round 28] psi sizes: my_input=1024, bins=1305, local_valid=1170
+STAGE_TIMING party=alice round=28 projection_ms=0.845 psi_ms=71.456 emp_batch_ms=335.597 bins=1305 compared_bits=104
+[alice-round 28] batch_emp_ms=335.597 batch_bins=1305
+[alice-round 28] secureFilterBin done
+[alice-round 28] done, matches=3
+[alice] round 28/89 done
+[alice] between round 28 and 29
+[alice-round 29] enter, local_size=1024
+[alice-round 29] RsCpsi start
+[alice-round 29] RsCpsi done, secure_bins=1297
+[alice-round 29] psi sizes: my_input=1021, bins=1297, local_valid=1176
+STAGE_TIMING party=alice round=29 projection_ms=0.770 psi_ms=74.453 emp_batch_ms=324.390 bins=1297 compared_bits=111
+[alice-round 29] batch_emp_ms=324.390 batch_bins=1297
+[alice-round 29] secureFilterBin done
+[alice-round 29] done, matches=3
+[alice] round 29/89 done
+[alice] between round 29 and 30
+[alice-round 30] enter, local_size=1024
+[alice-round 30] RsCpsi start
+[alice-round 30] RsCpsi done, secure_bins=1305
+[alice-round 30] psi sizes: my_input=1024, bins=1305, local_valid=1176
+STAGE_TIMING party=alice round=30 projection_ms=0.400 psi_ms=73.925 emp_batch_ms=336.974 bins=1305 compared_bits=99
+[alice-round 30] batch_emp_ms=336.974 batch_bins=1305
+[alice-round 30] secureFilterBin done
+[alice-round 30] done, matches=3
+[alice] round 30/89 done
+[alice] between round 30 and 31
+[alice-round 31] enter, local_size=1024
+[alice-round 31] RsCpsi start
+[alice-round 31] RsCpsi done, secure_bins=1305
+[alice-round 31] psi sizes: my_input=1024, bins=1305, local_valid=1189
+STAGE_TIMING party=alice round=31 projection_ms=0.381 psi_ms=72.861 emp_batch_ms=335.303 bins=1305 compared_bits=100
+[alice-round 31] batch_emp_ms=335.303 batch_bins=1305
+[alice-round 31] secureFilterBin done
+[alice-round 31] done, matches=3
+[alice] round 31/89 done
+[alice] between round 31 and 32
+[alice-round 32] enter, local_size=1024
+[alice-round 32] RsCpsi start
+[alice-round 32] RsCpsi done, secure_bins=1305
+[alice-round 32] psi sizes: my_input=1024, bins=1305, local_valid=1170
+STAGE_TIMING party=alice round=32 projection_ms=0.473 psi_ms=72.288 emp_batch_ms=331.685 bins=1305 compared_bits=96
+[alice-round 32] batch_emp_ms=331.685 batch_bins=1305
+[alice-round 32] secureFilterBin done
+[alice-round 32] done, matches=3
+[alice] round 32/89 done
+[alice] between round 32 and 33
+[alice-round 33] enter, local_size=1024
+[alice-round 33] RsCpsi start
+[alice-round 33] RsCpsi done, secure_bins=1305
+[alice-round 33] psi sizes: my_input=1024, bins=1305, local_valid=1181
+STAGE_TIMING party=alice round=33 projection_ms=0.435 psi_ms=73.054 emp_batch_ms=319.481 bins=1305 compared_bits=98
+[alice-round 33] batch_emp_ms=319.481 batch_bins=1305
+[alice-round 33] secureFilterBin done
+[alice-round 33] done, matches=4
+[alice] round 33/89 done
+[alice] between round 33 and 34
+[alice-round 34] enter, local_size=1024
+[alice-round 34] RsCpsi start
+[alice-round 34] RsCpsi done, secure_bins=1305
+[alice-round 34] psi sizes: my_input=1024, bins=1305, local_valid=1173
+STAGE_TIMING party=alice round=34 projection_ms=0.395 psi_ms=70.430 emp_batch_ms=302.083 bins=1305 compared_bits=105
+[alice-round 34] batch_emp_ms=302.083 batch_bins=1305
+[alice-round 34] secureFilterBin done
+[alice-round 34] done, matches=4
+[alice] round 34/89 done
+[alice] between round 34 and 35
+[alice-round 35] enter, local_size=1024
+[alice-round 35] RsCpsi start
+[alice-round 35] RsCpsi done, secure_bins=1305
+[alice-round 35] psi sizes: my_input=1024, bins=1305, local_valid=1183
+STAGE_TIMING party=alice round=35 projection_ms=0.398 psi_ms=70.275 emp_batch_ms=305.631 bins=1305 compared_bits=99
+[alice-round 35] batch_emp_ms=305.631 batch_bins=1305
+[alice-round 35] secureFilterBin done
+[alice-round 35] done, matches=4
+[alice] round 35/89 done
+[alice] between round 35 and 36
+[alice-round 36] enter, local_size=1024
+[alice-round 36] RsCpsi start
+[alice-round 36] RsCpsi done, secure_bins=1305
+[alice-round 36] psi sizes: my_input=1024, bins=1305, local_valid=1192
+STAGE_TIMING party=alice round=36 projection_ms=0.399 psi_ms=71.560 emp_batch_ms=339.056 bins=1305 compared_bits=92
+[alice-round 36] batch_emp_ms=339.056 batch_bins=1305
+[alice-round 36] secureFilterBin done
+[alice-round 36] done, matches=4
+[alice] round 36/89 done
+[alice] between round 36 and 37
+[alice-round 37] enter, local_size=1024
+[alice-round 37] RsCpsi start
+[alice-round 37] RsCpsi done, secure_bins=1305
+[alice-round 37] psi sizes: my_input=1024, bins=1305, local_valid=1176
+STAGE_TIMING party=alice round=37 projection_ms=0.390 psi_ms=70.001 emp_batch_ms=333.313 bins=1305 compared_bits=100
+[alice-round 37] batch_emp_ms=333.313 batch_bins=1305
+[alice-round 37] secureFilterBin done
+[alice-round 37] done, matches=4
+[alice] round 37/89 done
+[alice] between round 37 and 38
+[alice-round 38] enter, local_size=1024
+[alice-round 38] RsCpsi start
+[alice-round 38] RsCpsi done, secure_bins=1305
+[alice-round 38] psi sizes: my_input=1024, bins=1305, local_valid=1188
+STAGE_TIMING party=alice round=38 projection_ms=0.426 psi_ms=71.066 emp_batch_ms=330.816 bins=1305 compared_bits=93
+[alice-round 38] batch_emp_ms=330.816 batch_bins=1305
+[alice-round 38] secureFilterBin done
+[alice-round 38] done, matches=4
+[alice] round 38/89 done
+[alice] between round 38 and 39
+[alice-round 39] enter, local_size=1024
+[alice-round 39] RsCpsi start
+[alice-round 39] RsCpsi done, secure_bins=1305
+[alice-round 39] psi sizes: my_input=1024, bins=1305, local_valid=1179
+STAGE_TIMING party=alice round=39 projection_ms=0.388 psi_ms=71.217 emp_batch_ms=335.753 bins=1305 compared_bits=97
+[alice-round 39] batch_emp_ms=335.753 batch_bins=1305
+[alice-round 39] secureFilterBin done
+[alice-round 39] done, matches=4
+[alice] round 39/89 done
+[alice] between round 39 and 40
+[alice-round 40] enter, local_size=1024
+[alice-round 40] RsCpsi start
+[alice-round 40] RsCpsi done, secure_bins=1305
+[alice-round 40] psi sizes: my_input=1024, bins=1305, local_valid=1193
+STAGE_TIMING party=alice round=40 projection_ms=0.409 psi_ms=71.993 emp_batch_ms=330.349 bins=1305 compared_bits=95
+[alice-round 40] batch_emp_ms=330.349 batch_bins=1305
+[alice-round 40] secureFilterBin done
+[alice-round 40] done, matches=4
+[alice] round 40/89 done
+[alice] between round 40 and 41
+[alice-round 41] enter, local_size=1024
+[alice-round 41] RsCpsi start
+[alice-round 41] RsCpsi done, secure_bins=1305
+[alice-round 41] psi sizes: my_input=1024, bins=1305, local_valid=1175
+STAGE_TIMING party=alice round=41 projection_ms=0.459 psi_ms=72.545 emp_batch_ms=359.987 bins=1305 compared_bits=98
+[alice-round 41] batch_emp_ms=359.987 batch_bins=1305
+[alice-round 41] secureFilterBin done
+[alice-round 41] done, matches=4
+[alice] round 41/89 done
+[alice] between round 41 and 42
+[alice-round 42] enter, local_size=1024
+[alice-round 42] RsCpsi start
+[alice-round 42] RsCpsi done, secure_bins=1305
+[alice-round 42] psi sizes: my_input=1024, bins=1305, local_valid=1184
+STAGE_TIMING party=alice round=42 projection_ms=0.461 psi_ms=73.692 emp_batch_ms=347.143 bins=1305 compared_bits=94
+[alice-round 42] batch_emp_ms=347.143 batch_bins=1305
+[alice-round 42] secureFilterBin done
+[alice-round 42] done, matches=4
+[alice] round 42/89 done
+[alice] between round 42 and 43
+[alice-round 43] enter, local_size=1024
+[alice-round 43] RsCpsi start
+[alice-round 43] RsCpsi done, secure_bins=1305
+[alice-round 43] psi sizes: my_input=1024, bins=1305, local_valid=1156
+STAGE_TIMING party=alice round=43 projection_ms=0.510 psi_ms=75.360 emp_batch_ms=342.116 bins=1305 compared_bits=92
+[alice-round 43] batch_emp_ms=342.116 batch_bins=1305
+[alice-round 43] secureFilterBin done
+[alice-round 43] done, matches=4
+[alice] round 43/89 done
+[alice] between round 43 and 44
+[alice-round 44] enter, local_size=1024
+[alice-round 44] RsCpsi start
+[alice-round 44] RsCpsi done, secure_bins=1305
+[alice-round 44] psi sizes: my_input=1024, bins=1305, local_valid=1186
+STAGE_TIMING party=alice round=44 projection_ms=0.461 psi_ms=74.126 emp_batch_ms=348.322 bins=1305 compared_bits=94
+[alice-round 44] batch_emp_ms=348.322 batch_bins=1305
+[alice-round 44] secureFilterBin done
+[alice-round 44] done, matches=4
+[alice] round 44/89 done
+[alice] between round 44 and 45
+[alice-round 45] enter, local_size=1024
+[alice-round 45] RsCpsi start
+[alice-round 45] RsCpsi done, secure_bins=1305
+[alice-round 45] psi sizes: my_input=1024, bins=1305, local_valid=1185
+STAGE_TIMING party=alice round=45 projection_ms=0.520 psi_ms=82.709 emp_batch_ms=349.322 bins=1305 compared_bits=94
+[alice-round 45] batch_emp_ms=349.322 batch_bins=1305
+[alice-round 45] secureFilterBin done
+[alice-round 45] done, matches=4
+[alice] round 45/89 done
+[alice] between round 45 and 46
+[alice-round 46] enter, local_size=1024
+[alice-round 46] RsCpsi start
+[alice-round 46] RsCpsi done, secure_bins=1305
+[alice-round 46] psi sizes: my_input=1024, bins=1305, local_valid=1180
+STAGE_TIMING party=alice round=46 projection_ms=0.811 psi_ms=71.632 emp_batch_ms=350.528 bins=1305 compared_bits=93
+[alice-round 46] batch_emp_ms=350.528 batch_bins=1305
+[alice-round 46] secureFilterBin done
+[alice-round 46] done, matches=4
+[alice] round 46/89 done
+[alice] between round 46 and 47
+[alice-round 47] enter, local_size=1024
+[alice-round 47] RsCpsi start
+[alice-round 47] RsCpsi done, secure_bins=1305
+[alice-round 47] psi sizes: my_input=1024, bins=1305, local_valid=1187
+STAGE_TIMING party=alice round=47 projection_ms=0.810 psi_ms=73.573 emp_batch_ms=349.210 bins=1305 compared_bits=96
+[alice-round 47] batch_emp_ms=349.210 batch_bins=1305
+[alice-round 47] secureFilterBin done
+[alice-round 47] done, matches=4
+[alice] round 47/89 done
+[alice] between round 47 and 48
+[alice-round 48] enter, local_size=1024
+[alice-round 48] RsCpsi start
+[alice-round 48] RsCpsi done, secure_bins=1305
+[alice-round 48] psi sizes: my_input=1024, bins=1305, local_valid=1189
+STAGE_TIMING party=alice round=48 projection_ms=0.457 psi_ms=75.053 emp_batch_ms=341.106 bins=1305 compared_bits=101
+[alice-round 48] batch_emp_ms=341.106 batch_bins=1305
+[alice-round 48] secureFilterBin done
+[alice-round 48] done, matches=4
+[alice] round 48/89 done
+[alice] between round 48 and 49
+[alice-round 49] enter, local_size=1024
+[alice-round 49] RsCpsi start
+[alice-round 49] RsCpsi done, secure_bins=1305
+[alice-round 49] psi sizes: my_input=1024, bins=1305, local_valid=1193
+STAGE_TIMING party=alice round=49 projection_ms=0.504 psi_ms=74.870 emp_batch_ms=344.076 bins=1305 compared_bits=94
+[alice-round 49] batch_emp_ms=344.076 batch_bins=1305
+[alice-round 49] secureFilterBin done
+[alice-round 49] done, matches=4
+[alice] round 49/89 done
+[alice] between round 49 and 50
+[alice-round 50] enter, local_size=1024
+[alice-round 50] RsCpsi start
+[alice-round 50] RsCpsi done, secure_bins=1305
+[alice-round 50] psi sizes: my_input=1023, bins=1305, local_valid=1187
+STAGE_TIMING party=alice round=50 projection_ms=0.453 psi_ms=73.929 emp_batch_ms=367.992 bins=1305 compared_bits=106
+[alice-round 50] batch_emp_ms=367.992 batch_bins=1305
+[alice-round 50] secureFilterBin done
+[alice-round 50] done, matches=4
+[alice] round 50/89 done
+[alice] between round 50 and 51
+[alice-round 51] enter, local_size=1024
+[alice-round 51] RsCpsi start
+[alice-round 51] RsCpsi done, secure_bins=1305
+[alice-round 51] psi sizes: my_input=1024, bins=1305, local_valid=1188
+STAGE_TIMING party=alice round=51 projection_ms=0.541 psi_ms=80.269 emp_batch_ms=355.009 bins=1305 compared_bits=88
+[alice-round 51] batch_emp_ms=355.009 batch_bins=1305
+[alice-round 51] secureFilterBin done
+[alice-round 51] done, matches=4
+[alice] round 51/89 done
+[alice] between round 51 and 52
+[alice-round 52] enter, local_size=1024
+[alice-round 52] RsCpsi start
+[alice-round 52] RsCpsi done, secure_bins=1305
+[alice-round 52] psi sizes: my_input=1024, bins=1305, local_valid=1175
+STAGE_TIMING party=alice round=52 projection_ms=0.452 psi_ms=74.363 emp_batch_ms=344.204 bins=1305 compared_bits=96
+[alice-round 52] batch_emp_ms=344.204 batch_bins=1305
+[alice-round 52] secureFilterBin done
+[alice-round 52] done, matches=4
+[alice] round 52/89 done
+[alice] between round 52 and 53
+[alice-round 53] enter, local_size=1024
+[alice-round 53] RsCpsi start
+[alice-round 53] RsCpsi done, secure_bins=1305
+[alice-round 53] psi sizes: my_input=1024, bins=1305, local_valid=1195
+STAGE_TIMING party=alice round=53 projection_ms=0.513 psi_ms=80.970 emp_batch_ms=380.488 bins=1305 compared_bits=94
+[alice-round 53] batch_emp_ms=380.488 batch_bins=1305
+[alice-round 53] secureFilterBin done
+[alice-round 53] done, matches=4
+[alice] round 53/89 done
+[alice] between round 53 and 54
+[alice-round 54] enter, local_size=1024
+[alice-round 54] RsCpsi start
+[alice-round 54] RsCpsi done, secure_bins=1305
+[alice-round 54] psi sizes: my_input=1024, bins=1305, local_valid=1179
+STAGE_TIMING party=alice round=54 projection_ms=0.470 psi_ms=73.381 emp_batch_ms=407.440 bins=1305 compared_bits=104
+[alice-round 54] batch_emp_ms=407.440 batch_bins=1305
+[alice-round 54] secureFilterBin done
+[alice-round 54] done, matches=4
+[alice] round 54/89 done
+[alice] between round 54 and 55
+[alice-round 55] enter, local_size=1024
+[alice-round 55] RsCpsi start
+[alice-round 55] RsCpsi done, secure_bins=1305
+[alice-round 55] psi sizes: my_input=1024, bins=1305, local_valid=1181
+STAGE_TIMING party=alice round=55 projection_ms=0.653 psi_ms=80.031 emp_batch_ms=343.905 bins=1305 compared_bits=92
+[alice-round 55] batch_emp_ms=343.905 batch_bins=1305
+[alice-round 55] secureFilterBin done
+[alice-round 55] done, matches=4
+[alice] round 55/89 done
+[alice] between round 55 and 56
+[alice-round 56] enter, local_size=1024
+[alice-round 56] RsCpsi start
+[alice-round 56] RsCpsi done, secure_bins=1305
+[alice-round 56] psi sizes: my_input=1024, bins=1305, local_valid=1188
+STAGE_TIMING party=alice round=56 projection_ms=0.643 psi_ms=77.458 emp_batch_ms=339.767 bins=1305 compared_bits=98
+[alice-round 56] batch_emp_ms=339.767 batch_bins=1305
+[alice-round 56] secureFilterBin done
+[alice-round 56] done, matches=4
+[alice] round 56/89 done
+[alice] between round 56 and 57
+[alice-round 57] enter, local_size=1024
+[alice-round 57] RsCpsi start
+[alice-round 57] RsCpsi done, secure_bins=1305
+[alice-round 57] psi sizes: my_input=1024, bins=1305, local_valid=1172
+STAGE_TIMING party=alice round=57 projection_ms=0.486 psi_ms=76.347 emp_batch_ms=320.050 bins=1305 compared_bits=101
+[alice-round 57] batch_emp_ms=320.050 batch_bins=1305
+[alice-round 57] secureFilterBin done
+[alice-round 57] done, matches=4
+[alice] round 57/89 done
+[alice] between round 57 and 58
+[alice-round 58] enter, local_size=1024
+[alice-round 58] RsCpsi start
+[alice-round 58] RsCpsi done, secure_bins=1305
+[alice-round 58] psi sizes: my_input=1024, bins=1305, local_valid=1169
+STAGE_TIMING party=alice round=58 projection_ms=0.437 psi_ms=74.731 emp_batch_ms=344.756 bins=1305 compared_bits=103
+[alice-round 58] batch_emp_ms=344.756 batch_bins=1305
+[alice-round 58] secureFilterBin done
+[alice-round 58] done, matches=4
+[alice] round 58/89 done
+[alice] between round 58 and 59
+[alice-round 59] enter, local_size=1024
+[alice-round 59] RsCpsi start
+[alice-round 59] RsCpsi done, secure_bins=1305
+[alice-round 59] psi sizes: my_input=1024, bins=1305, local_valid=1182
+STAGE_TIMING party=alice round=59 projection_ms=0.527 psi_ms=76.232 emp_batch_ms=357.662 bins=1305 compared_bits=101
+[alice-round 59] batch_emp_ms=357.662 batch_bins=1305
+[alice-round 59] secureFilterBin done
+[alice-round 59] done, matches=4
+[alice] round 59/89 done
+[alice] between round 59 and 60
+[alice-round 60] enter, local_size=1024
+[alice-round 60] RsCpsi start
+[alice-round 60] RsCpsi done, secure_bins=1305
+[alice-round 60] psi sizes: my_input=1024, bins=1305, local_valid=1172
+STAGE_TIMING party=alice round=60 projection_ms=0.453 psi_ms=75.090 emp_batch_ms=384.740 bins=1305 compared_bits=99
+[alice-round 60] batch_emp_ms=384.740 batch_bins=1305
+[alice-round 60] secureFilterBin done
+[alice-round 60] done, matches=4
+[alice] round 60/89 done
+[alice] between round 60 and 61
+[alice-round 61] enter, local_size=1024
+[alice-round 61] RsCpsi start
+[alice-round 61] RsCpsi done, secure_bins=1305
+[alice-round 61] psi sizes: my_input=1024, bins=1305, local_valid=1183
+STAGE_TIMING party=alice round=61 projection_ms=0.581 psi_ms=72.688 emp_batch_ms=348.768 bins=1305 compared_bits=95
+[alice-round 61] batch_emp_ms=348.768 batch_bins=1305
+[alice-round 61] secureFilterBin done
+[alice-round 61] done, matches=4
+[alice] round 61/89 done
+[alice] between round 61 and 62
+[alice-round 62] enter, local_size=1024
+[alice-round 62] RsCpsi start
+[alice-round 62] RsCpsi done, secure_bins=1305
+[alice-round 62] psi sizes: my_input=1024, bins=1305, local_valid=1183
+STAGE_TIMING party=alice round=62 projection_ms=0.505 psi_ms=73.717 emp_batch_ms=340.530 bins=1305 compared_bits=107
+[alice-round 62] batch_emp_ms=340.530 batch_bins=1305
+[alice-round 62] secureFilterBin done
+[alice-round 62] done, matches=4
+[alice] round 62/89 done
+[alice] between round 62 and 63
+[alice-round 63] enter, local_size=1024
+[alice-round 63] RsCpsi start
+[alice-round 63] RsCpsi done, secure_bins=1305
+[alice-round 63] psi sizes: my_input=1024, bins=1305, local_valid=1180
+STAGE_TIMING party=alice round=63 projection_ms=0.860 psi_ms=73.720 emp_batch_ms=347.759 bins=1305 compared_bits=102
+[alice-round 63] batch_emp_ms=347.759 batch_bins=1305
+[alice-round 63] secureFilterBin done
+[alice-round 63] done, matches=4
+[alice] round 63/89 done
+[alice] between round 63 and 64
+[alice-round 64] enter, local_size=1024
+[alice-round 64] RsCpsi start
+[alice-round 64] RsCpsi done, secure_bins=1305
+[alice-round 64] psi sizes: my_input=1024, bins=1305, local_valid=1186
+STAGE_TIMING party=alice round=64 projection_ms=0.483 psi_ms=73.865 emp_batch_ms=343.552 bins=1305 compared_bits=101
+[alice-round 64] batch_emp_ms=343.552 batch_bins=1305
+[alice-round 64] secureFilterBin done
+[alice-round 64] done, matches=4
+[alice] round 64/89 done
+[alice] between round 64 and 65
+[alice-round 65] enter, local_size=1024
+[alice-round 65] RsCpsi start
+[alice-round 65] RsCpsi done, secure_bins=1305
+[alice-round 65] psi sizes: my_input=1024, bins=1305, local_valid=1173
+STAGE_TIMING party=alice round=65 projection_ms=0.462 psi_ms=74.171 emp_batch_ms=344.016 bins=1305 compared_bits=97
+[alice-round 65] batch_emp_ms=344.016 batch_bins=1305
+[alice-round 65] secureFilterBin done
+[alice-round 65] done, matches=4
+[alice] round 65/89 done
+[alice] between round 65 and 66
+[alice-round 66] enter, local_size=1024
+[alice-round 66] RsCpsi start
+[alice-round 66] RsCpsi done, secure_bins=1305
+[alice-round 66] psi sizes: my_input=1024, bins=1305, local_valid=1192
+STAGE_TIMING party=alice round=66 projection_ms=1.162 psi_ms=73.019 emp_batch_ms=342.564 bins=1305 compared_bits=105
+[alice-round 66] batch_emp_ms=342.564 batch_bins=1305
+[alice-round 66] secureFilterBin done
+[alice-round 66] done, matches=4
+[alice] round 66/89 done
+[alice] between round 66 and 67
+[alice-round 67] enter, local_size=1024
+[alice-round 67] RsCpsi start
+[alice-round 67] RsCpsi done, secure_bins=1305
+[alice-round 67] psi sizes: my_input=1024, bins=1305, local_valid=1183
+STAGE_TIMING party=alice round=67 projection_ms=0.483 psi_ms=70.893 emp_batch_ms=328.077 bins=1305 compared_bits=96
+[alice-round 67] batch_emp_ms=328.077 batch_bins=1305
+[alice-round 67] secureFilterBin done
+[alice-round 67] done, matches=4
+[alice] round 67/89 done
+[alice] between round 67 and 68
+[alice-round 68] enter, local_size=1024
+[alice-round 68] RsCpsi start
+[alice-round 68] RsCpsi done, secure_bins=1305
+[alice-round 68] psi sizes: my_input=1024, bins=1305, local_valid=1188
+STAGE_TIMING party=alice round=68 projection_ms=0.428 psi_ms=73.006 emp_batch_ms=341.058 bins=1305 compared_bits=102
+[alice-round 68] batch_emp_ms=341.058 batch_bins=1305
+[alice-round 68] secureFilterBin done
+[alice-round 68] done, matches=4
+[alice] round 68/89 done
+[alice] between round 68 and 69
+[alice-round 69] enter, local_size=1024
+[alice-round 69] RsCpsi start
+[alice-round 69] RsCpsi done, secure_bins=1305
+[alice-round 69] psi sizes: my_input=1024, bins=1305, local_valid=1172
+STAGE_TIMING party=alice round=69 projection_ms=0.452 psi_ms=77.791 emp_batch_ms=365.071 bins=1305 compared_bits=96
+[alice-round 69] batch_emp_ms=365.071 batch_bins=1305
+[alice-round 69] secureFilterBin done
+[alice-round 69] done, matches=4
+[alice] round 69/89 done
+[alice] between round 69 and 70
+[alice-round 70] enter, local_size=1024
+[alice-round 70] RsCpsi start
+[alice-round 70] RsCpsi done, secure_bins=1305
+[alice-round 70] psi sizes: my_input=1024, bins=1305, local_valid=1186
+STAGE_TIMING party=alice round=70 projection_ms=0.496 psi_ms=77.811 emp_batch_ms=360.683 bins=1305 compared_bits=97
+[alice-round 70] batch_emp_ms=360.683 batch_bins=1305
+[alice-round 70] secureFilterBin done
+[alice-round 70] done, matches=4
+[alice] round 70/89 done
+[alice] between round 70 and 71
+[alice-round 71] enter, local_size=1024
+[alice-round 71] RsCpsi start
+[alice-round 71] RsCpsi done, secure_bins=1305
+[alice-round 71] psi sizes: my_input=1024, bins=1305, local_valid=1186
+STAGE_TIMING party=alice round=71 projection_ms=0.481 psi_ms=74.606 emp_batch_ms=352.146 bins=1305 compared_bits=105
+[alice-round 71] batch_emp_ms=352.146 batch_bins=1305
+[alice-round 71] secureFilterBin done
+[alice-round 71] done, matches=4
+[alice] round 71/89 done
+[alice] between round 71 and 72
+[alice-round 72] enter, local_size=1024
+[alice-round 72] RsCpsi start
+[alice-round 72] RsCpsi done, secure_bins=1305
+[alice-round 72] psi sizes: my_input=1024, bins=1305, local_valid=1177
+STAGE_TIMING party=alice round=72 projection_ms=0.510 psi_ms=74.013 emp_batch_ms=356.542 bins=1305 compared_bits=94
+[alice-round 72] batch_emp_ms=356.542 batch_bins=1305
+[alice-round 72] secureFilterBin done
+[alice-round 72] done, matches=4
+[alice] round 72/89 done
+[alice] between round 72 and 73
+[alice-round 73] enter, local_size=1024
+[alice-round 73] RsCpsi start
+[alice-round 73] RsCpsi done, secure_bins=1305
+[alice-round 73] psi sizes: my_input=1024, bins=1305, local_valid=1180
+STAGE_TIMING party=alice round=73 projection_ms=0.507 psi_ms=77.530 emp_batch_ms=325.717 bins=1305 compared_bits=97
+[alice-round 73] batch_emp_ms=325.717 batch_bins=1305
+[alice-round 73] secureFilterBin done
+[alice-round 73] done, matches=4
+[alice] round 73/89 done
+[alice] between round 73 and 74
+[alice-round 74] enter, local_size=1024
+[alice-round 74] RsCpsi start
+[alice-round 74] RsCpsi done, secure_bins=1305
+[alice-round 74] psi sizes: my_input=1024, bins=1305, local_valid=1192
+STAGE_TIMING party=alice round=74 projection_ms=0.467 psi_ms=74.857 emp_batch_ms=320.728 bins=1305 compared_bits=104
+[alice-round 74] batch_emp_ms=320.728 batch_bins=1305
+[alice-round 74] secureFilterBin done
+[alice-round 74] done, matches=4
+[alice] round 74/89 done
+[alice] between round 74 and 75
+[alice-round 75] enter, local_size=1024
+[alice-round 75] RsCpsi start
+[alice-round 75] RsCpsi done, secure_bins=1305
+[alice-round 75] psi sizes: my_input=1024, bins=1305, local_valid=1188
+STAGE_TIMING party=alice round=75 projection_ms=0.480 psi_ms=73.373 emp_batch_ms=323.065 bins=1305 compared_bits=102
+[alice-round 75] batch_emp_ms=323.065 batch_bins=1305
+[alice-round 75] secureFilterBin done
+[alice-round 75] done, matches=4
+[alice] round 75/89 done
+[alice] between round 75 and 76
+[alice-round 76] enter, local_size=1024
+[alice-round 76] RsCpsi start
+[alice-round 76] RsCpsi done, secure_bins=1305
+[alice-round 76] psi sizes: my_input=1024, bins=1305, local_valid=1194
+STAGE_TIMING party=alice round=76 projection_ms=0.521 psi_ms=75.541 emp_batch_ms=333.898 bins=1305 compared_bits=104
+[alice-round 76] batch_emp_ms=333.898 batch_bins=1305
+[alice-round 76] secureFilterBin done
+[alice-round 76] done, matches=4
+[alice] round 76/89 done
+[alice] between round 76 and 77
+[alice-round 77] enter, local_size=1024
+[alice-round 77] RsCpsi start
+[alice-round 77] RsCpsi done, secure_bins=1305
+[alice-round 77] psi sizes: my_input=1024, bins=1305, local_valid=1181
+STAGE_TIMING party=alice round=77 projection_ms=0.770 psi_ms=74.232 emp_batch_ms=309.546 bins=1305 compared_bits=95
+[alice-round 77] batch_emp_ms=309.546 batch_bins=1305
+[alice-round 77] secureFilterBin done
+[alice-round 77] done, matches=4
+[alice] round 77/89 done
+[alice] between round 77 and 78
+[alice-round 78] enter, local_size=1024
+[alice-round 78] RsCpsi start
+[alice-round 78] RsCpsi done, secure_bins=1305
+[alice-round 78] psi sizes: my_input=1024, bins=1305, local_valid=1201
+STAGE_TIMING party=alice round=78 projection_ms=0.488 psi_ms=79.075 emp_batch_ms=309.859 bins=1305 compared_bits=91
+[alice-round 78] batch_emp_ms=309.859 batch_bins=1305
+[alice-round 78] secureFilterBin done
+[alice-round 78] done, matches=4
+[alice] round 78/89 done
+[alice] between round 78 and 79
+[alice-round 79] enter, local_size=1024
+[alice-round 79] RsCpsi start
+[alice-round 79] RsCpsi done, secure_bins=1305
+[alice-round 79] psi sizes: my_input=1024, bins=1305, local_valid=1188
+STAGE_TIMING party=alice round=79 projection_ms=0.545 psi_ms=74.903 emp_batch_ms=307.026 bins=1305 compared_bits=102
+[alice-round 79] batch_emp_ms=307.026 batch_bins=1305
+[alice-round 79] secureFilterBin done
+[alice-round 79] done, matches=4
+[alice] round 79/89 done
+[alice] between round 79 and 80
+[alice-round 80] enter, local_size=1024
+[alice-round 80] RsCpsi start
+[alice-round 80] RsCpsi done, secure_bins=1305
+[alice-round 80] psi sizes: my_input=1024, bins=1305, local_valid=1168
+STAGE_TIMING party=alice round=80 projection_ms=0.475 psi_ms=73.166 emp_batch_ms=342.411 bins=1305 compared_bits=94
+[alice-round 80] batch_emp_ms=342.411 batch_bins=1305
+[alice-round 80] secureFilterBin done
+[alice-round 80] done, matches=4
+[alice] round 80/89 done
+[alice] between round 80 and 81
+[alice-round 81] enter, local_size=1024
+[alice-round 81] RsCpsi start
+[alice-round 81] RsCpsi done, secure_bins=1305
+[alice-round 81] psi sizes: my_input=1024, bins=1305, local_valid=1173
+STAGE_TIMING party=alice round=81 projection_ms=0.777 psi_ms=72.988 emp_batch_ms=339.254 bins=1305 compared_bits=96
+[alice-round 81] batch_emp_ms=339.254 batch_bins=1305
+[alice-round 81] secureFilterBin done
+[alice-round 81] done, matches=4
+[alice] round 81/89 done
+[alice] between round 81 and 82
+[alice-round 82] enter, local_size=1024
+[alice-round 82] RsCpsi start
+[alice-round 82] RsCpsi done, secure_bins=1305
+[alice-round 82] psi sizes: my_input=1024, bins=1305, local_valid=1181
+STAGE_TIMING party=alice round=82 projection_ms=0.562 psi_ms=73.959 emp_batch_ms=343.634 bins=1305 compared_bits=98
+[alice-round 82] batch_emp_ms=343.634 batch_bins=1305
+[alice-round 82] secureFilterBin done
+[alice-round 82] done, matches=4
+[alice] round 82/89 done
+[alice] between round 82 and 83
+[alice-round 83] enter, local_size=1024
+[alice-round 83] RsCpsi start
+[alice-round 83] RsCpsi done, secure_bins=1305
+[alice-round 83] psi sizes: my_input=1024, bins=1305, local_valid=1186
+STAGE_TIMING party=alice round=83 projection_ms=0.534 psi_ms=71.836 emp_batch_ms=349.517 bins=1305 compared_bits=96
+[alice-round 83] batch_emp_ms=349.517 batch_bins=1305
+[alice-round 83] secureFilterBin done
+[alice-round 83] done, matches=4
+[alice] round 83/89 done
+[alice] between round 83 and 84
+[alice-round 84] enter, local_size=1024
+[alice-round 84] RsCpsi start
+[alice-round 84] RsCpsi done, secure_bins=1305
+[alice-round 84] psi sizes: my_input=1024, bins=1305, local_valid=1192
+STAGE_TIMING party=alice round=84 projection_ms=0.451 psi_ms=74.003 emp_batch_ms=329.286 bins=1305 compared_bits=100
+[alice-round 84] batch_emp_ms=329.286 batch_bins=1305
+[alice-round 84] secureFilterBin done
+[alice-round 84] done, matches=4
+[alice] round 84/89 done
+[alice] between round 84 and 85
+[alice-round 85] enter, local_size=1024
+[alice-round 85] RsCpsi start
+[alice-round 85] RsCpsi done, secure_bins=1305
+[alice-round 85] psi sizes: my_input=1024, bins=1305, local_valid=1174
+STAGE_TIMING party=alice round=85 projection_ms=0.982 psi_ms=75.369 emp_batch_ms=303.792 bins=1305 compared_bits=101
+[alice-round 85] batch_emp_ms=303.792 batch_bins=1305
+[alice-round 85] secureFilterBin done
+[alice-round 85] done, matches=4
+[alice] round 85/89 done
+[alice] between round 85 and 86
+[alice-round 86] enter, local_size=1024
+[alice-round 86] RsCpsi start
+[alice-round 86] RsCpsi done, secure_bins=1305
+[alice-round 86] psi sizes: my_input=1024, bins=1305, local_valid=1172
+STAGE_TIMING party=alice round=86 projection_ms=0.475 psi_ms=74.166 emp_batch_ms=307.812 bins=1305 compared_bits=104
+[alice-round 86] batch_emp_ms=307.812 batch_bins=1305
+[alice-round 86] secureFilterBin done
+[alice-round 86] done, matches=4
+[alice] round 86/89 done
+[alice] between round 86 and 87
+[alice-round 87] enter, local_size=1024
+[alice-round 87] RsCpsi start
+[alice-round 87] RsCpsi done, secure_bins=1305
+[alice-round 87] psi sizes: my_input=1024, bins=1305, local_valid=1188
+STAGE_TIMING party=alice round=87 projection_ms=0.428 psi_ms=71.836 emp_batch_ms=315.387 bins=1305 compared_bits=104
+[alice-round 87] batch_emp_ms=315.387 batch_bins=1305
+[alice-round 87] secureFilterBin done
+[alice-round 87] done, matches=4
+[alice] round 87/89 done
+[alice] between round 87 and 88
+[alice-round 88] enter, local_size=1024
+[alice-round 88] RsCpsi start
+[alice-round 88] RsCpsi done, secure_bins=1305
+[alice-round 88] psi sizes: my_input=1024, bins=1305, local_valid=1175
+STAGE_TIMING party=alice round=88 projection_ms=0.992 psi_ms=74.565 emp_batch_ms=283.260 bins=1305 compared_bits=94
+[alice-round 88] batch_emp_ms=283.260 batch_bins=1305
+[alice-round 88] secureFilterBin done
+[alice-round 88] done, matches=4
+[alice] round 88/89 done
+[alice-main] run returned
+party=ALICE
+matched_local_elements=4
+local_id=2 first_match_round=0
+local_id=1 first_match_round=3
+local_id=3 first_match_round=8
+local_id=0 first_match_round=33
+stats: rounds=89 projection_coordinates=2625 secure_bins_processed=116137
+stage_bytes: psi_sent=19569774 psi_recv=60564437 emp_sent=1023365833 emp_recv=196976810
+Network statistics:
+  sent:   1023374692 B (975.97 MiB)
+  recv:   197243087 B (188.11 MiB)
+  total:  1220617779 B (1.14 GiB)
+  rounds: 232455
+  flushes:116228
+Network statistics:
+  sent:   1023374692 B (975.97 MiB)
+  recv:   197243087 B (188.11 MiB)
+  total:  1220617779 B (1.14 GiB)
+  rounds: 232455
+  flushes:116228
