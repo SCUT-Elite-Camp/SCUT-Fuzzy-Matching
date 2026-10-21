@@ -73,6 +73,10 @@ python scripts/demo_sage_cross_script.py        # 多语言跨文字匹配
 python scripts/demo_multi_attribute_dataset.py --config config/examples/febrl_multi_attribute.json --limit 50   # 多属性匹配
 python scripts/demo_multi_attribute_dataset.py --config config/examples/fused_multilingual_multi_attribute.json --limit 0   # 多语言+多属性融合（全部 50 条）
 python scripts/demo_multi_attribute_dataset.py --config config/examples/fused_multilingual_demo10.json --limit 0   # 融合数据集演示子集（10 条查询约几十秒，适合现场演示）
+
+# 本地 Web 可视化交互界面（集成多属性多语言 + 单属性双模式）：
+python gui_server.py --port 5000
+# 在浏览器打开 http://localhost:5000
 ```
 
 `demo_multi_attribute_dataset.py` 不带 `--limit` 时默认只跑前 20 条查询（每条查询都是一次

@@ -170,6 +170,153 @@ def dataset_info():
     )
 
 
+@app.route("/api/multi-attribute/info", methods=["GET"])
+def api_multi_attribute_info():
+    """Return schema, database stats, and query list for multi-attribute demo."""
+    from multi_attribute.streaming_engine import (
+        MultiAttributeStreamingEngine,
+        QUERY_ANNOTATIONS,
+    )
+
+    config_path = request.args.get(
+        "config", "config/examples/fused_multilingual_demo10.json"
+    )
+    try:
+        engine = MultiAttributeStreamingEngine(
+            config_path=config_path, encrypted=False
+        )
+        queries_info = []
+        for q in engine.queries:
+            qid = q.record.record_id
+            anno = QUERY_ANNOTATIONS.get(qid, {})
+            queries_info.append(
+                {
+                    "query_id": qid,
+                    "name": engine.display_names.get(qid, qid),
+                    "values": dict(q.record.values or {}),
+                    "label": bool(q.label) if q.label is not None else None,
+                    "expected_record_ids": sorted(q.expected_record_ids),
+                    "script": anno.get("script", "Latin"),
+                    "lang_name": anno.get("lang_name", "Latin"),
+                    "flag": anno.get("flag", ""),
+                    "perturbation": anno.get("perturbation", ""),
+                    "note": anno.get("note", ""),
+                }
+            )
+
+        return jsonify(
+            {
+                "config_path": config_path,
+                "database_size": len(engine.database),
+                "total_queries": len(engine.queries),
+                "schema": {
+                    "fingerprint": engine.schema.fingerprint(),
+                    "threshold": engine.tau,
+                    "cluster_dim": engine.schema.cluster_dim,
+                    "match_dim": engine.schema.match_dim,
+                    "attributes": [
+                        {
+                            "name": spec.name,
+                            "kind": spec.kind,
+                            "weight": float(spec.weight),
+                            "params": dict(spec.params),
+                        }
+                        for spec in engine.schema.attributes
+                    ],
+                },
+                "queries": queries_info,
+                "available_configs": [
+                    {
+                        "path": "config/examples/fused_multilingual_demo10.json",
+                        "title": "Fused Multilingual Demo 10 (4 scripts, 10 queries)",
+                    },
+                    {
+                        "path": "config/examples/febrl_multi_attribute.json",
+                        "title": "FEBRL Multi-Attribute (Australian real-world linkage set)",
+                    },
+                    {
+                        "path": "config/examples/multi_attribute_schema.json",
+                        "title": "Synthetic Multi-Attribute Schema",
+                    },
+                ],
+            }
+        )
+    except Exception as e:
+        import traceback
+
+        return (
+            jsonify({"error": str(e), "traceback": traceback.format_exc()}),
+            500,
+        )
+
+
+@app.route("/api/multi-attribute/run", methods=["POST"])
+def api_multi_attribute_run():
+    """Run the multi-attribute protocol and stream SSE events back."""
+    from multi_attribute.streaming_engine import MultiAttributeStreamingEngine
+
+    data = request.get_json(silent=True) or {}
+    config_path = data.get(
+        "config", "config/examples/fused_multilingual_demo10.json"
+    )
+    query_mode = data.get("query_mode", "all")
+    filter_script = data.get("filter_script", None)
+    selected_query_id = data.get("selected_query_id", None)
+    custom_query_data = data.get("custom_query", None)
+    encrypted = bool(data.get("encrypted", True))
+    tau = data.get("tau", None)
+    if tau is not None:
+        try:
+            tau = float(tau)
+        except (ValueError, TypeError):
+            tau = None
+    probes = data.get("probes", 3)
+    k_mode = data.get("k_mode", "sqrt")
+    early_stop = bool(data.get("early_stop", True))
+    db_limit = data.get("db_limit", None)
+    if db_limit:
+        try:
+            db_limit = int(db_limit)
+        except (ValueError, TypeError):
+            db_limit = None
+
+    def generate():
+        try:
+            engine = MultiAttributeStreamingEngine(
+                config_path=config_path,
+                tau=tau,
+                probes=probes,
+                k_mode=k_mode,
+                early_stop=early_stop,
+                encrypted=encrypted,
+                db_limit=db_limit,
+            )
+            for event in engine.run_all_queries_with_events(
+                query_mode=query_mode,
+                filter_script=filter_script,
+                selected_query_id=selected_query_id,
+                custom_query_data=custom_query_data,
+            ):
+                yield _sse(event["event"], event)
+        except Exception as e:
+            import traceback
+
+            yield _sse(
+                "error",
+                {"message": str(e), "traceback": traceback.format_exc()},
+            )
+
+    return Response(
+        generate(),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
