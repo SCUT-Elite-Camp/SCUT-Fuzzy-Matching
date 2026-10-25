@@ -1,0 +1,34 @@
+{
+  "generator": "scripts/prepare_multi_attribute_datasets.py",
+  "seed": "n/a（FEBRL / fused 均为仓库既有数据，未重新采样）",
+  "datasets": {
+    "febrl4": {
+      "available": true,
+      "source": "baseline_Integration/dataset/febrl/dataset4a.csv + dataset4b.csv",
+      "attributes": [
+        "name(given_name,surname)",
+        "address(street_number,address_1,address_2)",
+        "dob(date_of_birth)",
+        "ssn(soc_sec_id)",
+        "postcode",
+        "state"
+      ],
+      "ground_truth": "rec-<N>-org 与 rec-<N>-dup-<M> 同实体"
+    },
+    "multiling": {
+      "available": true,
+      "source": "baseline_Integration/data/fused_multilingual/{database,queries,labels}.csv",
+      "attributes": [
+        "name(name_local,name_romanized)",
+        "dob",
+        "city",
+        "phone"
+      ],
+      "ground_truth": "labels.csv 的 true_entity_id（40 正 / 10 负）"
+    },
+    "ncvr10k": {
+      "available": false,
+      "reason": "ncvr_10k_database.csv 只有 ncid,full_name 两列，是单属性数据"
+    }
+  }
+}

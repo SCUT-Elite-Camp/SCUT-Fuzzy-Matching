@@ -1,0 +1,14 @@
+{
+  "adapter": {
+    "type": "sage_names",
+    "name": "sage_multilingual",
+    "path": "../../data/sage/sage_names_all.csv",
+    "queries_path": "../../data/sage/sage_multilingual_queries.csv"
+  },
+  "build": {
+    "normalizer": "unicode_v1",
+    "database_deduplication": "record_id",
+    "query_deduplication": "query_id",
+    "fuzzy_ratio": 0.0
+  }
+}

@@ -1,0 +1,183 @@
+
+================================================================================================
+  MULTI-ATTRIBUTE FUZZY MATCHING — REAL DATASET
+================================================================================================
+  i Each attribute is encoded into its own MinHash blocks and concatenated into one vector; Party B builds the encrypted index once, and every query runs the same two-round CKKS protocol on top of it.
+  job config: config/examples/febrl_multi_attribute.json
+  schema fingerprint: 617ddbf4288b3c42
+  threshold: 0.6
+    attribute kind       weight cluster match params
+    ---------------------------------------------------------------------------------------------------------
+    name      fuzzy_text 0.30   200     50    cluster_dim=200 match_dim=50
+    address   fuzzy_text 0.20   100     30    cluster_dim=100 match_dim=30
+    dob       date       0.20   256     256   blocks=2 buckets_per_block=128 seed=20260904 on_invalid=missing
+    ssn       exact      0.15   1024    1024  blocks=2 buckets_per_block=512 normalize=digits
+    postcode  exact      0.10   512     512   blocks=1 buckets_per_block=512 normalize=digits
+    state     exact      0.05   64      64    blocks=1 buckets_per_block=64 normalize=casefold
+    TOTAL                1.00   2156    1936
+
+  CKKS slots: 4096; headroom cluster 1940 / match 2160
+  i database 5000 -> k~71, <= 71 rows/cluster -> cluster_matrix ~74.5 MB
+
+data quality: dob: 1/5100 unparseable -> zeroed, 98 blank
+
+
+------------------------------------------------------------------------------------------------
+  [Party B] Step 1: Build Database Vectors & Party-B Offline Index
+------------------------------------------------------------------------------------------------
+  ⏱ Database vector encode: 0.593s
+  database rows: 5000
+  ⏱ Party-B offline (k-means + encrypted cluster matrix): 1.419s
+  k-means policy: sqrt
+  clusters: 70
+  max cluster size: 128
+  ✓ offline artifacts ready — all queries share this one index
+
+------------------------------------------------------------------------------------------------
+  [Party A] Step 2: Encrypt Each Query & Run the Two-Round Protocol
+------------------------------------------------------------------------------------------------
+    query                  label  true   imp    top-1          attr breakdown                             encrypted cluster    checked     rank
+    -----------------------------------------------------------------------------------------------------------------------------------------------
+    elton                  True   0.818  0.523  rec-561-org    name=0.51 address=0.82 dob=1.00 ssn=1.00 … CATCH     cluster=19 checked=11  rank=0
+    mitchell               True   0.910  0.503  rec-2642-org   name=0.77 address=0.89 dob=1.00 ssn=1.00 … CATCH     cluster=51 checked=26  rank=0
+    white                  True   0.804  0.512  rec-608-org    name=0.68 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=62 checked=196 rank=2
+    elk i                  True   0.852  0.488  rec-3239-org   name=0.71 address=0.69 dob=1.00 ssn=1.00 … CATCH     cluster=41 checked=60  rank=0
+    garanggar              True   0.854  0.486  rec-2886-org   name=1.00 address=0.77 dob=1.00 ssn=1.00 … CATCH     cluster=28 checked=77  rank=0
+    sophie                 True   0.948  0.543  rec-4285-org   name=1.00 address=0.74 dob=1.00 ssn=1.00 … CATCH     cluster=60 checked=15  rank=0
+    madison                True   0.988  0.512  rec-929-org    name=1.00 address=0.94 dob=1.00 ssn=1.00 … CATCH     cluster=56 checked=43  rank=0
+    jayed                  True   0.875  0.537  rec-4833-org   name=0.67 address=0.88 dob=1.00 ssn=1.00 … CATCH     cluster=6  checked=17  rank=0
+    joshua                 True   0.755  0.459  rec-717-org    name=1.00 address=0.77 dob=0.00 ssn=1.00 … CATCH     cluster=18 checked=47  rank=0
+    david                  True   0.990  0.507  rec-3984-org   name=1.00 address=0.95 dob=1.00 ssn=1.00 … CATCH     cluster=54 checked=35  rank=0
+    jacob                  True   1.000  0.510  rec-3138-org   name=1.00 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=43 checked=69  rank=0
+    braiden                True   0.949  0.579  rec-1424-org   name=1.00 address=0.75 dob=1.00 ssn=1.00 … CATCH     cluster=41 checked=15  rank=0
+    mia                    True   0.938  0.495  rec-825-org    name=0.79 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=5  checked=19  rank=0
+    nicholas               True   0.810  0.487  rec-520-org    name=1.00 address=0.80 dob=1.00 ssn=0.00 … CATCH     cluster=27 checked=33  rank=0
+    rybak                  True   0.847  0.490  rec-3868-org   name=0.92 address=0.85 dob=1.00 ssn=1.00 … CATCH     cluster=38 checked=56  rank=0
+    cassandra              True   0.951  0.474  rec-147-org    name=1.00 address=0.75 dob=1.00 ssn=1.00 … CATCH     cluster=24 checked=17  rank=0
+    ilam                   True   0.855  0.495  rec-919-org    name=0.58 address=0.91 dob=1.00 ssn=1.00 … CATCH     cluster=0  checked=45  rank=0
+    adam                   True   0.900  0.504  rec-3156-org   name=1.00 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=40 checked=64  rank=0
+    lochlan                True   0.750  0.506  rec-1026-org   name=1.00 address=1.00 dob=1.00 ssn=0.00 … CATCH     cluster=59 checked=26  rank=0
+    zara                   True   0.900  0.481  rec-3272-org   name=1.00 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=29 checked=40  rank=0
+    grubb                  True   0.816  0.526  rec-4342-org   name=0.74 address=0.97 dob=1.00 ssn=1.00 … CATCH     cluster=31 checked=77  rank=1
+    shanaye                True   0.826  0.482  rec-4788-org   name=1.00 address=0.88 dob=1.00 ssn=0.00 … no-catch  cluster=66 checked=203
+    babic                  True   0.650  0.427  rec-3978-org   name=1.00 address=1.00 dob=0.00 ssn=0.00 … no-catch  cluster=35 checked=172
+    amy                    True   0.885  0.563  rec-2440-org   name=1.00 address=0.67 dob=1.00 ssn=1.00 … CATCH     cluster=54 checked=27  rank=0
+    isabe lla              True   0.963  0.501  rec-4517-org   name=0.93 address=0.91 dob=1.00 ssn=1.00 … CATCH     cluster=27 checked=13  rank=0
+    samuel                 True   0.973  0.492  rec-4595-org   name=1.00 address=0.87 dob=1.00 ssn=1.00 … CATCH     cluster=20 checked=15  rank=0
+    jordan                 True   0.959  0.562  rec-316-org    name=0.86 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=32 checked=20  rank=0
+    brielle                True   0.944  0.477  rec-1413-org   name=0.86 address=0.93 dob=1.00 ssn=1.00 … CATCH     cluster=13 checked=62  rank=0
+    harry                  True   0.873  0.497  rec-470-org    name=1.00 address=0.86 dob=1.00 ssn=1.00 … CATCH     cluster=11 checked=105 rank=0
+    noah                   True   0.939  0.554  rec-2871-org   name=1.00 address=0.69 dob=1.00 ssn=1.00 … CATCH     cluster=14 checked=26  rank=0
+    stella                 True   0.869  0.482  rec-4096-org   name=0.63 address=0.90 dob=1.00 ssn=1.00 … CATCH     cluster=30 checked=1   rank=0
+    bradley                True   0.657  0.462  rec-567-org    name=0.61 address=0.86 dob=0.00 ssn=1.00 … CATCH     cluster=34 checked=38  rank=0
+    annabel                True   0.863  0.521  rec-3089-org   name=0.71 address=0.76 dob=1.00 ssn=1.00 … CATCH     cluster=58 checked=8   rank=0
+    joshua                 True   0.991  0.568  rec-4233-org   name=1.00 address=0.95 dob=1.00 ssn=1.00 … CATCH     cluster=5  checked=47  rank=0
+    jacob                  True   0.903  0.503  rec-3874-org   name=0.75 address=0.88 dob=1.00 ssn=1.00 … CATCH     cluster=31 checked=40  rank=0
+    isabella               True   0.934  0.499  rec-1168-org   name=0.78 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=50 checked=51  rank=0
+    chloe                  True   0.542  0.473  rec-4618-org   name=0.74 address=0.85 dob=0.00 ssn=1.00 … no-catch  cluster=21 checked=278 rank=2
+    blake                  True   0.781  0.514  rec-2896-org   name=0.60 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=53 checked=188 rank=2
+    nicholas               True   1.000  0.499  rec-3044-org   name=1.00 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=5  checked=16  rank=0
+    kiana                  True   0.691  0.521  rec-2852-org   name=0.66 address=0.97 dob=0.00 ssn=1.00 … CATCH     cluster=59 checked=16  rank=0
+    macormack              True   0.937  0.518  rec-1492-org   name=0.84 address=0.92 dob=1.00 ssn=1.00 … CATCH     cluster=49 checked=33  rank=0
+    lachln                 True   0.879  0.479  rec-1108-org   name=0.93 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=45 checked=64  rank=0
+    casey                  True   0.771  0.496  rec-2621-org   name=0.76 address=0.72 dob=1.00 ssn=1.00 … CATCH     cluster=11 checked=100 rank=0
+    bailey                 True   0.849  0.494  rec-2867-org   name=0.56 address=0.90 dob=1.00 ssn=1.00 … no-catch  cluster=40 checked=211
+    caleb                  True   0.928  0.459  rec-2979-org   name=1.00 address=0.64 dob=1.00 ssn=1.00 … CATCH     cluster=51 checked=17  rank=0
+    bllke                  True   0.898  0.529  rec-4466-org   name=0.69 address=0.96 dob=1.00 ssn=1.00 … CATCH     cluster=17 checked=78  rank=0
+    mihal                  True   0.666  0.473  rec-4903-org   name=0.74 address=0.72 dob=0.00 ssn=1.00 … CATCH     cluster=66 checked=65  rank=0
+    paige                  True   0.963  0.565  rec-1445-org   name=1.00 address=0.82 dob=1.00 ssn=1.00 … CATCH     cluster=60 checked=48  rank=0
+    nahan                  True   0.915  0.487  rec-2854-org   name=0.72 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=47 checked=40  rank=0
+    saraa                  True   0.894  0.455  rec-4281-org   name=0.98 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=58 checked=7   rank=0
+    mia                    True   0.987  0.582  rec-1831-org   name=1.00 address=0.93 dob=1.00 ssn=1.00 … CATCH     cluster=38 checked=39  rank=0
+    adamx                  True   0.926  0.569  rec-172-org    name=0.76 address=0.98 dob=1.00 ssn=1.00 … CATCH     cluster=10 checked=5   rank=0
+    makenzi                True   0.920  0.482  rec-2239-org   name=0.76 address=0.96 dob=1.00 ssn=1.00 … CATCH     cluster=55 checked=84  rank=0
+    rhys                   True   0.826  0.486  rec-2873-org   name=1.00 address=0.88 dob=1.00 ssn=1.00 … CATCH     cluster=62 checked=151 rank=2
+    zane                   True   0.976  0.483  rec-3040-org   name=1.00 address=0.88 dob=1.00 ssn=1.00 … CATCH     cluster=56 checked=58  rank=0
+    bailey                 True   0.878  0.455  rec-1015-org   name=0.59 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=32 checked=16  rank=0
+    phoebe                 True   0.859  0.478  rec-2154-org   name=0.70 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=25 checked=29  rank=0
+    molly                  True   0.884  0.502  rec-4799-org   name=1.00 address=0.92 dob=1.00 ssn=1.00 … CATCH     cluster=47 checked=203 rank=2
+    gibb                   True   0.752  0.585  rec-3528-org   name=0.77 address=0.85 dob=1.00 ssn=0.00 … no-catch  cluster=69 checked=207
+    ebert                  True   0.949  0.531  rec-2434-org   name=1.00 address=0.75 dob=1.00 ssn=1.00 … CATCH     cluster=27 checked=24  rank=0
+    cambell                True   0.797  0.465  rec-4382-org   name=0.82 address=1.00 dob=1.00 ssn=0.00 … no-catch  cluster=2  checked=187
+    marko                  True   0.927  0.489  rec-2786-org   name=0.84 address=0.88 dob=1.00 ssn=1.00 … CATCH     cluster=6  checked=39  rank=0
+    joe                    True   0.854  0.463  rec-2685-org   name=0.85 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=2  checked=21  rank=0
+    ethan                  True   0.906  0.504  rec-3436-org   name=0.73 address=0.94 dob=1.00 ssn=1.00 … CATCH     cluster=53 checked=18  rank=0
+    elton                  True   0.869  0.494  rec-4668-org   name=1.00 address=0.84 dob=1.00 ssn=1.00 … CATCH     cluster=21 checked=21  rank=0
+    ja xson                True   0.943  0.526  rec-3570-org   name=0.81 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=47 checked=72  rank=0
+    crystal                True   1.000  0.584  rec-490-org    name=1.00 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=25 checked=11  rank=0
+    lachlarn               True   0.694  0.515  rec-3777-org   name=0.90 address=0.62 dob=0.00 ssn=1.00 … CATCH     cluster=31 checked=58  rank=0
+    sophie                 True   0.798  0.497  rec-4113-org   name=1.00 address=0.99 dob=0.00 ssn=1.00 … CATCH     cluster=45 checked=52  rank=0
+    elizabeth              True   0.842  0.504  rec-4592-org   name=0.89 address=0.87 dob=1.00 ssn=1.00 … CATCH     cluster=59 checked=97  rank=1
+    chandler               True   0.915  0.468  rec-4070-org   name=0.85 address=0.80 dob=1.00 ssn=1.00 … CATCH     cluster=51 checked=9   rank=0
+    matthew                True   0.760  0.505  rec-4862-org   name=0.87 address=1.00 dob=0.00 ssn=1.00 … CATCH     cluster=55 checked=125 rank=1
+    willim                 True   0.915  0.533  rec-629-org    name=0.85 address=0.79 dob=1.00 ssn=1.00 … CATCH     cluster=56 checked=41  rank=0
+    mattheo                True   0.942  0.497  rec-2447-org   name=0.81 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=13 checked=41  rank=0
+    ebony                  True   0.953  0.513  rec-2694-org   name=1.00 address=0.76 dob=1.00 ssn=1.00 … CATCH     cluster=23 checked=85  rank=0
+    noah                   True   0.998  0.483  rec-3899-org   name=1.00 address=0.99 dob=1.00 ssn=1.00 … CATCH     cluster=28 checked=30  rank=0
+    lowry                  True   0.894  0.586  rec-4878-org   name=1.00 address=0.72 dob=1.00 ssn=1.00 … CATCH     cluster=65 checked=2   rank=0
+    jasmine                True   0.955  0.553  rec-1503-org   name=0.85 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=48 checked=51  rank=0
+    cleb                   True   0.818  0.560  rec-4831-org   name=0.89 address=1.00 dob=1.00 ssn=0.00 … CATCH     cluster=9  checked=64  rank=0
+    caitlin                True   0.970  0.452  rec-888-org    name=1.00 address=0.85 dob=1.00 ssn=1.00 … CATCH     cluster=51 checked=76  rank=0
+    angelina               True   0.960  0.488  rec-3917-org   name=1.00 address=0.80 dob=1.00 ssn=1.00 … CATCH     cluster=19 checked=27  rank=0
+    benjamin               True   0.770  0.448  rec-2713-org   name=0.87 address=0.80 dob=1.00 ssn=1.00 … CATCH     cluster=17 checked=39  rank=0
+    evan                   True   0.855  0.496  rec-3390-org   name=0.63 address=0.83 dob=1.00 ssn=1.00 … CATCH     cluster=24 checked=18  rank=0
+    dnaiel                 True   0.736  0.531  rec-109-org    name=0.70 address=0.88 dob=1.00 ssn=0.00 … CATCH     cluster=28 checked=33  rank=0
+    mollie                 True   0.990  0.509  rec-4162-org   name=1.00 address=0.95 dob=1.00 ssn=1.00 … CATCH     cluster=64 checked=58  rank=0
+    seth                   True   0.700  0.490  rec-1226-org   name=0.67 address=1.00 dob=0.00 ssn=1.00 … CATCH     cluster=7  checked=42  rank=0
+    brianna                True   0.948  0.525  rec-2175-org   name=1.00 address=0.74 dob=1.00 ssn=1.00 … CATCH     cluster=64 checked=53  rank=0
+    millie                 True   0.998  0.486  rec-2820-org   name=1.00 address=0.99 dob=1.00 ssn=1.00 … CATCH     cluster=61 checked=79  rank=0
+    luke                   True   0.913  0.516  rec-4051-org   name=0.87 address=0.76 dob=1.00 ssn=1.00 … CATCH     cluster=8  checked=25  rank=0
+    hayey                  True   0.876  0.541  rec-4486-org   name=0.72 address=0.80 dob=1.00 ssn=1.00 … CATCH     cluster=51 checked=23  rank=0
+    sophie                 True   0.949  0.511  rec-3316-org   name=1.00 address=0.75 dob=1.00 ssn=1.00 … CATCH     cluster=0  checked=14  rank=0
+    brodie                 True   0.830  0.586  rec-687-org    name=0.93 address=0.76 dob=1.00 ssn=1.00 … CATCH     cluster=49 checked=17  rank=0
+    daniel                 True   0.955  0.500  rec-1552-org   name=0.92 address=0.90 dob=1.00 ssn=1.00 … CATCH     cluster=11 checked=89  rank=0
+    mya                    True   0.739  0.486  rec-802-org    name=1.00 address=0.69 dob=0.00 ssn=1.00 … CATCH     cluster=59 checked=58  rank=1
+    liam                   True   0.908  0.461  rec-1880-org   name=1.00 address=0.54 dob=1.00 ssn=1.00 … CATCH     cluster=66 checked=33  rank=0
+    zali                   True   1.000  0.535  rec-2306-org   name=1.00 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=51 checked=5   rank=0
+    lachlan                True   1.000  0.582  rec-394-org    name=1.00 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=62 checked=3   rank=0
+    fyynlay                True   1.000  0.518  rec-2963-org   name=1.00 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=11 checked=44  rank=0
+    jarus                  True   0.913  0.487  rec-4451-org   name=0.71 address=1.00 dob=1.00 ssn=1.00 … CATCH     cluster=67 checked=34  rank=0
+    nicholas               True   0.994  0.529  rec-8-org      name=1.00 address=0.97 dob=1.00 ssn=1.00 … CATCH     cluster=7  checked=39  rank=0
+    -----------------------------------------------------------------------------------------------------------------------------------------------
+  ⏱ Encrypted two-round protocol, all queries: 748.378s
+
+================================================================================================
+  FINAL RESULTS SUMMARY
+================================================================================================
+queries: 100 (100 positive / 0 negative)   tau=0.600   round-2 probes/query=3
+plaintext top-1 recall, positives only (debug reference): 100/100 = 100.0%
+
+recall denominator: should_catch = plaintext true-match score > tau
+  identical queries (expected score = 1.000): 6
+  should-catch positives: 99/100 (below tau, excluded: rec-4618-dup-0)
+
+encrypted recall, should-catch only : 94/99 = 94.9%
+  misses among those: 5   [round-1 cluster miss 5 / boundary 0 / unexplained 0]
+  ^ tau-DEPENDENT: the denominator is the should-catch set, so raising tau moves
+    round-1 misses out of it and this count drops. tau-free: 5 of 100
+    positives were never checked at all -- that is the line below.
+cluster recall (true match landed in the 3 probed cluster(s), tau-free): 95/100 = 95.0%
+  ^ with more than one probe this saturates by construction; the tau-free anchor
+    is the top-1-only line below, which the probe count cannot move.
+  top-1-only cluster recall (what a single probe would have caught): 86/100 = 86.0%   true-cluster rank mean 0.15 / p95 2 / max 2
+encrypted recall, all positives (whole population, for contrast): 94/100 = 94.0%
+identical-query invariant: 6/6 caught [OK]
+
+plaintext calibration (tau anchoring only, not an evaluation metric): lowest expected-match 0.542 / highest impostor 0.586
+  -> true matches and impostors OVERLAP here; no tau separates them. Add attributes, raise weights, or accept errors.
+
+tau guard: tau=0.600 sits above the impostor ceiling 0.586, and it cost
+  1 positive(s) to get there (100 -> 99).
+  Everything above 0.586 suppresses nothing -- no impostor can reach it --
+  so that entire span is pure subtraction from the recall denominator. Judge a
+  run by the tau-free cluster recall line, which this cannot move.
+
+NOTE: the protocol returns only the sign of the threshold test, the selected
+cluster index, and the column index -- never the id of the matched record. So a
+CATCH means "some record in the selected cluster scored above tau", not "the
+right record was found": the recall above is a DETECTION rate, not identification
+precision/recall. It also has tau in its own denominator, so raising tau moves the
+hardest queries out of the denominator and pushes the number toward 100% without
+fixing anything. It reports agreement with the threshold; it is not a target.
+Saved JSON: artifacts/demo/febrl_ma_100/demo_multi_attribute_dataset.json
+Saved CSV:  artifacts/demo/febrl_ma_100/demo_multi_attribute_dataset.csv

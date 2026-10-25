@@ -1,0 +1,23 @@
+{
+  "measured_at": "2026-10-25T17:20+08:00",
+  "workload": {"tiles": 25, "m": 200, "k": 50, "d": 50, "slots_per_tile": 4000},
+  "single_tile_profile_s": {
+    "ct_pt_mul_2500": 2.207,
+    "plaintext_prep_2500": 0.161,
+    "ct_ct_add_2450": 0.073,
+    "dot_50": 0.065,
+    "total": 2.506,
+    "share": {"mul": 0.881, "prep": 0.064, "add": 0.029, "dot": 0.026}
+  },
+  "end_to_end_25_tiles_s": {
+    "kernel_v2": [65.814, 69.445],
+    "vectorized_prep_plus_tree": [74.066],
+    "vectorized_prep_serial_acc": [69.283]
+  },
+  "speedup_vs_v2": {
+    "vectorized_prep_plus_tree": 0.889,
+    "vectorized_prep_serial_acc": 1.002
+  },
+  "correctness": {"max_abs_diff": 0.0, "sign_mismatch": "0/96600", "identical_masks": true},
+  "verdict": "no structural gain; tree reduction is 12.5% slower due to live-ciphertext pressure"
+}

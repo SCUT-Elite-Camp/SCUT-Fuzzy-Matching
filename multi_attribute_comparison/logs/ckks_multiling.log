@@ -1,0 +1,133 @@
+
+================================================================================================
+  MULTI-ATTRIBUTE FUZZY MATCHING — REAL DATASET
+================================================================================================
+  i Each attribute is encoded into its own MinHash blocks and concatenated into one vector; Party B builds the encrypted index once, and every query runs the same two-round CKKS protocol on top of it.
+  job config: config/examples/fused_multilingual_multi_attribute.json
+  schema fingerprint: 22515fee46e6eee9
+  threshold: 0.485
+    attribute kind       weight cluster match params
+    ---------------------------------------------------------------------------------------------------------
+    name      fuzzy_text 0.40   200     50    cluster_dim=200 match_dim=50
+    dob       date       0.25   1024    1024  blocks=2 buckets_per_block=512 seed=20261014 on_invalid=missing
+    city      exact      0.15   1024    1024  blocks=2 buckets_per_block=512 seed=20261016 normalize=casefold
+    phone     exact      0.20   1024    1024  blocks=2 buckets_per_block=512 seed=20261015 normalize=digits
+    TOTAL                1.00   3272    3122
+
+  CKKS slots: 4096; headroom cluster 824 / match 974
+  i database 300 -> k~17, <= 18 rows/cluster -> cluster_matrix ~7.3 MB
+
+data quality: dob: 0/350 unparseable -> zeroed, 9 blank
+
+
+------------------------------------------------------------------------------------------------
+  [Party B] Step 1: Build Database Vectors & Party-B Offline Index
+------------------------------------------------------------------------------------------------
+  ⏱ Database vector encode: 0.028s
+  database rows: 300
+  ⏱ Party-B offline (k-means + encrypted cluster matrix): 0.074s
+  k-means policy: sqrt
+  clusters: 17
+  max cluster size: 29
+  ✓ offline artifacts ready — all queries share this one index
+
+------------------------------------------------------------------------------------------------
+  [Party A] Step 2: Encrypt Each Query & Run the Two-Round Protocol
+------------------------------------------------------------------------------------------------
+    query                  label  true   imp    top-1          attr breakdown                             encrypted cluster    checked     rank
+    -----------------------------------------------------------------------------------------------------------------------------------------------
+    ဦးစိုင်းလွင်                True   0.691  0.404  fused-b1abcb76 name=0.85 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=2  checked=8   rank=0
+    borghi stella          True   0.733  0.410  fused-61711a14 name=0.96 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=9  checked=2   rank=0
+    Moeketsi Thapelo Dani… True   0.750  0.393  fused-8ce0394f name=1.00 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=4  checked=25  rank=0
+    Malik Toaqeer Abbas K… True   0.750  0.374  fused-7cd30cb5 name=1.00 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=1  checked=12  rank=0
+    MAHAN DETOH TIA ARMAND False  0.318  0.318  fused-15be12f6 name=0.54 dob=0.00 city=0.00 phone=0.50    no-catch  cluster=11 checked=46
+    貽莊量                 True   0.694  0.452  fused-8760a554 name=0.74 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=12 checked=15  rank=0
+    roschetti antonino     True   0.720  0.412  fused-a66e2c1b name=0.92 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=6  checked=6   rank=0
+    hythm mhmwd zhwn khly… True   0.714  0.421  fused-e5036632 name=0.79 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=7  checked=7   rank=0
+    ukhnemantn             True   0.667  0.409  fused-911fe333 name=0.67 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=6  checked=14  rank=0
+    Lesoma Lebakae         False  0.390  0.390  fused-0aeeda51 name=0.66 dob=0.50 city=0.00 phone=0.00    no-catch  cluster=14 checked=50
+    sib khfl shb wfy lhjm  True   0.894  0.406  fused-38c16ca0 name=0.74 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=4  checked=8   rank=0
+    smy tlb bd hsn lmmwry  True   0.447  0.399  fused-3c7dba22 name=0.74 dob=0.00 city=1.00 phone=0.00    no-catch  cluster=15 checked=68  rank=1
+    Melao Tobana           True   1.000  0.395  fused-be50d0a2 name=1.00 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=7  checked=22  rank=0
+    rGandinetti, Fabrizio  True   0.721  0.410  fused-e85ce2a2 name=0.93 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=8  checked=5   rank=0
+    Dennis Terchi-Dukp     False  0.330  0.330  fused-42cd2271 name=0.51 dob=0.50 city=0.00 phone=0.00    no-catch  cluster=4  checked=48
+    ဒေါ်နစ်းစန်းအောင်            True   0.899  0.379  fused-a7332eaf name=0.75 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=11 checked=11  rank=0
+    leone anna maria       True   0.490  0.431  fused-4045cf92 name=0.85 dob=0.00 city=1.00 phone=0.00    CATCH     cluster=14 checked=3   rank=0
+    林宜瑄                 True   0.435  0.435  fused-8c259454 name=0.71 dob=0.00 city=1.00 phone=0.00    no-catch  cluster=6  checked=58
+    utikhvnmrt             True   0.658  0.400  fused-7721c229 name=0.77 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=10 checked=6   rank=0
+    Qazi Rahela Salim      False  0.362  0.362  fused-1a2ae9d4 name=0.53 dob=0.00 city=1.00 phone=0.00    no-catch  cluster=8  checked=55
+    oMnare Motsokoane Mary True   0.973  0.373  fused-4c388d37 name=0.93 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=8  checked=22  rank=0
+    xuhiuzhen              True   0.921  0.438  fused-0865fca9 name=0.80 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=12 checked=12  rank=0
+    伊斯坦大 貝雅夫 正福   True   0.425  0.418  fused-837e4643 name=0.69 dob=0.00 city=1.00 phone=0.00    no-catch  cluster=12 checked=59
+    鄭天財                 True   0.633  0.433  fused-8d00fb40 name=0.71 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=5  checked=9   rank=0
+    Mojapela Matela Timot… False  0.371  0.371  fused-b675fdac name=0.55 dob=0.00 city=1.00 phone=0.00    no-catch  cluster=1  checked=33
+    mysh mwfq bdlkrym twf… True   0.723  0.399  fused-49a9c142 name=0.81 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=11 checked=8   rank=0
+    蔡明堂                 True   0.573  0.428  fused-c194170e name=0.56 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=6  checked=19  rank=0
+    Bassi, Maria Gabriella True   0.768  0.360  fused-c29127db name=0.92 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=6  checked=2   rank=0
+    李舜正                 True   0.598  0.451  fused-e9816fc9 name=0.62 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=13 checked=16  rank=0
+    Nasrun bin Mansur      False  0.452  0.452  fused-da5b08f2 name=0.75 dob=0.00 city=1.00 phone=0.00    no-catch  cluster=10 checked=47
+    張寶美                 True   0.862  0.425  fused-7e85b60c name=0.66 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=16 checked=6   rank=0
+    lyn jml mhsn ly lhshmy True   0.905  0.408  fused-1cbb891f name=0.76 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=2  checked=5   rank=0
+    bertolucci ilva        True   0.967  0.407  fused-5c3f80f8 name=0.92 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=12 checked=2   rank=0
+    曜張羣                 True   0.837  0.427  fused-bd13b260 name=0.59 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=13 checked=17  rank=0
+    Michel Paa Kojo Bowma… False  0.379  0.379  fused-d9e6b49a name=0.64 dob=0.50 city=0.00 phone=0.00    no-catch  cluster=12 checked=63
+    usamnrthu              True   0.848  0.423  fused-680888f9 name=0.62 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=4  checked=10  rank=0
+    Abdur Rahim Khan Burki True   0.750  0.323  fused-412fd88f name=1.00 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=9  checked=8   rank=0
+    uthvneankrnn           True   0.704  0.409  fused-8a2485da name=0.76 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=10 checked=5   rank=0
+    xujinut                True   0.713  0.406  fused-a3254528 name=0.78 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=6  checked=15  rank=0
+    HIEN PIRIHINTE         False  0.322  0.322  fused-93501e26 name=0.81 dob=0.00 city=0.00 phone=0.00    no-catch  cluster=12 checked=58
+    天鄭財                 True   0.820  0.452  fused-cd423af0 name=0.55 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=5  checked=10  rank=0
+    正章輝                 True   0.863  0.481  fused-7248e6db name=0.66 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=0  checked=20  rank=0
+    華珮君                 True   0.439  0.439  fused-56bac6de name=0.72 dob=0.00 city=1.00 phone=0.00    no-catch  cluster=5  checked=53
+    Favilla, Attilio       True   0.700  0.406  fused-1e3669db name=0.87 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=7  checked=3   rank=0
+    Baryalai Nazari        False  0.359  0.359  fused-46744932 name=0.58 dob=0.50 city=0.00 phone=0.00    no-catch  cluster=16 checked=54
+    rkn syd ly rdw nljbwry True   0.849  0.407  fused-df5801e8 name=0.62 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=15 checked=1   rank=0
+    ⁦داود سلمان عبد كانون …⁩ True   0.636  0.443  fused-57fa9d1c name=0.71 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=1  checked=9   rank=0
+    Galahe Wubai Haywaan   True   0.721  0.414  fused-330e4a47 name=0.80 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=12 checked=17  rank=0
+    ဦးရဲထွန်းနိုင်               True   0.910  0.394  fused-4bd140d9 name=0.77 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=2  checked=12  rank=0
+    Tente Mamolete Jemina  False  0.393  0.393  fused-be50d0a2 name=0.61 dob=0.00 city=1.00 phone=0.00    no-catch  cluster=14 checked=47
+    -----------------------------------------------------------------------------------------------------------------------------------------------
+  ⏱ Encrypted two-round protocol, all queries: 121.092s
+
+================================================================================================
+  FINAL RESULTS SUMMARY
+================================================================================================
+queries: 50 (40 positive / 10 negative)   tau=0.485   round-2 probes/query=3
+plaintext top-1 recall, positives only (debug reference): 38/40 = 95.0%
+plaintext false positives at tau=0.485 (debug reference): 0/10 = 0.0%
+
+recall denominator: should_catch = plaintext true-match score > tau
+  identical queries (expected score = 1.000): 1
+  should-catch positives: 36/40 (below tau, excluded: q12, q18, q23, q43)
+
+encrypted recall, should-catch only : 36/36 = 100.0%
+  misses among those: 0   [round-1 cluster miss 0 / boundary 0 / unexplained 0]
+  ^ tau-DEPENDENT: the denominator is the should-catch set, so raising tau moves
+    round-1 misses out of it and this count drops. tau-free: 3 of 40
+    positives were never checked at all -- that is the line below.
+cluster recall (true match landed in the 3 probed cluster(s), tau-free): 37/40 = 92.5%
+  ^ with more than one probe this saturates by construction; the tau-free anchor
+    is the top-1-only line below, which the probe count cannot move.
+  top-1-only cluster recall (what a single probe would have caught): 36/40 = 90.0%   true-cluster rank mean 0.03 / p95 0 / max 1
+encrypted recall, all positives (whole population, for contrast): 36/40 = 90.0%
+over-reports (negatives caught above tau): 0/10 = 0.0%
+identical-query invariant: 1/1 caught [OK]
+
+plaintext calibration (tau anchoring only, not an evaluation metric): lowest expected-match 0.389 / highest impostor 0.481
+  -> true matches and impostors OVERLAP here; no tau separates them. Add attributes, raise weights, or accept errors.
+
+tau guard: tau=0.485 sits above the impostor ceiling 0.481, and it cost
+  4 positive(s) to get there (40 -> 36).
+  Everything above 0.481 suppresses nothing -- no impostor can reach it --
+  so that entire span is pure subtraction from the recall denominator. Judge a
+  run by the tau-free cluster recall line, which this cannot move.
+
+NOTE: the protocol returns only the sign of the threshold test, the selected
+cluster index, and the column index -- never the id of the matched record. So a
+CATCH means "some record in the selected cluster scored above tau", not "the
+right record was found": the recall above is a DETECTION rate, not identification
+precision/recall. It also has tau in its own denominator, so raising tau moves the
+hardest queries out of the denominator and pushes the number toward 100% without
+fixing anything. It reports agreement with the threshold; it is not a target.
+Saved JSON: artifacts/demo/fused_ma_50/demo_multi_attribute_dataset.json
+Saved CSV:  artifacts/demo/fused_ma_50/demo_multi_attribute_dataset.csv
