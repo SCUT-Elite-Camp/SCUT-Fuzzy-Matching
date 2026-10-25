@@ -27,10 +27,15 @@ env/
 # 构建目录（整目录忽略）
 approx-psi-reproduction/build*/
 approx-psi-reproduction/*.dir/
+fused-secure-filter/build*/
+fused-secure-filter/*.dir/
 
 # ========== 项目大数据目录（按需重新生成，不入库） ==========
 dataset/
 artifacts/
+
+# Original colleague deliveries stay local; curated source/results are tracked.
+/deliveries/local/
 
 # ========== 前端 ==========
 node_modules/

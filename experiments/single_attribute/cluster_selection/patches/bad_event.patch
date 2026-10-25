@@ -1,0 +1,323 @@
+diff --git a/baseline_Integration/clustering/bad_event_topk.py b/baseline_Integration/clustering/bad_event_topk.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/clustering/bad_event_topk.py
+@@ -0,0 +1,60 @@
++"""Bad-event-calibrated, query-adaptive cluster selection (no projection).
++
++The finite-sample guarantee is *marginal* for exchangeable calibration/test
++positive query examples. No query-specific conditional guarantee is claimed.
++"""
++from __future__ import annotations
++
++from dataclasses import dataclass
++import math
++import numpy as np
++
++
++@dataclass(frozen=True)
++class BadEventCalibration:
++    epsilon: float
++    delta: float
++    n_calibration: int
++    order_statistic: int
++    used_all_clusters_fallback: bool
++
++
++def calibrate_delta(scores: np.ndarray, matching_cluster: np.ndarray, epsilon: float) -> BadEventCalibration:
++    """Conformal quantile of D=max(center score)-score(true target cluster).
++
++    Each row must correspond to an independent/exchangeable positive *query*
++    with exactly one designated match, or to a query-level score constructed
++    from all matches consistently with the evaluation target.
++    """
++    scores = np.asarray(scores, dtype=np.float64)
++    labels = np.asarray(matching_cluster, dtype=int).reshape(-1)
++    if scores.ndim != 2 or scores.shape[0] != len(labels) or scores.size == 0:
++        raise ValueError('scores must have shape (n_calibration, n_clusters), with n_calibration > 0')
++    if not 0 < epsilon < 1:
++        raise ValueError('epsilon must lie strictly between 0 and 1')
++    if np.any(~np.isfinite(scores)) or np.any(labels < 0) or np.any(labels >= scores.shape[1]):
++        raise ValueError('nonfinite scores or invalid matching cluster')
++    deficits = scores.max(axis=1) - scores[np.arange(len(labels)), labels]
++    ordered = np.sort(np.maximum(deficits, 0.0))
++    j = math.ceil((len(ordered) + 1) * (1 - epsilon))
++    delta = float(ordered[j - 1]) if j <= len(ordered) else float('inf')
++    return BadEventCalibration(float(epsilon), delta, len(ordered), j, bool(j > len(ordered)))
++
++
++def select_clusters(scores: np.ndarray, delta: float) -> np.ndarray:
++    """Select all clusters with score >= top_score - delta (include ties)."""
++    scores = np.asarray(scores, dtype=np.float64).reshape(-1)
++    if not len(scores) or np.any(~np.isfinite(scores)):
++        raise ValueError('scores must be a non-empty finite vector')
++    if delta < 0 or np.isnan(delta):
++        raise ValueError('delta must be nonnegative')
++    # Include boundary ties. Tiny tolerance absorbs numerical differences between
++    # the same score computed in different floating point paths.
++    return np.flatnonzero(scores >= scores.max() - delta - 1e-12).astype(int)
++
++
++def select_topk(scores: np.ndarray, k: int) -> np.ndarray:
++    scores = np.asarray(scores, dtype=float).reshape(-1)
++    if not 1 <= k <= len(scores):
++        raise ValueError('invalid fixed top-k')
++    return np.argsort(-scores, kind='stable')[:k].astype(int)
+diff --git a/baseline_Integration/scripts/evaluate_bad_event_topk.py b/baseline_Integration/scripts/evaluate_bad_event_topk.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/scripts/evaluate_bad_event_topk.py
+@@ -0,0 +1,162 @@
++"""NCVR 10K: compare Bad-Event dynamic Top-K to Top-1/2/3 WITHOUT projection.
++
++Run from repository root:
++    python scripts/evaluate_bad_event_topk.py --epsilons 0.20 0.10 0.05 0.02
++This intentionally evaluates the plaintext algorithmic candidate stage.
++It does NOT claim CKKS/PSI communication or end-to-end security measurements.
++"""
++from __future__ import annotations
++import argparse
++import csv
++import json
++from pathlib import Path
++import sys
++import time
++import numpy as np
++from sklearn.preprocessing import StandardScaler
++
++ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(ROOT))
++from clustering.bad_event_topk import calibrate_delta, select_clusters, select_topk
++from clustering.kmeans_cosine import run_cosine_kmeans
++from minhash.encoder import batch_encode
++from preprocessing.normalizer import l2_normalize
++
++
++def get_args():
++    p=argparse.ArgumentParser(description='Evaluate calibrated Bad Event dynamic Top-K (no projection, no HE).')
++    p.add_argument('--data-dir',type=Path,default=ROOT/'data/ncvr_10k')
++    p.add_argument('--output-dir',type=Path,default=ROOT/'artifacts/bad_event_topk')
++    p.add_argument('--clusters',type=int,default=50,help='Total K-Means clusters M, not number selected per query')
++    p.add_argument('--calibration-positives',type=int,default=50)
++    p.add_argument('--fuzzy-ratio',type=float,default=.3)
++    p.add_argument('--fuzzy-seed',type=int,default=42)
++    p.add_argument('--split-seed',type=int,default=2026)
++    p.add_argument('--kmeans-seed',type=int,default=42)
++    p.add_argument('--epsilons',type=float,nargs='+',default=[.20,.10,.05,.02])
++    p.add_argument('--tau',type=float,default=.9,help='Original final-match cosine threshold')
++    p.add_argument('--no-cosine-eval',action='store_true',help='Only evaluate ID-grounded target-cluster coverage')
++    return p.parse_args()
++
++
++def prepare_english_ncvr(names_q, names_b, labels, *, fuzzy_ratio, fuzzy_seed):
++    """Match english_v1 + single_substitution with no other pipeline dependencies.
++
++    The original data_pipeline requires the optional `anyascii` dependency even
++    for English; this function retains its English branch and perturbation RNG.
++    """
++    import random
++    import string
++    from preprocessing.text_cleaner import clean_name
++    if not 0 <= fuzzy_ratio <= 1: raise ValueError('fuzzy-ratio must be between 0 and 1')
++    qb=[clean_name(v) for v in names_q]
++    db=[clean_name(v) for v in names_b]
++    eligible=[i for i in range(len(qb)) if labels[i] and any(c in string.ascii_lowercase for c in qb[i])]
++    target_count=int(len(eligible)*fuzzy_ratio+.5)
++    rng=random.Random(fuzzy_seed)
++    selected=rng.sample(eligible,target_count)
++    forbidden=set(db)
++    for idx in selected:
++        original=qb[idx]
++        positions=[i for i,c in enumerate(original) if c in string.ascii_lowercase]
++        rng.shuffle(positions)
++        for position in positions:
++            replacements=[c for c in string.ascii_lowercase if c!=original[position]]
++            rng.shuffle(replacements)
++            candidates=(original[:position]+c+original[position+1:] for c in replacements)
++            alternative=next((s for s in candidates if s not in forbidden),None)
++            if alternative is not None:
++                qb[idx]=alternative
++                break
++    return qb,db
++
++def main():
++    a=get_args(); start=time.perf_counter(); a.output_dir.mkdir(parents=True,exist_ok=True)
++    with (a.data_dir/'ncvr_10k_database.csv').open(encoding='utf8',newline='') as f: db=list(csv.DictReader(f))
++    with (a.data_dir/'ncvr_10k_queries.csv').open(encoding='utf8',newline='') as f: qs=list(csv.DictReader(f))
++    labs=np.asarray([q['label'].strip().lower() in ('true','1','yes') for q in qs],dtype=bool)
++    queries,names_b=prepare_english_ncvr([q['query_name'] for q in qs], [r['full_name'] for r in db], labs,fuzzy_ratio=a.fuzzy_ratio,fuzzy_seed=a.fuzzy_seed)
++    id_to_row={r['ncid']:i for i,r in enumerate(db)}
++    target=np.asarray([id_to_row.get(q['query_ncid'],-1) for q in qs],dtype=int)
++    positive=np.flatnonzero(labs)
++    if np.any(target[positive]<0):
++        raise RuntimeError('Positive query has no database target by NCID: cannot calibrate without ground truth')
++    if not 1<=a.calibration_positives<len(positive): raise ValueError('calibration-positives must be 1..positive_count-1')
++    rng=np.random.RandomState(a.split_seed); shuffled=rng.permutation(positive)
++    cal=shuffled[:a.calibration_positives]
++    test=np.sort(np.concatenate((shuffled[a.calibration_positives:],np.flatnonzero(~labs))))
++    print(f'Database={len(db)}, cluster count={a.clusters}, calibration positives={len(cal)}, test positives={np.sum(labs[test])}, test negatives={np.sum(~labs[test])}',flush=True)
++    print('Encoding database MinHash EL=200...',flush=True)
++    db_raw=batch_encode(names_b,200); db_200=l2_normalize(db_raw)
++    scaler=StandardScaler().fit(db_200)
++    print('Training spherical K-Means...',flush=True)
++    centroids,assignment=run_cosine_kmeans(scaler.transform(db_200),a.clusters,random_state=a.kmeans_seed)
++    del db_raw,db_200
++    print('Encoding queries and scoring centroids...',flush=True)
++    q_raw=batch_encode(queries,200)
++    q_sc=scaler.transform(l2_normalize(q_raw))
++    q_sc_norm=l2_normalize(q_sc)
++    scores=q_sc_norm@centroids.T
++    matched_cl=assignment[target[cal]]
++    configs={f'Top-{k}':{'epsilon':None,'delta':None,'calibration':None} for k in [1,2,3]}
++    for epsilon in a.epsilons:
++        calibration=calibrate_delta(scores[cal],matched_cl,epsilon)
++        configs[f'Dynamic-eps-{epsilon:g}']={'epsilon':epsilon,'delta':calibration.delta,'calibration':calibration.__dict__}
++    # Reuse baseline EL=50 cosine representation for the OPTIONAL plaintext
++    # final decision. Distinguish model prediction from ID target coverage.
++    db_match=l2_normalize(batch_encode(names_b,50)) if not a.no_cosine_eval else None
++    query_match=l2_normalize(q_raw[:,:50]) if not a.no_cosine_eval else None
++    # Avoid pairwise 10K x 10K materialization; index candidate record rows per selected cluster.
++    cluster_rows=[np.flatnonzero(assignment==i) for i in range(a.clusters)]
++    details=[]; summary=[]
++    for name,conf in configs.items():
++        k_sizes=[]; candidate_sizes=[]; target_hits=[]; tp=fp=tn=fn=0
++        for idx in test:
++            chosen=select_topk(scores[idx],int(name.split('-')[1])) if name.startswith('Top-') else select_clusters(scores[idx],conf['delta'])
++            rows=np.concatenate([cluster_rows[int(j)] for j in chosen])
++            covered=(target[idx]>=0 and int(assignment[target[idx]]) in chosen)
++            k_sizes.append(len(chosen));candidate_sizes.append(len(rows))
++            if labs[idx]: target_hits.append(bool(covered))
++            pred=None
++            if db_match is not None:
++                similarity=db_match[rows]@query_match[idx]
++                pred=bool(np.any(similarity>=a.tau))
++                if pred and labs[idx]:tp+=1
++                elif pred:fp+=1
++                elif labs[idx]:fn+=1
++                else:tn+=1
++            details.append({'strategy':name,'query_index':int(idx),'query_ncid':qs[idx]['query_ncid'],
++                'label':bool(labs[idx]),'target_cluster':int(assignment[target[idx]]) if labs[idx] else None,
++                'top1_cluster':int(np.argmax(scores[idx])),'selected_clusters':chosen.tolist(),
++                'selected_k':int(len(chosen)),'candidate_count':int(len(rows)),
++                'target_cluster_covered':bool(covered) if labs[idx] else None,
++                'threshold_prediction':pred,'epsilon':conf['epsilon'],'delta':conf['delta']})
++        result={'strategy':name,'epsilon':conf['epsilon'],'delta':conf['delta'],
++            'n_calibration_positive':len(cal),'n_test_positive':len(target_hits),'n_test_negative':int(np.sum(~labs[test])),
++            'target_cluster_recall':float(np.mean(target_hits)), 'bad_rate':float(1-np.mean(target_hits)),
++            'avg_selected_k':float(np.mean(k_sizes)),'median_selected_k':float(np.median(k_sizes)),
++            'p95_selected_k':float(np.percentile(k_sizes,95)),
++            'min_selected_k':int(np.min(k_sizes)),'max_selected_k':int(np.max(k_sizes)),
++            'avg_candidate_count':float(np.mean(candidate_sizes)),
++            'p95_candidate_count':float(np.percentile(candidate_sizes,95)),
++            'candidate_reduction_vs_full_db':float(1-np.mean(candidate_sizes)/len(db)),
++            'calibration_all_cluster_fallback':bool(conf['calibration']['used_all_clusters_fallback']) if conf['calibration'] else False}
++        if db_match is not None:
++            result.update({'TP':tp,'FP':fp,'FN':fn,'TN':tn,
++                'precision':float(tp/max(1,tp+fp)),'recall':float(tp/max(1,tp+fn)),
++                'f1':float(2*tp/max(1,2*tp+fp+fn)), 'accuracy':float((tp+tn)/len(test))})
++        summary.append(result)
++        print(f'{name:>19}: bad={result["bad_rate"]:.3f} avgK={result["avg_selected_k"]:.2f} candidates={result["avg_candidate_count"]:.1f}',flush=True)
++    with (a.output_dir/'comparison.csv').open('w',newline='',encoding='utf8') as f:
++        w=csv.DictWriter(f,fieldnames=list(summary[0].keys()),extrasaction='ignore');w.writeheader();w.writerows(summary)
++    with (a.output_dir/'per_query.csv').open('w',newline='',encoding='utf8') as f:
++        w=csv.DictWriter(f,fieldnames=list(details[0].keys()));w.writeheader();w.writerows(details)
++    report={'note':'Plaintext candidate-coverage study; no random projection; no CKKS/PSI timing or secure protocol claims',
++        'settings':vars(a)|{'data_dir':str(a.data_dir),'output_dir':str(a.output_dir)},
++        'calibration_query_indices':cal.tolist(),'test_query_indices':test.tolist(),
++        'calibrations':{name:v['calibration'] for name,v in configs.items() if v['calibration']},
++        'summary':summary,'elapsed_sec':time.perf_counter()-start}
++    with (a.output_dir/'report.json').open('w',encoding='utf8') as f:json.dump(report,f,ensure_ascii=False,indent=2)
++    print('Results written to',a.output_dir,'elapsed',round(report['elapsed_sec'],2),'seconds',flush=True)
++
++if __name__=='__main__':main()
+diff --git a/baseline_Integration/tests/test_bad_event_topk.py b/baseline_Integration/tests/test_bad_event_topk.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/tests/test_bad_event_topk.py
+@@ -0,0 +1,17 @@
++import numpy as np
++from clustering.bad_event_topk import calibrate_delta, select_clusters, select_topk
++
++def test_order_statistic_and_dynamic_k():
++    scores=np.array([[.95,.94,.7],[.9,.87,.8],[.8,.7,.78],[.9,.89,.88]])
++    clusters=np.array([1,1,2,0])
++    c=calibrate_delta(scores,clusters,.25)
++    assert c.order_statistic==4
++    assert c.delta>=0
++    assert select_clusters(np.array([.95,.94,.80]),.02).tolist()==[0,1]
++    assert select_clusters(np.array([.95,.80,.79]),.02).tolist()==[0]
++    assert select_topk(np.array([.1,.3,.2]),2).tolist()==[1,2]
++
++def test_tiny_sample_conservative_fallback():
++    c=calibrate_delta(np.array([[.5,.4],[.9,.2]]),np.array([1,0]),.01)
++    assert np.isinf(c.delta)
++    assert len(select_clusters(np.array([.9,.1]),c.delta))==2
+diff --git a/baseline_Integration/BAD_EVENT_TOPK_EXPERIMENT.md b/baseline_Integration/BAD_EVENT_TOPK_EXPERIMENT.md
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/BAD_EVENT_TOPK_EXPERIMENT.md
+@@ -0,0 +1,64 @@
++# Bad Event 动态 Top-K：第一阶段独立验证（不使用随机投影）
++
++## 本次修改的边界
++
++保留原始项目及 baseline 模块不变。新增 `clustering/bad_event_topk.py`、`scripts/evaluate_bad_event_topk.py` 与单元测试 `tests/test_bad_event_topk.py`。当前验证的是**真实 NCVR 姓名数据上的明文候选簇覆盖与余弦相似度结果**，不是 CKKS 多簇密文检索或安全协议性能测试；因此没有修改原有 `party_a/online_querier.py` 的 one-hot 安全协议，也不对加密通信性能作推论。没有加入随机投影。
++
++## 数学定义
++
++数据库运行原 spherical K-Means，`M=50`（为贴合 NCVR 10K baseline），对 Query `q` 获取簇中心相似度 `a_j(q)`。对于真实目标数据库记录 `x*`，令 `c(x*)` 为它的聚类标签：
++
++- `D(q,x*) = max_j a_j(q) - a_{c(x*)}(q)`。
++- 选择 `S_delta(q) = {j: a_j(q) >= max_l a_l(q) - delta}`，遇到得分相同的簇全部保留。
++- Bad Event 为 `c(x*) not in S_delta(q)`，等价于 `D(q,x*) > delta`。
++- 给定风险预算 `epsilon`，在 `n_cal` 条独立校准正查询上对 `D` 排序，选 `j=ceil((n_cal+1)*(1-epsilon))`，`delta=D_(j)`。若 `j>n_cal`，设置 `delta=+infinity`（选择全部 M 个簇）。
++- 对每条 Query 自适应输出 `K(q)=|S_delta(q)|`。**delta 是全局校准阈值，K(q) 是逐查询动态值。**
++
++在校准/未来正例满足可交换性、特征模型固定、数据不泄漏的条件下，这是**边际**候选覆盖控制，而不是每条给定 Query 的确定性条件保证。对多正例 Query 需改用 `D_min` 或 `D_max` 进行查询级定义；当前 NCVR 的 `query_ncid` 指向唯一目标身份，仅评估指定 ID 的簇覆盖。
++
++## 运行
++
++项目根目录（Python 环境至少安装 `numpy`, `scikit-learn`, `pytest`）：
++
++```bash
++python scripts/evaluate_bad_event_topk.py --clusters 50 --calibration-positives 50 --fuzzy-ratio 0.3 --fuzzy-seed 42 --split-seed 2026 --epsilons 0.20 0.10 0.05 0.02
++```
++
++可选加 `--no-cosine-eval` 跳过记录级明文余弦阈值判定。单元测试：
++
++```bash
++python -m pytest -q tests/test_bad_event_topk.py
++```
++
++**依赖说明：** 项目原有的 `data_pipeline` 依赖 `anyascii`，本次为确保独立的英语 NCVR 候选验证在没有 `anyascii` / `TenSEAL` 的环境也能执行，实验脚本使用了与现有 `english_v1` 清洗和 `single_substitution` 对齐的独立入口；EL=200 MinHash、标准化和 spherical K-Means 则直接复用原项目的实现。正式复现实验建议在完整 requirements 环境中交叉校验两条预处理入口的一致性。
++
++输出位于 `artifacts/bad_event_topk/`：
++
++- `comparison.csv`：Top-1/2/3 与各风险预算动态方案的汇总指标。
++- `per_query.csv`：逐条测试查询的所选簇、动态 K、候选数量、目标簇是否覆盖、明文余弦最终判定。
++- `report.json`：完整配置、校准/测试查询索引、校准阈值及汇总。
++
++## 这次实际运行结果
++
++使用输入 ZIP 自带的 NCVR 10K 数据库（10,000 条）；其 CSV 包含 100 条正查询和 100 条负查询。通过 `--fuzzy-ratio 0.3` 在全部正查询中施加 30% 的单字母替换扰动。按 `split-seed=2026` 将其中 **50 条正查询用于校准、另外 50 条正查询与全部 100 条负查询用于测试**。K-Means 共 50 簇，最终明文余弦阈值 τ=0.9。
++
++| 方法 | 测试正例目标簇覆盖 | Bad Rate | 平均 K | 平均候选数 | 明文最终 TP / FN |
++|---|---:|---:|---:|---:|---:|
++| Top-1 | 46/50 | 8% | 1.00 | 198.12 | 41 / 9 |
++| Top-2 | 47/50 | 6% | 2.00 | 401.76 | 42 / 8 |
++| Top-3 | 47/50 | 6% | 3.00 | 603.21 | 42 / 8 |
++| Dynamic ε=0.20 | 46/50 | 8% | 1.00 | 198.12 | 41 / 9 |
++| Dynamic ε=0.10 | 47/50 | 6% | 1.63 | 327.11 | 42 / 8 |
++| Dynamic ε=0.05 | 50/50 | 0% | 5.51 | 1105.84 | 44 / 6 |
++| Dynamic ε=0.02 | 50/50 | 0% | 19.99 | 4001.85 | 44 / 6 |
++
++**重要解释：** ε=0.05、0.02 的测试目标簇覆盖为 100%，但在 τ=0.9 的明文最终阈值判定中仍有 6 个 FN；这表示 6 个正查询没有在当前最终判定下被识别，并不与“指定 NCID 目标簇被覆盖”矛盾。此处预测统计不等于 CKKS 的近似密文实现，且指定 NCID 身份标签与基于余弦阈值定义的所有真实匹配集合并非同一概念。
++
++**风险与限制：** 校准正例仅 50 条，测试正例仅 50 条。单次测试 0 漏检不等于总体 Bad Rate=0，也不保证每个 Query 零漏检。ε 越小，选簇范围可能明显增大；动态策略不一定在所有预算下优于固定 Top-K。结果对簇数、随机划分和姓名扰动有依赖，建议进行多种子和更大独立校准集复测。
++
++## 下一步验证建议
++
++1. 增加校准正例和测试正例，进行多随机种子重复与置信区间计算。
++2. 对 `ε` 扫描绘制候选覆盖 vs 平均候选记录数曲线，观察相同覆盖下动态方案是否优于 Top-1/2/3。
++3. 额外区分 **指定 NCID 的目标簇覆盖**、**查询级至少一个阈值匹配的候选覆盖**、**所有满足 τ 的匹配对覆盖** 三种不同的评价粒度。
++4. 如果算法有收益，再实现 CKKS 版多簇选择：不可直接将原 one-hot 改成 multi-hot，因为原按列操作会求和混合不同簇；应该分别验证或重新设计隐私保护的候选检索。届时才比较完整安全协议通信与耗时。

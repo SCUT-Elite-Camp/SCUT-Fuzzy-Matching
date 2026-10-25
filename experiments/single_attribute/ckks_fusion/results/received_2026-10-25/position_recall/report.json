@@ -1,0 +1,69 @@
+{
+  "n_queries": 200,
+  "recall_at_1": 0.895,
+  "position_quantiles": {
+    "0.1": 23.0,
+    "0.25": 62.75,
+    "0.5": 110.0,
+    "0.75": 159.5,
+    "0.9": 202.39999999999998,
+    "1.0": 418.0
+  },
+  "rows": [
+    {
+      "cut": 50,
+      "position_cover": 0.19,
+      "tier1_only_recall": 0.175,
+      "loss_vs_full": 0.72
+    },
+    {
+      "cut": 100,
+      "position_cover": 0.43,
+      "tier1_only_recall": 0.4,
+      "loss_vs_full": 0.495
+    },
+    {
+      "cut": 150,
+      "position_cover": 0.72,
+      "tier1_only_recall": 0.665,
+      "loss_vs_full": 0.22999999999999998
+    },
+    {
+      "cut": 200,
+      "position_cover": 0.89,
+      "tier1_only_recall": 0.8,
+      "loss_vs_full": 0.09499999999999997
+    },
+    {
+      "cut": 250,
+      "position_cover": 0.965,
+      "tier1_only_recall": 0.865,
+      "loss_vs_full": 0.030000000000000027
+    },
+    {
+      "cut": 300,
+      "position_cover": 0.985,
+      "tier1_only_recall": 0.885,
+      "loss_vs_full": 0.010000000000000009
+    },
+    {
+      "cut": 350,
+      "position_cover": 0.99,
+      "tier1_only_recall": 0.89,
+      "loss_vs_full": 0.0050000000000000044
+    },
+    {
+      "cut": 400,
+      "position_cover": 0.995,
+      "tier1_only_recall": 0.895,
+      "loss_vs_full": 0.0
+    },
+    {
+      "cut": 450,
+      "position_cover": 1.0,
+      "tier1_only_recall": 0.895,
+      "loss_vs_full": 0.0
+    }
+  ],
+  "note": "查询由随机库记录单字符替换生成；聚类冻结（仅库上训练）"
+}

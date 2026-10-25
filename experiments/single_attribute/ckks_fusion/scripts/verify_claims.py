@@ -135,6 +135,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--level", choices=["quick", "tenseal", "full"], default="quick")
     ap.add_argument("--repeats", type=int, default=3, help="full 模式下每种形状的重复次数")
+    ap.add_argument(
+        "--reference-dir", type=Path,
+        default=ROOT / "results" / "received_2026-10-25",
+        help="Read-only received results used as the reference, not fresh artifacts.",
+    )
     ap.add_argument("--out", type=Path, default=ROOT / "artifacts" / "verification" / "report.json")
     args = ap.parse_args()
 
@@ -150,7 +155,7 @@ def main() -> int:
             actual=math.ceil(200 / T), ok=(math.ceil(200 / T) == 10))
 
     # ---------- C2/C3：召回与布局（重算 vs 归档） ----------
-    archive_path = ROOT / "artifacts" / "balanced_layout" / "recall_compare.json"
+    archive_path = args.reference_dir / "balanced_layout" / "recall_compare.json"
     if not archive_path.exists():
         rep.add(cid="C2", what="归档召回文件存在", expected=str(archive_path), actual=None,
                 ok=False, note="缺少归档文件，无法比对")
@@ -199,7 +204,8 @@ def main() -> int:
             # C5：R3 探针（复用同一脚本，结果与归档比对）
             from fusion.r3_numeric_probe import main as r3_main  # noqa: F401
             r3_path = ROOT / "artifacts" / "r3_probe" / "numeric.json"
-            r3_before = json.loads(r3_path.read_text(encoding="utf-8")) if r3_path.exists() else None
+            r3_reference = args.reference_dir / "r3_probe" / "numeric.json"
+            r3_before = json.loads(r3_reference.read_text(encoding="utf-8")) if r3_reference.exists() else None
             import contextlib, io
             with contextlib.redirect_stdout(io.StringIO()):
                 r3_main()
@@ -226,7 +232,7 @@ def main() -> int:
     # ---------- C7：计时可复现性（仅 full） ----------
     if args.level == "full":
         import csv
-        summary_path = ROOT / "artifacts" / "tile_scaling" / "summary.csv"
+        summary_path = args.reference_dir / "tile_scaling" / "summary.csv"
         arch = {}
         if summary_path.exists():
             for row in csv.DictReader(summary_path.open(encoding="utf-8")):

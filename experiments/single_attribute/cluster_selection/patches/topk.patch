@@ -1,0 +1,515 @@
+diff --git a/baseline_Integration/party_a/online_querier.py b/baseline_Integration/party_a/online_querier.py
+--- a/baseline_Integration/party_a/online_querier.py
++++ b/baseline_Integration/party_a/online_querier.py
+@@ -66,7 +66,7 @@
+     return np.asarray(decrypted, dtype=np.float64).reshape(-1)
+ 
+ 
+-def build_selector(sim_scores: np.ndarray, k: int) -> tuple[int, np.ndarray]:
++def build_selector(sim_scores: np.ndarray, k: int, *, rank: int = 0) -> tuple[int, np.ndarray]:
+     """Build a one-hot selector for the highest-scoring cluster."""
+ 
+     scores = np.asarray(sim_scores, dtype=np.float64).reshape(-1)
+@@ -79,7 +79,9 @@
+     if not np.all(np.isfinite(scores)):
+         raise ValueError("sim_scores contains NaN or Inf")
+ 
+-    selected_cluster = int(np.argmax(scores))
++    if not 0 <= rank < k:
++        raise ValueError(f"rank must be between 0 and {k - 1}, got {rank}")
++    selected_cluster = int(np.argsort(-scores, kind="stable")[rank])
+     selector = np.zeros(k, dtype=np.float64)
+     selector[selected_cluster] = 1.0
+     return selected_cluster, selector
+@@ -103,11 +105,13 @@
+     encrypted_sim_scores: Any,
+     party_a_state: PartyALocalState,
+     k: int,
++    *,
++    rank: int = 0,
+ ) -> tuple[SecondRoundRequest, ClusterSelectionDebug]:
+     """Step 4-5: choose a cluster and build the second-round request."""
+ 
+     sim_scores = decrypt_sim_scores(encrypted_sim_scores, party_a_state.secret_context)
+-    selected_cluster, selector = build_selector(sim_scores, k)
++    selected_cluster, selector = build_selector(sim_scores, k, rank=rank)
+     encrypted_selector = encrypt_selector(selector, party_a_state.secret_context)
+ 
+     return (
+@@ -138,6 +142,8 @@
+     encrypted_score_tiles: Iterable[CipherLike],
+     party_a_state: TiledPartyALocalState,
+     k: int,
++    *,
++    rank: int = 0,
+ ) -> tuple[TiledSecondRoundRequest, TiledClusterSelectionDebug]:
+     """V2 Step 4-5: 解密 centroid score tiles，按 query argmax 选 cluster，
+     构造第二轮 tiled selector 请求。
+@@ -178,7 +184,9 @@
+     if not np.all(np.isfinite(scores_matrix)):
+         raise ValueError("decrypted sim_scores contain NaN or Inf")
+ 
+-    selected_clusters = np.argmax(scores_matrix, axis=1)
++    if not 0 <= rank < k:
++        raise ValueError(f"rank must be between 0 and {k - 1}, got {rank}")
++    selected_clusters = np.argsort(-scores_matrix, axis=1, kind="stable")[:, rank]
+ 
+     selector_matrix = np.zeros((m, k), dtype=np.float64)
+     for q in range(m):
+diff --git a/baseline_Integration/evaluation/benchmark.py b/baseline_Integration/evaluation/benchmark.py
+--- a/baseline_Integration/evaluation/benchmark.py
++++ b/baseline_Integration/evaluation/benchmark.py
+@@ -99,13 +99,18 @@
+ 
+     Returns:
+         dict: {
+-            "config": config,
++            "config": {**config, "top_k": top_k},
+             "metrics": {"precision":..., "recall":..., ...},
+             "timing_sec": {"offline":..., "online_total":..., "round1":..., "round2":...},
+             "communication_mb": {"sent":..., "recv":..., "total":...},
+             "memory_peak_mb": float,
+         }
+     """
++    top_k = config.get("top_k", 1)
++    if isinstance(top_k, bool) or not isinstance(top_k, int) or top_k not in (1, 2, 3):
++        raise ValueError("top_k must be 1, 2 or 3")
++    if top_k > 1 and config.get("use_mock", True):
++        raise ValueError("Top-2/Top-3 comparisons require use_mock=False")
+     # 1. 加载并标准化数据。旧配置仍然可用，ncvr_10k 自动走新管线。
+     names_A, names_B, labels, dataset_manifest = _load_benchmark_dataset(config)
+ 
+@@ -146,6 +151,8 @@
+         tracemalloc.stop()
+         memory_peak = peak / 1024**2
+ 
++    if top_k > centroids.shape[0]:
++        raise ValueError(f"top_k={top_k} exceeds actual cluster count {centroids.shape[0]}")
+     # 2.5. 校验 he_batch_size 配置
+     raw_he_batch = config.get("he_batch_size", config.get("batch_size", 0))
+     if raw_he_batch is None:
+@@ -204,42 +211,44 @@
+             )
+             total_recv_bytes += sum(len(b) for b in bytes_sim_scores)
+ 
+-            req2, _ = choose_clusters_and_build_tiled_request(
+-                bytes_sim_scores,
+-                party_a_state,
+-                k=centroids.shape[0],
+-            )
+-            wire_req2 = serialize_tiled_second_round_request(req2)
+-            total_sent_bytes += sum(len(b) for b in wire_req2.encrypted_query_50) + sum(
+-                len(b) for b in wire_req2.encrypted_selectors
+-            )
+-
++            # One independent encrypted one-hot selector per ranked cluster.
++            # Never combine selectors with multi-hot: the baseline column-wise
++            # routine would add rows of different clusters, invalidating cosine.
+             r1_time = time.perf_counter() - r1_start
+             round1_times.append(r1_time)
+-
+             r2_start = time.perf_counter()
+-            score_tile_gen = tiled_batch_matching(
+-                cluster_matrix,
+-                wire_req2,
+-                public_context_bytes,
+-                tau=config.get("tau", SIMILARITY_THRESHOLD),
+-                serialize_output=True,
+-            )
+-
+-            def counted_batch_scores(score_iter=score_tile_gen):
+-                nonlocal total_recv_bytes
+-                for tile_bytes in score_iter:
+-                    total_recv_bytes += len(tile_bytes)
+-                    yield tile_bytes
+-
+-            match_res, _ = check_tiled_score_batch_debug(
+-                counted_batch_scores(),
+-                secret_context,
+-                layout=party_a_state.layout,
+-                logical_width=cluster_matrix.shape[1],
+-                early_stop=config.get("early_stop", True),
+-            )
+-            predictions.extend(match_res.catches.tolist())
++            chunk_catches = np.zeros(len(chunk_names), dtype=bool)
++            for rank in range(top_k):
++                req2, _ = choose_clusters_and_build_tiled_request(
++                    bytes_sim_scores, party_a_state, k=centroids.shape[0], rank=rank
++                )
++                wire_req2 = serialize_tiled_second_round_request(req2)
++                total_sent_bytes += sum(len(b) for b in wire_req2.encrypted_query_50) + sum(
++                    len(b) for b in wire_req2.encrypted_selectors
++                )
++                score_tile_gen = tiled_batch_matching(
++                    cluster_matrix,
++                    wire_req2,
++                    public_context_bytes,
++                    tau=config.get("tau", SIMILARITY_THRESHOLD),
++                    serialize_output=True,
++                )
++
++                def counted_batch_scores(score_iter=score_tile_gen):
++                    nonlocal total_recv_bytes
++                    for tile_bytes in score_iter:
++                        total_recv_bytes += len(tile_bytes)
++                        yield tile_bytes
++
++                match_res, _ = check_tiled_score_batch_debug(
++                    counted_batch_scores(),
++                    secret_context,
++                    layout=party_a_state.layout,
++                    logical_width=cluster_matrix.shape[1],
++                    early_stop=config.get("early_stop", True),
++                )
++                chunk_catches |= match_res.catches
++            predictions.extend(chunk_catches.tolist())
+             r2_time = time.perf_counter() - r2_start
+             round2_times.append(r2_time)
+     else:
+@@ -336,40 +345,41 @@
+                 total_recv_bytes += sum(
+                     measure_ct_size(score) for score in sim_scores_cipher
+                 )
+-                second_round_request, _ = choose_cluster_and_build_request(
+-                    sim_scores_cipher,
+-                    party_a_state,
+-                    k=centroids.shape[0],
+-                )
+-                total_sent_bytes += measure_ct_size(
+-                    second_round_request.encrypted_query_50
+-                )
+-                total_sent_bytes += measure_ct_size(
+-                    second_round_request.encrypted_selector
+-                )
+                 round1_time = time.perf_counter() - round1_start
+                 round1_times.append(round1_time)
+-
+                 round2_start = time.perf_counter()
+-                raw_scores = column_wise_matching(
+-                    cluster_matrix,
+-                    second_round_request,
+-                    first_round_request.public_context_bytes,
+-                    tau=config.get("tau", SIMILARITY_THRESHOLD),
+-                )
+-
+-                def counted_scores(score_iter=raw_scores):
+-                    nonlocal total_recv_bytes
+-                    for score in score_iter:
+-                        total_recv_bytes += measure_ct_size(score)
+-                        yield score
+-
+-                result, _ = check_encrypted_scores_debug(
+-                    counted_scores(),
+-                    party_a_state.secret_context,
+-                    early_stop=config.get("early_stop", True),
+-                )
+-                predictions.append(result.catch)
++                any_catch = False
++                for rank in range(top_k):
++                    second_round_request, _ = choose_cluster_and_build_request(
++                        sim_scores_cipher, party_a_state,
++                        k=centroids.shape[0], rank=rank,
++                    )
++                    total_sent_bytes += measure_ct_size(
++                        second_round_request.encrypted_query_50
++                    )
++                    total_sent_bytes += measure_ct_size(
++                        second_round_request.encrypted_selector
++                    )
++                    raw_scores = column_wise_matching(
++                        cluster_matrix,
++                        second_round_request,
++                        first_round_request.public_context_bytes,
++                        tau=config.get("tau", SIMILARITY_THRESHOLD),
++                    )
++
++                    def counted_scores(score_iter=raw_scores):
++                        nonlocal total_recv_bytes
++                        for score in score_iter:
++                            total_recv_bytes += measure_ct_size(score)
++                            yield score
++
++                    result, _ = check_encrypted_scores_debug(
++                        counted_scores(),
++                        party_a_state.secret_context,
++                        early_stop=config.get("early_stop", True),
++                    )
++                    any_catch = any_catch or result.catch
++                predictions.append(any_catch)
+                 round2_time = time.perf_counter() - round2_start
+                 round2_times.append(round2_time)
+ 
+diff --git a/baseline_Integration/scripts/evaluate_ncvr_10k.py b/baseline_Integration/scripts/evaluate_ncvr_10k.py
+--- a/baseline_Integration/scripts/evaluate_ncvr_10k.py
++++ b/baseline_Integration/scripts/evaluate_ncvr_10k.py
+@@ -55,6 +55,10 @@
+         default="sqrt",
+         help='Cluster count mode only when --k is 0, for example "sqrt".',
+     )
++    parser.add_argument(
++        "--top-k", type=int, choices=(1, 2, 3), default=1,
++        help="Number of highest-ranking clusters to verify (1/2/3).",
++    )
+     parser.add_argument("--tau", type=float, default=0.9)
+     parser.add_argument(
+         "--fuzzy-ratio",
+@@ -110,6 +114,7 @@
+         "el_cluster": 200,
+         "el_match": 50,
+         "k": args.k,
++        "top_k": args.top_k,
+         "k_mode": args.k if args.k > 0 else args.k_mode,
+         "tau": args.tau,
+         "fuzzy_ratio": args.fuzzy_ratio,
+@@ -126,7 +131,7 @@
+     paths = save_evaluation_report(
+         result,
+         args.output_dir,
+-        prefix="ncvr_10k",
++        prefix=f"ncvr_10k_top{args.top_k}",
+     )
+ 
+     print(json.dumps(result["metrics"], indent=2, ensure_ascii=False))
+diff --git a/baseline_Integration/scripts/compare_topk_ncvr.py b/baseline_Integration/scripts/compare_topk_ncvr.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/scripts/compare_topk_ncvr.py
+@@ -0,0 +1,63 @@
++"""Run controlled Top-1 / Top-2 / Top-3 NCVR comparisons."""
++from __future__ import annotations
++
++import argparse
++import csv
++import json
++import subprocess
++import sys
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parent.parent
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Compare real CKKS Top-1/2/3 fairly")
++    parser.add_argument("--query-limit", type=int, default=-1)
++    parser.add_argument("--db-limit", type=int, default=-1)
++    parser.add_argument("--clusters", type=int, default=50)
++    parser.add_argument("--batch-size", type=int, default=0)
++    parser.add_argument("--tau", type=float, default=.9)
++    parser.add_argument("--fuzzy-ratio", type=float, default=.3)
++    parser.add_argument("--fuzzy-seed", type=int, default=42)
++    parser.add_argument("--output-dir", default=str(ROOT / "artifacts" / "topk_ncvr_comparison"))
++    parser.add_argument("--tops", nargs="+", type=int, choices=[1,2,3], default=[1,2,3])
++    parser.add_argument("--no-early-stop", action="store_true", help="Use complete candidate checks in each cluster")
++    args = parser.parse_args()
++    out = Path(args.output_dir).resolve(); out.mkdir(parents=True, exist_ok=True)
++    rows = []
++    for top in args.tops:
++        folder = out / f"top{top}"
++        command = [sys.executable, str(ROOT / "scripts" / "evaluate_ncvr_10k.py"),
++                   "--top-k", str(top), "--k", str(args.clusters),
++                   "--query-limit", str(args.query_limit), "--db-limit", str(args.db_limit),
++                   "--batch-size", str(args.batch_size), "--tau", str(args.tau),
++                   "--fuzzy-ratio", str(args.fuzzy_ratio), "--fuzzy-seed", str(args.fuzzy_seed),
++                   "--output-dir", str(folder)]
++        if args.no_early_stop:
++            command.append("--no-early-stop")
++        print(f"\n=== Running Top-{top} ===", flush=True)
++        with (folder.parent / f"top{top}.log").open("w", encoding="utf-8") as log:
++            subprocess.run(command, check=True, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
++        result = json.loads((folder / f"ncvr_10k_top{top}_result.json").read_text(encoding="utf-8"))
++        row = {"top_k":top, "clusters":args.clusters,
++               "query_count":len(result["predictions"]),
++               **{k:result["metrics"].get(k) for k in ["precision", "recall", "f1", "accuracy"]},
++               **{k:result["confusion"].get(k) for k in ["tp","fp","fn","tn"]},
++               "offline_sec":result["timing_sec"]["offline"],
++               "online_total_sec":result["timing_sec"]["online_total"],
++               "round1_avg_sec":result["timing_sec"]["avg_round1"],
++               "round2_avg_sec":result["timing_sec"]["avg_round2"],
++               "comm_total_mb":result["communication_mb"]["total"],
++               "comm_sent_mb":result["communication_mb"]["sent"],
++               "comm_recv_mb":result["communication_mb"]["recv"]}
++        rows.append(row)
++        print(row, flush=True)
++    if rows:
++        with (out/"comparison.csv").open("w", newline="", encoding="utf-8-sig") as f:
++            writer=csv.DictWriter(f,fieldnames=list(rows[0])); writer.writeheader(); writer.writerows(rows)
++        (out/"comparison.json").write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding="utf-8")
++    print(f"Results written to: {out}")
++
++if __name__ == "__main__":
++    main()
+diff --git a/baseline_Integration/scripts/measure_topk_cluster_coverage.py b/baseline_Integration/scripts/measure_topk_cluster_coverage.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/scripts/measure_topk_cluster_coverage.py
+@@ -0,0 +1,64 @@
++"""Plaintext cluster coverage diagnostic, NOT a CKKS protocol evaluation."""
++from __future__ import annotations
++import argparse, csv, json, sys
++from pathlib import Path
++import numpy as np
++ROOT=Path(__file__).resolve().parent.parent
++if str(ROOT) not in sys.path: sys.path.insert(0,str(ROOT))
++from party_b.offline_prep import prepare_party_b_offline
++from minhash.encoder import batch_encode
++from preprocessing.normalizer import l2_normalize
++
++
++def main():
++    ap=argparse.ArgumentParser()
++    ap.add_argument('--clusters',type=int,default=50)
++    ap.add_argument('--fuzzy-ratio',type=float,default=.3)
++    ap.add_argument('--fuzzy-seed',type=int,default=42)
++    ap.add_argument('--db-limit',type=int,default=-1)
++    ap.add_argument('--query-limit',type=int,default=-1)
++    ap.add_argument('--output',default=str(ROOT/'artifacts'/'topk_cluster_coverage.json'))
++    a=ap.parse_args()
++    from data_pipeline import build_prepared_dataset, ncvr_10k_pipeline_config
++    prep=build_prepared_dataset(ncvr_10k_pipeline_config(
++        ROOT/'data', database_limit=a.db_limit, query_limit=a.query_limit,
++        fuzzy_ratio=a.fuzzy_ratio, fuzzy_seed=a.fuzzy_seed))
++    db=list(prep.database)
++    queries=list(prep.queries)
++    ids={row.record_id:i for i,row in enumerate(db)}
++    print(f'Preparing {len(db)} database names...', flush=True)
++    offline=prepare_party_b_offline([row.canonical_name for row in db],k_mode=a.clusters,random_state=42)
++    q_names=[row.canonical_name for row in queries]
++    sigs=batch_encode(q_names,200)
++    z=(l2_normalize(sigs)-offline.scaler_mean)/offline.scaler_scale
++    norms=np.linalg.norm(z,axis=1,keepdims=True)
++    zn=z/np.maximum(norms,1e-12)
++    scores=zn@offline.centroids.T
++    ranks=np.argsort(-scores,axis=1,kind='stable')
++    covers={1:0,2:0,3:0}; counts={1:[],2:[],3:[]}
++    labeled=0; positive=0; missing=0
++    for i,row in enumerate(queries):
++        if not row.label: continue
++        positive+=1
++        real=next((ids[rid] for rid in row.expected_record_ids if rid in ids),None)
++        if real is None:
++            missing+=1; continue
++        labeled+=1; target=offline.cluster_assignments[real]
++        for k in covers:
++            chosen=ranks[i,:min(k,offline.centroids.shape[0])]
++            if target in chosen: covers[k]+=1
++            counts[k].append(int(np.isin(offline.cluster_assignments,chosen).sum()))
++    result={'dataset':'NCVR 10K','method':'plaintext cluster assignment coverage (no CKKS)',
++            'database_size':len(db),'query_size':len(queries),'positive_queries':positive,
++            'positive_with_matching_ncid_in_database':labeled,'positive_without_ncid':missing,
++            'total_clusters':int(offline.centroids.shape[0]),
++            'fuzzy_ratio':a.fuzzy_ratio,'fuzzy_seed':a.fuzzy_seed,
++            'top_k':{str(k):{'true_record_cluster_hits':covers[k],
++                 'true_record_cluster_recall':covers[k]/labeled if labeled else None,
++                 'avg_candidate_records':float(np.mean(counts[k])) if counts[k] else None}
++                 for k in covers}}
++    output=Path(a.output); output.parent.mkdir(parents=True,exist_ok=True)
++    output.write_text(json.dumps(result,indent=2,ensure_ascii=False),encoding='utf-8')
++    print(json.dumps(result,indent=2,ensure_ascii=False))
++
++if __name__=='__main__': main()
+diff --git a/baseline_Integration/tests/test_topk_selection.py b/baseline_Integration/tests/test_topk_selection.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/tests/test_topk_selection.py
+@@ -0,0 +1,24 @@
++"""Top-K rank-selection invariants: each pass stays one-hot."""
++import numpy as np
++import pytest
++
++from party_a.online_querier import build_selector
++
++
++def test_ranked_top3_selectors_are_distinct_and_one_hot():
++    scores = np.array([0.3, 0.9, 0.7, 0.1, 0.8])
++    selected = [build_selector(scores, len(scores), rank=r) for r in range(3)]
++    assert [i for i, _ in selected] == [1, 4, 2]
++    for index, mask in selected:
++        assert mask.sum() == 1.0
++        assert mask[index] == 1.0
++
++
++def test_equal_score_ties_are_deterministic():
++    scores = np.array([0.9, 0.9, 0.4])
++    assert [build_selector(scores, 3, rank=i)[0] for i in range(3)] == [0, 1, 2]
++
++
++def test_invalid_rank():
++    with pytest.raises(ValueError):
++        build_selector(np.array([0.1, 0.2]), 2, rank=2)
+diff --git a/baseline_Integration/TOPK_EXPERIMENTS.md b/baseline_Integration/TOPK_EXPERIMENTS.md
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/TOPK_EXPERIMENTS.md
+@@ -0,0 +1,72 @@
++# NCVR 10K — Top-1 / Top-2 / Top-3 对照实验
++
++## 改动目标
++
++保持数据、MinHash、K-Means 总簇数、CKKS 参数和最终相似度阈值完全一致，**仅改变每条查询参与最终验证的簇数量**。
++
++- Top-1：最高分簇（原始对照）
++- Top-2：最高分的两个簇，分别独立执行原有 one-hot 加密匹配，结果做逻辑 OR
++- Top-3：最高分的三个簇，同样分别加密匹配，结果做逻辑 OR
++
++这里不能简单把 one-hot 改成 multi-hot：原实现会逐列把多个簇的记录向量**相加**后再计算余弦，得到的不是“任意簇中存在一条匹配记录”的结果。
++
++**实现策略：**第一轮加密查询与簇中心分数只做一次；从解密分数取排名前 K 的簇；第二阶段每个簇仍使用 one-hot 且分别验证；最终结果对各簇执行 OR。此版本优先验证正确性和对照公平性，暂未实现真正的多簇批量融合或随机投影。Top-2/3 的额外密文和计算开销计入总通信和时间。
++
++## 安装
++
++在项目根目录安装 requirements.txt 中的依赖，包括 TenSEAL。建议在已有 baseline 能运行的同一环境中执行。
++
++## 一次运行三组实验（建议）
++
++```bash
++python scripts/compare_topk_ncvr.py --query-limit 200 --clusters 50 --batch-size 0 --fuzzy-ratio 0.3 --fuzzy-seed 42 --no-early-stop
++```
++
++这会依次运行 Top-1、Top-2、Top-3；统一在 `artifacts/topk_ncvr_comparison/` 生成每组 JSON/CSV/PNG，以及总表 `comparison.csv`。日志写入 `top1.log`、`top2.log`、`top3.log`。
++
++完整 NCVR 10K 数据集上的 200 条查询示例（固定的 10K 库）可继续使用以上命令；`--query-limit -1` 表示读取全量查询。
++
++## 分别运行（可用于先测小样本）
++
++```bash
++python scripts/evaluate_ncvr_10k.py --top-k 2 --k 50 --query-limit 10 --output-dir artifacts/top2_smoke
++python scripts/evaluate_ncvr_10k.py --top-k 3 --k 50 --query-limit 10 --output-dir artifacts/top3_smoke
++```
++
++如果使用 V2 Tiled HE 批处理：
++
++```bash
++python scripts/compare_topk_ncvr.py --query-limit 200 --clusters 50 --batch-size 8 --no-early-stop
++```
++
++注意：这里 `--k 50` / `--clusters 50` 表示 K-Means 总簇数 M=50；`--top-k 2` 才是选取前两个候选簇。与 `--k-mode` 不是同一含义。
++
++## 结果如何解释
++
++汇总文件包含 Precision、Recall、F1、Accuracy、TP/FP/FN/TN、离线时间、在线时间、Round1/2 时间、总通信量及收发通信量。
++
++建议关注：
++1. **Top-2 相对 Top-1** 的正例检出是否提高，以及 FP 是否增加。
++2. **Top-3 相对 Top-2** 是否存在额外收益，还是主要增加计算与通信。
++3. 统计 `FN` 是否下降，和 `online_total_sec`、`comm_total_mb` 的增量。
++4. 多次用相同数据配置、不同环境重复验证。若更换随机种子，应明确这同时改变了姓名扰动。为了隔离 Top-K 的影响，首先固定所有其他参数。
++
++**注意**：这是最终查询级匹配对照，尚未另外统计“真实匹配所在簇是否被选中”的簇级召回。查询级最终 Recall 不等于簇级 Candidate Recall。完整端到端跑通前，不应声称 Top-2/3 已经改善性能。
++
++## 已验证与未验证
++
++- 已进行 Python 源码静态编译检查。
++- 当前生成环境缺少 `tenseal`，因此尚未实际运行 CKKS 加密端到端实验，**没有真实 Top-2/Top-3 实验指标**。
++- 请在能运行原 baseline 的环境中执行三组实验，并先用 10 条查询小样本进行 smoke test。
++
++## 明文簇覆盖率快速检查（非加密实验）
++
++当依赖安装完整后可执行：
++
++```bash
++python scripts/measure_topk_cluster_coverage.py --clusters 50 --fuzzy-ratio 0.3 --fuzzy-seed 42
++```
++
++该脚本基于实际数据库记录 ID 与 Query 的标注关系测量“正确记录所在簇是否进入候选 Top-K”，并统计候选池大小，不涉及 CKKS。它**不是** `evaluate_ncvr_10k.py` 的端到端 Accuracy / Recall，也不能代替安全协议跑分。
++
++本次工作环境仅能完成无扰动（原始姓名）候选簇覆盖的初步检查：10K 库、200 Queries、100 个有标注正例、M=50。Top-1/Top-2/Top-3 的目标记录所在簇覆盖均为 100/100，平均候选记录分别约为 202.16、402.77、602.50。因此在**这批无扰动查询**下，单纯扩簇没有增加覆盖，却会增加候选数。这并不代表 30% 单字符扰动条件下也相同。正式对照应按默认 fuzzy_ratio=0.3 运行 CKKS，并严格区分簇覆盖和最终匹配检出率。

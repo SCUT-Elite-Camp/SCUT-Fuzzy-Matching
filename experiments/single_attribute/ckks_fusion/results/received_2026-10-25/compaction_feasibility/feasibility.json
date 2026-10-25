@@ -1,0 +1,33 @@
+{
+  "layout": {
+    "slot_capacity": 4096,
+    "batch_size": 200,
+    "tile_width_T": 20,
+    "active_slots": 4000,
+    "note": "W <= T 是硬约束；W=32 在 m=200 时不可表示，需要 m<=128"
+  },
+  "baseline": {
+    "tiles": 25,
+    "ops_per_tile": 2550,
+    "ops_total": 63750,
+    "breakdown": "50x50 ct-pt (selector) + 50 ct-ct (dot)"
+  },
+  "compacted": [
+    {
+      "width": 6,
+      "feasible_within_slots": true,
+      "tile_width_limit": 20,
+      "compacted_tiles": 1,
+      "compacted_ops": 50,
+      "budget_ops": 63700,
+      "budget_rotations": 2123.3333333333335
+    }
+  ],
+  "compaction_cost_first_order": {
+    "assumption": "Benes 深度 × 特征数 × 源 tile 数，每次旋转按 rotation_cost 折算",
+    "benes_depth": 22,
+    "rotations": 27500,
+    "ops_equivalent": 825000.0
+  },
+  "verdict": "见打印输出"
+}

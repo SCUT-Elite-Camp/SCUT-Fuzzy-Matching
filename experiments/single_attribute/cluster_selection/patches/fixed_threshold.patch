@@ -1,0 +1,507 @@
+diff --git a/baseline_Integration/party_a/online_querier.py b/baseline_Integration/party_a/online_querier.py
+--- a/baseline_Integration/party_a/online_querier.py
++++ b/baseline_Integration/party_a/online_querier.py
+@@ -85,6 +85,32 @@
+     return selected_cluster, selector
+ 
+ 
++def threshold_cluster_indices(sim_scores: np.ndarray, threshold: float) -> np.ndarray:
++    """Select every centroid with score >= threshold; fall back to Top-1.
++
++    The threshold is in the ORIGINAL centroid-score space, not the
++    final CKKS record-level cosine threshold ``tau``.
++    """
++    scores = np.asarray(sim_scores, dtype=np.float64).reshape(-1)
++    if scores.size == 0 or not np.all(np.isfinite(scores)):
++        raise ValueError("centroid scores must be nonempty and finite")
++    if not np.isfinite(threshold):
++        raise ValueError("cluster threshold must be finite")
++    indices = np.flatnonzero(scores >= threshold)
++    if indices.size == 0:
++        indices = np.array([int(np.argmax(scores))], dtype=np.int64)
++    return indices[np.argsort(-scores[indices], kind="stable")].astype(np.int64)
++
++
++def build_one_hot_for_cluster(cluster_index: int, k: int) -> np.ndarray:
++    """One cluster per request: original column-wise HE contract remains valid."""
++    if not (0 <= cluster_index < k):
++        raise ValueError("cluster index out of bounds")
++    selector = np.zeros(k, dtype=np.float64)
++    selector[cluster_index] = 1.0
++    return selector
++
++
+ def encrypt_selector(
+     selector: np.ndarray,
+     secret_context: ts.Context,
+diff --git a/baseline_Integration/evaluation/benchmark.py b/baseline_Integration/evaluation/benchmark.py
+--- a/baseline_Integration/evaluation/benchmark.py
++++ b/baseline_Integration/evaluation/benchmark.py
+@@ -20,6 +20,10 @@
+     check_encrypted_scores_debug,
+     check_tiled_score_batch_debug,
+     choose_cluster_and_build_request,
++    threshold_cluster_indices,
++    build_one_hot_for_cluster,
++    decrypt_sim_scores,
++    encrypt_selector,
+     choose_clusters_and_build_tiled_request,
+ )
+ from party_b.offline_prep import prepare_party_b_offline
+@@ -34,6 +38,7 @@
+     serialize_tiled_second_round_request,
+ )
+ 
++from protocol.types import SecondRoundRequest
+ from .communication_cost import measure_ct_size
+ from .metrics import compute_confusion_counts, compute_metrics
+ 
+@@ -174,6 +179,23 @@
+     round1_times = []
+     round2_times = []
+     predictions = []
++    cluster_threshold = config.get("cluster_threshold", None)
++    if cluster_threshold is not None:
++        cluster_threshold = float(cluster_threshold)
++        if not np.isfinite(cluster_threshold):
++            raise ValueError("cluster_threshold must be finite")
++        if use_mock:
++            raise ValueError("threshold evaluation requires real data, not use_mock=True")
++        if he_batch_size > 0:
++            raise ValueError("threshold CKKS experiments currently require --batch-size 0; "
++                             "tiled selector is one-hot, so multi-hot cannot be used")
++    threshold_selected_k = []
++    threshold_candidate_count = []
++    threshold_selected_ids = []
++    cluster_size_counts = (
++        np.bincount(artifacts.cluster_assignments, minlength=centroids.shape[0])
++        if artifacts is not None else None
++    )
+ 
+     if he_batch_size > 0 and not use_mock:
+         # V2 query-by-candidate 2-D slot tiling 分块路径
+@@ -336,40 +358,58 @@
+                 total_recv_bytes += sum(
+                     measure_ct_size(score) for score in sim_scores_cipher
+                 )
+-                second_round_request, _ = choose_cluster_and_build_request(
+-                    sim_scores_cipher,
+-                    party_a_state,
+-                    k=centroids.shape[0],
+-                )
+-                total_sent_bytes += measure_ct_size(
+-                    second_round_request.encrypted_query_50
+-                )
+-                total_sent_bytes += measure_ct_size(
+-                    second_round_request.encrypted_selector
+-                )
+-                round1_time = time.perf_counter() - round1_start
+-                round1_times.append(round1_time)
+-
++                if cluster_threshold is None:
++                    selected_indices = np.array([int(np.argmax(
++                        decrypt_sim_scores(sim_scores_cipher, party_a_state.secret_context)
++                    ))])
++                else:
++                    decrypted_centroid_scores = decrypt_sim_scores(
++                        sim_scores_cipher, party_a_state.secret_context
++                    )
++                    selected_indices = threshold_cluster_indices(
++                        decrypted_centroid_scores, cluster_threshold
++                    )
++                threshold_selected_k.append(int(len(selected_indices)))
++                threshold_selected_ids.append(selected_indices.tolist())
++                threshold_candidate_count.append(int(np.sum(cluster_size_counts[selected_indices])))
++                r1_time = time.perf_counter() - round1_start
++                round1_times.append(r1_time)
++
++                # Important: never multi-hot the original column-wise HE selector.
++                # Each selected cluster gets its own one-hot HE evaluation; OR the results.
+                 round2_start = time.perf_counter()
+-                raw_scores = column_wise_matching(
+-                    cluster_matrix,
+-                    second_round_request,
+-                    first_round_request.public_context_bytes,
+-                    tau=config.get("tau", SIMILARITY_THRESHOLD),
+-                )
+-
+-                def counted_scores(score_iter=raw_scores):
+-                    nonlocal total_recv_bytes
+-                    for score in score_iter:
+-                        total_recv_bytes += measure_ct_size(score)
+-                        yield score
+-
+-                result, _ = check_encrypted_scores_debug(
+-                    counted_scores(),
+-                    party_a_state.secret_context,
+-                    early_stop=config.get("early_stop", True),
+-                )
+-                predictions.append(result.catch)
++                any_hit = False
++                for selected_idx in selected_indices:
++                    selector = build_one_hot_for_cluster(int(selected_idx), centroids.shape[0])
++                    encrypted_selector = encrypt_selector(selector, party_a_state.secret_context)
++                    second_round_request = SecondRoundRequest(
++                        encrypted_query_50=party_a_state.encrypted_query_50,
++                        encrypted_selector=encrypted_selector,
++                    )
++                    total_sent_bytes += measure_ct_size(second_round_request.encrypted_selector)
++                    total_sent_bytes += measure_ct_size(second_round_request.encrypted_query_50)
++                    raw_scores = column_wise_matching(
++                        cluster_matrix,
++                        second_round_request,
++                        first_round_request.public_context_bytes,
++                        tau=config.get("tau", SIMILARITY_THRESHOLD),
++                    )
++
++                    def counted_scores(score_iter=raw_scores):
++                        nonlocal total_recv_bytes
++                        for score in score_iter:
++                            total_recv_bytes += measure_ct_size(score)
++                            yield score
++
++                    result, _ = check_encrypted_scores_debug(
++                        counted_scores(),
++                        party_a_state.secret_context,
++                        early_stop=config.get("early_stop", True),
++                    )
++                    any_hit |= bool(result.catch)
++                    if any_hit and config.get("early_stop", True):
++                        break
++                predictions.append(any_hit)
+                 round2_time = time.perf_counter() - round2_start
+                 round2_times.append(round2_time)
+ 
+@@ -420,6 +460,17 @@
+         },
+         "memory_peak_mb": memory_peak,
+     }
++    if threshold_selected_k:
++        result["cluster_selection"] = {
++            "threshold": cluster_threshold,
++            "fallback": "top1_when_empty",
++            "selected_k": threshold_selected_k,
++            "selected_clusters": threshold_selected_ids,
++            "candidate_counts": threshold_candidate_count,
++            "mean_k": float(np.mean(threshold_selected_k)),
++            "mean_candidate_count": float(np.mean(threshold_candidate_count)),
++            "max_k": int(np.max(threshold_selected_k)),
++        }
+     return result
+ 
+ 
+diff --git a/baseline_Integration/scripts/evaluate_cluster_threshold.py b/baseline_Integration/scripts/evaluate_cluster_threshold.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/scripts/evaluate_cluster_threshold.py
+@@ -0,0 +1,180 @@
++"""Fixed centroid-score threshold sweep; no projection.
++
++Two modes:
++  plain: real MinHash/KMeans and true target-cluster coverage, no TenSEAL required.
++  ckks: real HE benchmark, one-hot per selected cluster, no projection.
++"""
++from __future__ import annotations
++
++import argparse
++import csv
++import json
++import sys
++from pathlib import Path
++
++import numpy as np
++
++ROOT = Path(__file__).resolve().parents[1]
++if str(ROOT) not in sys.path:
++    sys.path.insert(0, str(ROOT))
++
++from minhash.encoder import batch_encode
++from party_b.offline_prep import prepare_party_b_offline
++from preprocessing.normalizer import l2_normalize
++from config.params import NUM_PERMUTATIONS_CLUSTER
++
++# These are project-specific *centroid dot-product scores*, not record-level tau.
++DEFAULT_THRESHOLDS = [-5, -2, 0, 2, 5]
++
++
++def threshold_select(scores: np.ndarray, threshold: float) -> np.ndarray:
++    if not np.isfinite(threshold):
++        raise ValueError("threshold must be finite")
++    scores = np.asarray(scores, dtype=float)
++    if scores.ndim != 1 or not scores.size or not np.all(np.isfinite(scores)):
++        raise ValueError("scores must be a nonempty finite 1-D array")
++    chosen = np.flatnonzero(scores >= threshold)
++    if not chosen.size:
++        chosen = np.array([int(np.argmax(scores))])
++    return chosen[np.argsort(-scores[chosen], kind="stable")]
++
++
++def read_ncvr(data_path: Path, db_limit: int, query_limit: int):
++    dbfile = data_path / "ncvr_10k_database.csv"
++    qfile = data_path / "ncvr_10k_queries.csv"
++    with dbfile.open(encoding="utf-8-sig", newline="") as f:
++        db_rows = list(csv.DictReader(f))
++    with qfile.open(encoding="utf-8-sig", newline="") as f:
++        q_rows = list(csv.DictReader(f))
++    if db_limit > 0: db_rows = db_rows[:db_limit]
++    if query_limit > 0: q_rows = q_rows[:query_limit]
++    return db_rows, q_rows
++
++
++def fuzz_query(name: str, rng: np.random.Generator) -> str:
++    positions = [i for i, ch in enumerate(name) if ch.isascii() and ch.isalpha()]
++    if not positions: return name
++    pos = int(rng.choice(positions))
++    old = name[pos].upper()
++    replacement = chr(ord('A') + (ord(old)-ord('A')+int(rng.integers(1,26)))%26)
++    return name[:pos]+replacement+name[pos+1:]
++
++
++def plain_sweep(args):
++    db_rows, q_rows = read_ncvr(Path(args.data_path), args.db_limit, args.query_limit)
++    names_b = [r['full_name'] for r in db_rows]
++    print(f'Offline K-Means: database={len(names_b)}, clusters={args.clusters}')
++    artifacts = prepare_party_b_offline(names_b, k_mode=args.clusters)
++    rng = np.random.default_rng(args.fuzzy_seed)
++    names_q = []
++    for row in q_rows:
++        name = row['query_name']
++        if str(row['label']).lower() in ('true','1') and rng.random()<args.fuzzy_ratio:
++            name = fuzz_query(name, rng)
++        names_q.append(name)
++    raw = batch_encode(names_q, NUM_PERMUTATIONS_CLUSTER)
++    q_norm = l2_normalize(raw)
++    q_std = (q_norm - artifacts.scaler_mean) / artifacts.scaler_scale
++    # This matches compare_to_centroids, which evaluates DOT PRODUCT, not cosine(query_std, centroid).
++    scores = q_std @ artifacts.centroids.T
++    sizes = np.bincount(artifacts.cluster_assignments, minlength=len(artifacts.centroids))
++    known_ids = {r['ncid']: i for i,r in enumerate(db_rows)}
++    outdir = Path(args.output_dir); outdir.mkdir(parents=True,exist_ok=True)
++    details, summary = [], []
++    for eta in args.thresholds:
++        selected = [threshold_select(row, eta) for row in scores]
++        counts = [int(sizes[idx].sum()) for idx in selected]
++        ks = [len(idx) for idx in selected]
++        target_valid, target_hit = 0,0
++        for i,row in enumerate(q_rows):
++            ispos = str(row['label']).lower() in ('true','1')
++            target_idx = known_ids.get(row['query_ncid']) if ispos else None
++            covered = None
++            if target_idx is not None:
++                target_valid+=1
++                covered=bool(artifacts.cluster_assignments[target_idx] in selected[i])
++                target_hit+=int(covered)
++            details.append({
++                'threshold':eta,'query_index':i,'query_ncid':row['query_ncid'],
++                'label':row['label'],'query_name':names_q[i],
++                'score_max':float(np.max(scores[i])),
++                'score_min':float(np.min(scores[i])),
++                'selected_k':ks[i], 'selected_clusters':';'.join(map(str,selected[i])),
++                'candidate_records':counts[i], 'known_target_in_candidates':covered,
++            })
++        record={
++            'threshold':float(eta),'num_queries':len(q_rows),'num_clusters':len(artifacts.centroids),
++            'mean_k':float(np.mean(ks)),'median_k':float(np.median(ks)),
++            'max_k':int(max(ks)),'mean_candidates':float(np.mean(counts)),
++            'p95_candidates':float(np.percentile(counts,95)),
++            'target_positives':target_valid,'target_hits':target_hit,
++            'target_coverage':target_hit/target_valid if target_valid else None,
++            'fallback_top1_queries':int(np.sum(np.max(scores,axis=1)<eta)),
++            'min_centroid_score':float(np.min(scores)),
++            'median_max_centroid_score':float(np.median(np.max(scores,axis=1))),
++            'max_centroid_score':float(np.max(scores)),
++        }
++        summary.append(record)
++        print(f"eta={eta:>8g} | avg K={record['mean_k']:.2f} | avg records={record['mean_candidates']:.1f} | target cover={record['target_coverage']}")
++    def write_csv(path,rows):
++        with path.open('w',encoding='utf-8-sig',newline='') as f:
++            wr=csv.DictWriter(f,fieldnames=list(rows[0])); wr.writeheader(); wr.writerows(rows)
++    write_csv(outdir/'summary.csv',summary)
++    write_csv(outdir/'per_query.csv',details)
++    (outdir/'summary.json').write_text(json.dumps({'mode':'plain','thresholds':args.thresholds,
++        'fuzzy_ratio':args.fuzzy_ratio,'fuzzy_note':'plain mode uses a reproducible custom single-letter substitution; official pipeline may differ',
++        'summary':summary},ensure_ascii=False,indent=2),encoding='utf-8')
++    print('Outputs:',outdir)
++
++
++def ckks_sweep(args):
++    try:
++        from evaluation.benchmark import benchmark
++        from evaluation.reporting import save_evaluation_report
++    except ModuleNotFoundError as exc:
++        raise SystemExit(f'CKKS mode needs full requirements installed: {exc}') from exc
++    outdir=Path(args.output_dir);outdir.mkdir(parents=True,exist_ok=True)
++    results=[]
++    for eta in args.thresholds:
++        config={'dataset':'ncvr_10k','data_path':str(Path(args.data_path).parent),
++            'el_cluster':200,'el_match':50,'k':args.clusters,'k_mode':args.clusters,
++            'tau':args.tau,'fuzzy_ratio':args.fuzzy_ratio,'fuzzy_seed':args.fuzzy_seed,
++            'query_limit':args.query_limit,'db_limit':args.db_limit,
++            'he_batch_size':0,'use_mock':False,'early_stop':not args.no_early_stop,
++            'reuse_context':True,'cluster_threshold':float(eta)}
++        print('CKKS running threshold=',eta,flush=True)
++        result=benchmark(config)
++        suffix=str(eta).replace('-','neg').replace('.','p')
++        save_evaluation_report(result,outdir/f'eta_{suffix}',prefix='ncvr_10k')
++        results.append({'threshold':eta,'metrics':result['metrics'],
++                        'confusion':result.get('confusion',{}),
++                        'timing_sec':result['timing_sec'],
++                        'communication_mb':result['communication_mb'],
++                        'mean_k':result.get('cluster_selection',{}).get('mean_k'),
++                        'mean_candidates':result.get('cluster_selection',{}).get('mean_candidate_count')})
++    (outdir/'ckks_comparison.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
++    print('Outputs:',outdir)
++
++
++def main():
++    parser=argparse.ArgumentParser(description='Fixed threshold cluster selection (without projection).')
++    parser.add_argument('--mode', choices=['plain','ckks'],default='plain')
++    parser.add_argument('--data-path',default=str(ROOT/'data'/'ncvr_10k'))
++    parser.add_argument('--output-dir',default=str(ROOT/'artifacts'/'fixed_threshold'))
++    parser.add_argument('--thresholds',type=float,nargs='+',default=DEFAULT_THRESHOLDS)
++    parser.add_argument('--clusters',type=int,default=50)
++    parser.add_argument('--query-limit',type=int,default=200)
++    parser.add_argument('--db-limit',type=int,default=-1)
++    parser.add_argument('--fuzzy-ratio',type=float,default=0.3)
++    parser.add_argument('--fuzzy-seed',type=int,default=42)
++    parser.add_argument('--tau',type=float,default=0.9)
++    parser.add_argument('--no-early-stop',action='store_true')
++    args=parser.parse_args()
++    if not args.thresholds or not all(np.isfinite(t) for t in args.thresholds):
++        parser.error('thresholds must be finite values')
++    if not 0<=args.fuzzy_ratio<=1:parser.error('fuzzy-ratio must lie in [0,1]')
++    if args.clusters<=0:parser.error('clusters must be positive')
++    if args.mode=='plain':plain_sweep(args)
++    else:ckks_sweep(args)
++
++if __name__=='__main__':main()
+diff --git a/baseline_Integration/tests/test_fixed_threshold.py b/baseline_Integration/tests/test_fixed_threshold.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/tests/test_fixed_threshold.py
+@@ -0,0 +1,22 @@
++import unittest
++import numpy as np
++
++# Avoid importing the TenSEAL-dependent online_querier in a dependency-light test.
++from scripts.evaluate_cluster_threshold import threshold_select
++
++
++class FixedThresholdTest(unittest.TestCase):
++    def test_equal_threshold_included(self):
++        np.testing.assert_array_equal(threshold_select([0.2, 0.8, 0.8, -1], 0.8), [1, 2])
++
++    def test_top1_fallback(self):
++        np.testing.assert_array_equal(threshold_select([0.2, 0.8, 0.1], 1.0), [1])
++
++    def test_all_included(self):
++        self.assertEqual(len(threshold_select([0.2, 0.8, 0.1], -10)), 3)
++
++    def test_nan_rejected(self):
++        with self.assertRaises(ValueError):threshold_select([0.1, float('nan')],0)
++
++
++if __name__ == '__main__':unittest.main()
+diff --git a/baseline_Integration/FIXED_THRESHOLD_EXPERIMENT.md b/baseline_Integration/FIXED_THRESHOLD_EXPERIMENT.md
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/FIXED_THRESHOLD_EXPERIMENT.md
+@@ -0,0 +1,98 @@
++# 固定阈值候选簇选择实验（不加入随机投影）
++
++## 1. 设计与公式
++
++原始 baseline 使用 Query 对所有 K-Means 中心的最高分（Top-1）。本版本在中心得分空间设置固定阈值 **η**：
++
++\[
++ a_j(q)=z(q)^\top\mu_j,\qquad
++ \mathcal S_\eta(q)=\{j\mid a_j(q)\ge\eta\}.
++\]
++
++如果没有中心满足 η，则回退到最高分中心 Top-1。单查询最终选择的簇数是 \(K(q)=|\mathcal S_\eta(q)|\)，可随 Query 变化。
++
++**非常重要：** 原 `compare_to_centroids` 实际是标准化 200 维 Query 特征与单位中心的**点积**，不是最终 50 维姓名向量余弦。其得分未必落在 [-1,1]，因此 η 不等于最终姓名匹配阈值 τ=0.9。建议首先探索 η 对选簇数量和正例簇覆盖率的影响。
++
++## 2. 修改文件
++
++| 文件 | 改动 |
++|---|---|
++| `party_a/online_querier.py` | 新增 `threshold_cluster_indices`：选出所有得分大于等于 η 的簇，按分数降序排列；若为空则回退 Top-1。新增 `build_one_hot_for_cluster` 生成单簇 one-hot。原 Top-1 接口保留。 |
++| `evaluation/benchmark.py` | 在真实单查询 CKKS 路径接受 `cluster_threshold` 配置；解密一次中心得分，得到多个簇；逐簇使用原来的 **one-hot** 安全列式匹配，再 OR 结果。新增平均 K、候选数量、逐查询选簇统计。明确禁用此实验的 tiled/batch 和 mock 路径，以免误把原 one-hot 当成 multi-hot。 |
++| `scripts/evaluate_cluster_threshold.py` | 新增固定阈值扫描工具。支持纯明文候选覆盖实验和真实 CKKS 对照实验，支持预设阈值或命令行自定义阈值，写出 CSV / JSON 报告。 |
++| `tests/test_fixed_threshold.py` | 新增阈值边界、空集回退、非法数值测试（仅用 numpy）。 |
++
++## 3. 环境准备
++
++在解压后的项目根目录执行：
++
++```bash
++python -m pip install -r requirements.txt
++```
++
++建议先运行 `--mode plain` 来观察 η 是否合理；不需要 TenSEAL，但需要 NumPy 和 sklearn。`--mode ckks` 需要完整项目依赖，尤其 TenSEAL 与 anyascii。
++
++## 4. 方式 A：使用脚本预设阈值批量实验
++
++编辑 `scripts/evaluate_cluster_threshold.py` 的 `DEFAULT_THRESHOLDS`，默认：
++
++```python
++DEFAULT_THRESHOLDS = [-5, -2, 0, 2, 5]
++```
++
++然后：
++
++```bash
++python scripts/evaluate_cluster_threshold.py --mode plain --clusters 50 --query-limit 200 --fuzzy-ratio 0.3
++```
++
++运行后将生成 `artifacts/fixed_threshold/summary.csv`、`per_query.csv` 和 `summary.json`。
++
++## 5. 方式 B：在运行时指定阈值
++
++**只验证选簇算法（推荐先执行）：**
++
++```bash
++python scripts/evaluate_cluster_threshold.py --mode plain --thresholds -5 -2 0 2 5 --clusters 50 --query-limit 200 --fuzzy-ratio 0.3 --fuzzy-seed 42
++```
++
++**单阈值实验：**
++
++```bash
++python scripts/evaluate_cluster_threshold.py --mode plain --thresholds 2 --clusters 50 --query-limit 200
++```
++
++**正式 CKKS 实验（计算开销明显更大）：**
++
++```bash
++python scripts/evaluate_cluster_threshold.py --mode ckks --thresholds 0 2 5 --clusters 50 --query-limit 200 --fuzzy-ratio 0.3 --fuzzy-seed 42 --no-early-stop
++```
++
++先以 10 条 Query 冒烟测试：
++
++```bash
++python scripts/evaluate_cluster_threshold.py --mode ckks --thresholds 2 --clusters 50 --query-limit 10
++```
++
++`--mode ckks` 逐阈值调用 `benchmark`；为避免错误混合多个簇，**每选中的簇都单独执行原 one-hot CKKS 匹配**，最后将各簇匹配位 OR。此版本故意暂不支持 tiled/batch 多查询 CKKS 优化路径，避免误报批处理性能。阈值越低，可能选中越多簇，运算成本越高。
++
++CKKS 报告保存在 `artifacts/fixed_threshold/eta_*/`，总体对比 JSON 为 `artifacts/fixed_threshold/ckks_comparison.json`。
++
++## 6. 输出指标及其边界
++
++`plain`：每条 Query 的选中簇编号、选簇个数 K、候选记录数、真实 `query_ncid` 对应数据库记录是否落在候选簇中；汇总平均 K、95% 分位候选数、目标簇覆盖率等。`plain` 使用脚本内可复现的单字符替换，**并不保证与项目官方数据管线的扰动样本逐条一致**。这个模式只用于初步选择 η 的范围，而不是最终加密准确率结果。
++
++`ckks`：原项目数据管线，得到 TP/FP/FN/TN、Precision/Recall/F1、通信 MB、时延及平均选簇数量。此模式执行真实加密与各簇匹配，不包含 Projection。
++
++对照不同 η 时应固定数据库大小、簇数、随机种子、Query 数量、最终阈值 τ，并报告空集回退次数。比较候选覆盖和最终匹配准确率应分别进行；簇覆盖更高不保证最终 CKKS Recall 一定提高。
++
++## 7. 已验证与未验证
++
++已完成：Python 语法编译、明文端到端冒烟运行（500 条数据库、20 条 Query、10 簇、四个阈值）、阈值测试。未完成：本环境缺少 TenSEAL，**无法在此提供可信的 CKKS 实测通信/耗时或 F1**；正式加密评测需在具备完整依赖的机器上运行。
++
++## 8. 注意事项
++
++- **不使用加密 multi-hot**：原按列选择为逐列求和，多簇 multi-hot 会把不同记录相加，改变最终姓名匹配含义。
++- **不声称泄漏范围完全不变**：当前逐簇调用可隐藏单次簇号，但次数、长度和时序可能泄漏 K；这是算法对照实验实现，不是已经完成安全证明的优化协议。
++- **无随机投影**：本阶段仅研究阈值与簇覆盖、候选成本的关系。
++- **阈值越高通常越少簇**；超过最高分时使用 Top-1 回退，不能理解为“没有匹配”。

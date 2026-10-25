@@ -1,0 +1,32 @@
+{
+  "cut": 250,
+  "repeats": 2,
+  "median": {
+    "A": {
+      "tiles": 25.0,
+      "seconds": 141.64133554549335
+    },
+    "B": {
+      "tiles": 14.0,
+      "seconds": 60.64709523899364,
+      "tier1_s": 53.16105570349464,
+      "tier2_s": 7.486039535499003,
+      "tier2_queries": 16.0
+    },
+    "C": {
+      "tiles": 14.0,
+      "seconds": 58.56302021050942,
+      "tier1_s": 51.889275462504884,
+      "tier2_s": 6.6737447480045375,
+      "tier2_queries": 16.0
+    }
+  },
+  "sign_mismatch": {
+    "B": 0,
+    "C": 0
+  },
+  "mult_reduction_compaction": 1.7857142857142858,
+  "v2_time_gain": 1.0355868775379558,
+  "total_mult_reduction": 1.7857142857142858,
+  "total_time_gain": 2.4186139143157632
+}

@@ -1,0 +1,11 @@
+项目,A 基线,B 公开索引,C 固定形状,D PSI 融合,证据等级
+查询身份/特征,B 不可见,B 不可见,B 不可见,B 不可见,code_audit: A 侧加密后才发送
+簇号,B 不可见,间接可见（由块集合反推）,B 不可见,B 不可见,code_audit: 基线用加密 one-hot selector；公开块索引等价于暴露簇
+候选记录索引,B 不可见,B 可见,B 不可见,仅份额，两方都不见明文,code_audit: 基线只返回掩码后分数
+块编号,不适用,B 可见,B 不可见,设计上不可见，未实现,measured: fusion/run_fusion_plan.py 的 public_index 模式
+候选数量,不泄漏（固定形状）,B 可见,B 不可见,设计上不可见,design: fixed_count 仅抹平上限，未证实可区分性
+实际访问数量,恒为 max_size 列,B 可见,恒为 max_size 列,未实现,code_audit: 基线固定 25 tiles
+数据库记录身份,B 不可见,可见（块内含记录）,B 不可见,B 不可见,code_audit: 块是公开划分，索引即记录集合
+中间密文,B 只见密文，A 有私钥,同基线,同基线,需重加密，未实现,code_audit: 公开 context 不含私钥
+解密结果,A 得到逐候选掩码分数,同基线,同基线,设计上只出 keep 位，未实现,code_audit: check_tiled_score_batch 解全部 tile
+最终输出,catch: bool（API 层）,catch: bool,catch: bool,未实现,code_audit: protocol/types.py 的 MatchResult

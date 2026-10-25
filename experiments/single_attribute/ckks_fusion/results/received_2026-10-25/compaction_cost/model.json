@@ -1,0 +1,123 @@
+{
+  "config": {
+    "batch_size": 200,
+    "clusters": 50,
+    "max_size": 483,
+    "match_dim": 50,
+    "width": 6,
+    "stages": 22,
+    "c_pt": 1.0,
+    "c_ct": 2.0,
+    "c_ct_add": 0.1,
+    "c_rescale": 1.0,
+    "c_relin": 2.0,
+    "c_rot": 5.0,
+    "c_cmp": 3.0,
+    "cost_model": "primitive",
+    "out": "artifacts/compaction_cost/model.json"
+  },
+  "unit_costs": {
+    "ct_pt_mul": 1.0,
+    "ct_pt_add": 1.0,
+    "ct_ct_mul": 2.0,
+    "ct_ct_add": 0.1,
+    "rescale": 1.0,
+    "relin": 2.0,
+    "rotate": 5.0,
+    "compare": 3.0
+  },
+  "cost_model": "primitive",
+  "L1_capacity": {
+    "T": 20,
+    "W": 6,
+    "W_max": 20,
+    "W_feasible": true,
+    "base_tiles": 25,
+    "compact_tiles": 1,
+    "note": "W <= T=20 是槽位硬约束；W=6 是每条查询的候选槽位，不等于 tile 数"
+  },
+  "L1b_depth": {
+    "poly_modulus_degree": 8192,
+    "chain": [
+      60,
+      40,
+      40,
+      60
+    ],
+    "total_bits": 200,
+    "secure_limit_bits": 218,
+    "headroom_bits": 18,
+    "available_depth": 2,
+    "matching_depth": 2,
+    "compaction_depth_min": 1,
+    "depth_fits": false,
+    "can_add_prime_at_current_degree": false,
+    "note": "compaction 输出不能解密（会向查询方泄漏库内候选）也不能重加密（无 key），所以它与匹配阶段共享同一份深度预算。"
+  },
+  "L2_ideal_gain": {
+    "baseline_ops": {
+      "ct_pt_mul": 62500,
+      "ct_pt_add": 25,
+      "ct_ct_mul": 1250,
+      "ct_ct_add": 62475,
+      "rescale": 63750,
+      "relin": 1250,
+      "rotate": 0,
+      "compare": 0
+    },
+    "baseline_cost": 137522.5,
+    "matched_ops": {
+      "ct_pt_mul": 50,
+      "ct_pt_add": 1,
+      "ct_ct_mul": 0,
+      "ct_ct_add": 0,
+      "rescale": 50,
+      "relin": 0,
+      "rotate": 0,
+      "compare": 0
+    },
+    "matched_cost": 101.0,
+    "budget_cost": 137421.5
+  },
+  "L2_label": "idealized matching-cost budget（未证明可兑现）",
+  "L3_secure_compaction": {
+    "features": 50,
+    "source_ciphertexts_per_feature": 24,
+    "stages": 22,
+    "routing_rotations": 26400,
+    "logical_predicates": 96600,
+    "packed_selection_ops_per_feature": 24,
+    "slot_normalized_compares": 23.583984375,
+    "cost": 132070.751953125,
+    "family": "置换网络（Benes 类）；GC 方案不在本模型内"
+  },
+  "break_even": {
+    "condition": "L3 < L2.budget",
+    "holds": true,
+    "ratio": 0.9610632393994025
+  },
+  "ledger": {
+    "per_tile": {
+      "ct_pt_mul": 2500,
+      "ct_pt_add": 1,
+      "ct_ct_mul": 50,
+      "ct_ct_add": 2499,
+      "rescale": 2550,
+      "relin": 50,
+      "rotate": 0,
+      "compare": 0
+    },
+    "tiles": 25,
+    "total": {
+      "ct_pt_mul": 62500,
+      "ct_pt_add": 25,
+      "ct_ct_mul": 1250,
+      "ct_ct_add": 62475,
+      "rescale": 63750,
+      "relin": 1250,
+      "rotate": 0,
+      "compare": 0
+    },
+    "source": "party_b/online_responder.py:381-406 (逐 tile 的 f/i 双循环)"
+  }
+}

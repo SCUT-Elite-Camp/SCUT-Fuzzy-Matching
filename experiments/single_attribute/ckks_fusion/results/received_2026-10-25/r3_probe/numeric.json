@@ -1,0 +1,28 @@
+{
+  "config": {
+    "poly_modulus_degree": 8192,
+    "coeff_mod_bit_sizes": [
+      60,
+      40,
+      40,
+      60
+    ],
+    "scale_bits": 40,
+    "m": 200,
+    "max_size": 483,
+    "tile_width_T": 20,
+    "slots_per_tile": 4000,
+    "tiles": 25
+  },
+  "formula": "Enc(z) = Enc(a) + Enc(b) - 2*Enc(a)*Enc(b)",
+  "result": {
+    "bits_tested": 96600,
+    "bit_errors": 0,
+    "bit_accuracy": 1.0,
+    "max_abs_error": 1.6314307369305642e-06,
+    "median_tile_seconds": 0.008753628004342318,
+    "total_seconds": 0.2238240789884003,
+    "ct_ct_mults": 25
+  },
+  "note": "仅重构 PSI 碰撞位；电路里的 valid 与 ham_ok 两道门没有被重构。"
+}

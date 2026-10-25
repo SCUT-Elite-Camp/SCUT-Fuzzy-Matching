@@ -1,0 +1,135 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "numpy": "2.5.4",
+    "tenseal": "0.3.18",
+    "coeff_mod_bit_sizes": [
+      60,
+      40,
+      40,
+      60
+    ],
+    "poly_modulus_degree": 8192,
+    "scale_bits": 40
+  },
+  "config": {
+    "columns": [
+      20,
+      100,
+      200,
+      483
+    ],
+    "clusters": 50,
+    "batch_size": 200,
+    "repeats": 5,
+    "warmup": 1,
+    "rotate_order": true,
+    "measured_orders": [
+      [
+        20,
+        100,
+        200,
+        483
+      ],
+      [
+        100,
+        200,
+        483,
+        20
+      ],
+      [
+        200,
+        483,
+        20,
+        100
+      ],
+      [
+        483,
+        20,
+        100,
+        200
+      ],
+      [
+        20,
+        100,
+        200,
+        483
+      ]
+    ]
+  },
+  "definitions": {
+    "round2_b_kernel": "B 侧 kernel + tile 序列化（serialize_output=True）",
+    "online_total": "context 创建之前 → round2 解密结束；含 setup",
+    "online_ex_setup": "online_total - context_and_public_key；保留 query_encrypt、两轮序列化、两轮 kernel、两轮解密，扣除 context/keygen/公开 context 序列化"
+  },
+  "caveats": [
+    "round2_b_kernel 含 tile 序列化（serialize_output=True）",
+    "online_total 含 context 与 keygen；因此另报 online_ex_setup",
+    "拟合是有限点经验模型，不是运行规律"
+  ],
+  "fit_kernel": {
+    "applicable": true,
+    "a_intercept": 0.35259648606794525,
+    "b_slope_per_tile": 3.226153379847219,
+    "r_squared": 0.9999844842914268,
+    "residuals": [
+      -0.1340891569157283,
+      0.032005223701194296,
+      0.1718690194636423,
+      -0.06978508624904123
+    ],
+    "intercept_negative": false,
+    "note": "有限测量点的经验拟合；R² 不能单独作为线性关系成立的证据"
+  },
+  "fit_online": {
+    "applicable": true,
+    "a_intercept": 2.5333386277277428,
+    "b_slope_per_tile": 3.223797072050882,
+    "r_squared": 0.9999834134990586,
+    "residuals": [
+      -0.13398209777998638,
+      0.02402190201283716,
+      0.18234215376430285,
+      -0.07238195799705238
+    ],
+    "intercept_negative": false,
+    "note": "有限测量点的经验拟合；R² 不能单独作为线性关系成立的证据"
+  },
+  "order_effect": {
+    "pearson_sequence_vs_online": 0.19000531951149083,
+    "median_by_position": {
+      "0": 18.0683534589989,
+      "1": 18.81969797799684,
+      "2": 35.259815489000175,
+      "3": 34.95365150200087
+    },
+    "note": "r 接近 0 说明未见明显顺序漂移；样本少时该值本身不稳定，只作提示"
+  },
+  "decision": {
+    "design": "paired",
+    "delta_seconds": 47.652950575797874,
+    "relative": 0.5737456346778241,
+    "se": 0.5042451302210418,
+    "t_crit": 2.776,
+    "threshold": 1.3997844814936118,
+    "n_pairs": 5,
+    "kernel_fit": {
+      "applicable": true,
+      "a_intercept": 0.35259648606794525,
+      "b_slope_per_tile": 3.226153379847219,
+      "r_squared": 0.9999844842914268,
+      "residuals": [
+        -0.1340891569157283,
+        0.032005223701194296,
+        0.1718690194636423,
+        -0.06978508624904123
+      ],
+      "intercept_negative": false,
+      "note": "有限测量点的经验拟合；R² 不能单独作为线性关系成立的证据"
+    },
+    "thresholds": "CoV<=5%, n>=3, |delta|>t*SE, relative>5% 均为预设工程阈值",
+    "verdict": "支持继续研究",
+    "reason": "配对差 47.653s（57.4%），超过 t(4)×SE = 1.400s"
+  }
+}

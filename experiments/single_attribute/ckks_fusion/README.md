@@ -1,5 +1,13 @@
 # CKKS 同态隐私匹配
 
+> 目录整理（2026-10-25）：原 `fused-secure-filter/10_25/` 已迁至本目录。
+> 这是**单姓名 CKKS 研究快照**，不是 C++ EMP 代码，也不替换根目录的
+> `baseline_Integration/`。以下命令均须先在仓库根目录执行
+> `cd experiments/single_attribute/ckks_fusion`。
+> 交付中的 31 份结果已保存在 `results/received_2026-10-25/`；新的运行仍写入
+> 被忽略的 `artifacts/`。`verify_claims.py` 默认读取前者，也可用
+> `--reference-dir` 指定其他归档。下文性能数字是原交付的记录，不是此次整理重新测得的加速比。
+
 两轮 CKKS 同态匹配协议的可运行实现。A 持查询与私钥，B 持库明文，双方不同任何一方
 暴露明文查询、明文库或连续相似度分数。
 
