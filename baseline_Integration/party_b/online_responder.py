@@ -24,7 +24,6 @@ from ckks.tiling import (
     pack_centroid_tile,
 )
 from config.params import (
-    NUM_PERMUTATIONS_CLUSTER,
     NUM_PERMUTATIONS_MATCH,
     RANDOM_MASK_MAX,
     RANDOM_MASK_MIN,
@@ -69,19 +68,17 @@ def compare_to_centroids(
     matrix = np.asarray(centroids, dtype=np.float64)
     if matrix.ndim != 2:
         raise ValueError(f"centroids must be 2-D, got shape {matrix.shape}")
-    if matrix.shape[1] != NUM_PERMUTATIONS_CLUSTER:
-        raise ValueError(
-            f"centroids second dimension must be {NUM_PERMUTATIONS_CLUSTER}, "
-            f"got {matrix.shape[1]}"
-        )
+    feature_count = matrix.shape[1]
+    if feature_count <= 0:
+        raise ValueError("centroids must contain at least one feature")
     context = _load_public_context(first_round_request.public_context_bytes)
     encrypted_query_200 = _load_ciphertext(
         first_round_request.encrypted_query_200, context
     )
-    if encrypted_query_200.size() != NUM_PERMUTATIONS_CLUSTER:
+    if encrypted_query_200.size() != feature_count:
         raise ValueError(
-            f"encrypted_query_200 length must be {NUM_PERMUTATIONS_CLUSTER}, "
-            f"got {encrypted_query_200.size()}"
+            f"encrypted query length {encrypted_query_200.size()} does not match "
+            f"centroid feature count {feature_count}"
         )
     encrypted_scores = [dot_ct_pt(encrypted_query_200, centroid) for centroid in matrix]
     if serialize_output:
@@ -144,7 +141,7 @@ def compare_batch_to_centroids(
     """Step 3 (Batch): compute encrypted query-batch-to-centroid scores on Party B.
     Args:
         request: BatchFirstRoundRequest payload from Party A.
-        centroids: Centroids matrix of shape (k, 200).
+        centroids: Centroids matrix of shape (k, cluster_feature_dim).
         serialize_output: Whether to return serialized bytes list.
     Returns:
         list[EncryptedScalar]: k encrypted score vectors (or bytes), each of size m.
@@ -152,11 +149,9 @@ def compare_batch_to_centroids(
     matrix = np.asarray(centroids, dtype=np.float64)
     if matrix.ndim != 2:
         raise ValueError(f"centroids must be 2-D, got shape {matrix.shape}")
-    if matrix.shape[1] != NUM_PERMUTATIONS_CLUSTER:
-        raise ValueError(
-            f"centroids second dimension must be {NUM_PERMUTATIONS_CLUSTER}, "
-            f"got {matrix.shape[1]}"
-        )
+    feature_count = matrix.shape[1]
+    if feature_count <= 0:
+        raise ValueError("centroids must contain at least one feature")
     if not np.all(np.isfinite(matrix)):
         raise ValueError("centroids contains NaN or Inf")
     k, _ = matrix.shape
@@ -167,7 +162,7 @@ def compare_batch_to_centroids(
     enc_query_200 = load_feature_batch(
         request.encrypted_query_200,
         context,
-        feature_count=NUM_PERMUTATIONS_CLUSTER,
+        feature_count=feature_count,
         batch_size=batch_size,
     )
     score_ciphertexts = batch_dot_ct_pt(enc_query_200, matrix)
@@ -289,11 +284,9 @@ def compare_tiled_batch_to_centroids(
     matrix = np.asarray(centroids, dtype=np.float64)
     if matrix.ndim != 2:
         raise ValueError(f"centroids must be 2-D, got shape {matrix.shape}")
-    if matrix.shape[1] != NUM_PERMUTATIONS_CLUSTER:
-        raise ValueError(
-            f"centroids second dimension must be {NUM_PERMUTATIONS_CLUSTER}, "
-            f"got {matrix.shape[1]}"
-        )
+    feature_count = matrix.shape[1]
+    if feature_count <= 0:
+        raise ValueError("centroids must contain at least one feature")
     if not np.all(np.isfinite(matrix)):
         raise ValueError("centroids contains NaN or Inf")
     k = matrix.shape[0]
@@ -306,15 +299,14 @@ def compare_tiled_batch_to_centroids(
     enc_query_200 = _load_tiled_ciphertexts(
         request.encrypted_query_200,
         context,
-        feature_count=NUM_PERMUTATIONS_CLUSTER,
+        feature_count=feature_count,
         layout=layout,
     )
     score_tiles = []
     for _, start, valid_width in iter_tile_slices(k, layout):
         tile = pack_centroid_tile(matrix, layout, start, valid_width)
-        # Compute dot product per feature and sum.
         acc = enc_query_200[0] * expand_plain_tile(tile[:, 0], layout).tolist()
-        for f in range(1, NUM_PERMUTATIONS_CLUSTER):
+        for f in range(1, feature_count):
             acc = acc + (
                 enc_query_200[f] * expand_plain_tile(tile[:, f], layout).tolist()
             )
@@ -343,6 +335,7 @@ def tiled_batch_matching(
     tau: float = SIMILARITY_THRESHOLD,
     *,
     serialize_output: bool = False,
+    skip_zero_blocks: bool = False,
 ) -> Iterator[EncryptedScalar]:
     """V2 Step 6-8: 二维 tiling 同时计算多个 candidate columns。
     外层只遍历 ceil(L / T) tiles；每 tile 输出一个 active_slots 分数密文。
@@ -393,8 +386,14 @@ def tiled_batch_matching(
             for i in range(k):
                 # Plaintext for cluster i: R[q,t] * B_tile[i,t,f] flattened q-major.
                 plain_i = (B_tile[i, :, f] * R).reshape(-1)
+                if skip_zero_blocks and not np.any(plain_i):
+                    continue
                 term = enc_selectors[i] * plain_i.tolist()
                 acc_f = term if acc_f is None else acc_f + term
+            if acc_f is None:
+                # Keep an encrypted zero at the usual ct-pt depth even when
+                # every cluster is zero for this feature (or the whole tile).
+                acc_f = enc_selectors[0] * ([0.0] * layout.active_slots)
             selected_features.append(acc_f)
         # Dot product with query_50 features.
         score_tile = enc_query_50[0] * selected_features[0]

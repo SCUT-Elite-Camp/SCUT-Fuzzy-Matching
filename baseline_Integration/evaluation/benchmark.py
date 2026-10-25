@@ -136,7 +136,12 @@ def benchmark(config):
     else:
         k_config = config.get("k", 0)
         k_mode = config.get("k_mode", k_config if k_config else "sqrt")
-        artifacts = prepare_party_b_offline(names_B, k_mode=k_mode)
+        artifacts = prepare_party_b_offline(
+            names_B,
+            k_mode=k_mode,
+            projection_dim=config.get("projection_dim"),
+            projection_seed=config.get("projection_seed", 42),
+        )
         centroids = artifacts.centroids
         cluster_matrix = artifacts.cluster_matrix
         scaler_mean = artifacts.scaler_mean
@@ -162,14 +167,31 @@ def benchmark(config):
     else:
         raise ValueError(f"Invalid he_batch_size: {raw_he_batch}")
 
+    raw_probes = config.get("probes", 1)
+    if isinstance(raw_probes, bool) or not isinstance(raw_probes, int):
+        raise ValueError(f"Invalid probes: {raw_probes}")
+    if raw_probes <= 0:
+        raise ValueError(f"probes must be positive, got {raw_probes}")
+    if use_mock and raw_probes != 1:
+        raise ValueError("probes > 1 is supported only with use_mock=False")
+    if use_mock and config.get("projection_dim") is not None:
+        raise ValueError("projection_dim is supported only with use_mock=False")
+    probes = min(raw_probes, int(centroids.shape[0]))
+    if he_batch_size == 0 and raw_probes != 1:
+        raise ValueError("probes > 1 requires the tiled batch path")
+    if he_batch_size * probes > POLY_MODULUS_DEGREE // 2:
+        raise ValueError("he_batch_size × effective probes must not exceed 4096")
+
     # 3. 在线阶段（对每个查询执行协议）
     num_queries = len(names_A)
     print(
-        f"Running online phase for {num_queries} queries (he_batch_size={he_batch_size})..."
+        f"Running online phase for {num_queries} queries "
+        f"(he_batch_size={he_batch_size}, probes={probes})..."
     )
-    # 通信量统计
     total_sent_bytes = 0
     total_recv_bytes = 0
+    public_context_setup_bytes = 0
+    public_context_transmitted_bytes = 0
     online_start = time.perf_counter()
     round1_times = []
     round2_times = []
@@ -180,8 +202,9 @@ def benchmark(config):
         secret_context = create_ckks_context()
         secret_context.generate_relin_keys()
         public_context_bytes = serialize_public_context(secret_context)
-        # 公开 context 在整个会话中仅计入一次
-        total_sent_bytes += len(public_context_bytes)
+        public_context_setup_bytes = len(public_context_bytes)
+        public_context_transmitted_bytes = public_context_setup_bytes
+        total_sent_bytes += public_context_transmitted_bytes
 
         for start_idx in range(0, num_queries, he_batch_size):
             chunk_names = names_A[start_idx : start_idx + he_batch_size]
@@ -193,6 +216,8 @@ def benchmark(config):
                 scaler_scale,
                 context=secret_context,
                 public_context_bytes=public_context_bytes,
+                projection_dim=artifacts.projection_dim,
+                projection_seed=artifacts.projection_seed,
             )
             wire_req1 = serialize_tiled_first_round_request(req1)
             total_sent_bytes += sum(len(b) for b in wire_req1.encrypted_query_200)
@@ -204,10 +229,11 @@ def benchmark(config):
             )
             total_recv_bytes += sum(len(b) for b in bytes_sim_scores)
 
-            req2, _ = choose_clusters_and_build_tiled_request(
+            req2, cluster_debug = choose_clusters_and_build_tiled_request(
                 bytes_sim_scores,
                 party_a_state,
                 k=centroids.shape[0],
+                probes=probes,
             )
             wire_req2 = serialize_tiled_second_round_request(req2)
             total_sent_bytes += sum(len(b) for b in wire_req2.encrypted_query_50) + sum(
@@ -224,6 +250,7 @@ def benchmark(config):
                 public_context_bytes,
                 tau=config.get("tau", SIMILARITY_THRESHOLD),
                 serialize_output=True,
+                skip_zero_blocks=config.get("skip_zero_blocks", False),
             )
 
             def counted_batch_scores(score_iter=score_tile_gen):
@@ -235,9 +262,11 @@ def benchmark(config):
             match_res, _ = check_tiled_score_batch_debug(
                 counted_batch_scores(),
                 secret_context,
-                layout=party_a_state.layout,
+                layout=req2.layout,
                 logical_width=cluster_matrix.shape[1],
                 early_stop=config.get("early_stop", True),
+                probe_count=cluster_debug.probe_count,
+                original_batch_size=len(chunk_names),
             )
             predictions.extend(match_res.catches.tolist())
             r2_time = time.perf_counter() - r2_start
@@ -317,14 +346,25 @@ def benchmark(config):
                         scaler_scale,
                         reusable_secret_context,
                         reusable_public_context_bytes,
+                        projection_dim=artifacts.projection_dim,
+                        projection_seed=artifacts.projection_seed,
                     )
                 else:
                     first_round_request, party_a_state = prepare_encrypted_query(
                         query_name,
                         scaler_mean,
                         scaler_scale,
+                        projection_dim=artifacts.projection_dim,
+                        projection_seed=artifacts.projection_seed,
                     )
-                total_sent_bytes += len(first_round_request.public_context_bytes)
+                context_bytes = len(first_round_request.public_context_bytes)
+                public_context_transmitted_bytes += context_bytes
+                if reuse_context:
+                    if public_context_setup_bytes == 0:
+                        public_context_setup_bytes = context_bytes
+                else:
+                    public_context_setup_bytes += context_bytes
+                total_sent_bytes += context_bytes
                 total_sent_bytes += measure_ct_size(
                     first_round_request.encrypted_query_200
                 )
@@ -412,11 +452,37 @@ def benchmark(config):
             "sent": comm_sent_mb,
             "recv": comm_recv_mb,
             "total": comm_total_mb,
+            "public_context_setup": public_context_setup_bytes / 1024**2,
+            "public_context_transmitted": public_context_transmitted_bytes / 1024**2,
+            "total_without_public_context": (
+                total_sent_bytes + total_recv_bytes - public_context_transmitted_bytes
+            )
+            / 1024**2,
+        },
+        "communication_bytes": {
+            "sent": total_sent_bytes,
+            "received": total_recv_bytes,
+            "public_context_setup": public_context_setup_bytes,
+            "public_context_transmitted": public_context_transmitted_bytes,
         },
         "communication_per_query_kb": {
             "sent": comm_sent_kb_per_q,
             "recv": comm_recv_kb_per_q,
             "total": comm_total_kb_per_q,
+        },
+        "protocol": {
+            "clusters": int(centroids.shape[0]),
+            "cluster_feature_dim": int(centroids.shape[1]),
+            "max_cluster_size": int(cluster_matrix.shape[1]),
+            "probes": probes,
+            "requested_probes": raw_probes,
+            "skip_zero_blocks": config.get("skip_zero_blocks", False),
+            "projection_dim": (
+                artifacts.projection_dim if artifacts is not None else None
+            ),
+            "projection_seed": (
+                artifacts.projection_seed if artifacts is not None else None
+            ),
         },
         "memory_peak_mb": memory_peak,
     }

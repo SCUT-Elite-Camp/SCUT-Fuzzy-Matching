@@ -87,6 +87,29 @@ def parse_args() -> argparse.Namespace:
         help="Alias for --batch-size.",
     )
     parser.add_argument(
+        "--projection-dim",
+        type=int,
+        default=None,
+        help="Recluster in a random-projection space with this dimension.",
+    )
+    parser.add_argument(
+        "--projection-seed",
+        type=int,
+        default=42,
+        help="Public seed for the data-independent projection matrix.",
+    )
+    parser.add_argument(
+        "--probes",
+        type=int,
+        default=1,
+        help="Independent clusters probed per query on the tiled batch path.",
+    )
+    parser.add_argument(
+        "--skip-zero-blocks",
+        action="store_true",
+        help="Skip all-zero plaintext selector blocks in the tiled second round.",
+    )
+    parser.add_argument(
         "--no-early-stop",
         action="store_true",
         help="Disable early stop during A-side final judgment.",
@@ -117,6 +140,10 @@ def main() -> int:
         "query_limit": args.query_limit,
         "db_limit": args.db_limit,
         "he_batch_size": batch_size,
+        "projection_dim": args.projection_dim,
+        "projection_seed": args.projection_seed,
+        "probes": args.probes,
+        "skip_zero_blocks": args.skip_zero_blocks,
         "use_mock": False,
         "early_stop": not args.no_early_stop,
         "reuse_context": not args.no_reuse_context,

@@ -164,7 +164,7 @@ def test_illegal_centroids_shape(pub_ctx_bytes):
         compare_batch_to_centroids(req1, bad_centroids_1d)
 
     bad_centroids_cols = np.ones((4, 100))
-    with pytest.raises(ValueError, match="second dimension must be 200"):
+    with pytest.raises(ValueError, match="密文数量不匹配: 期望 100"):
         compare_batch_to_centroids(req1, bad_centroids_cols)
 
 

@@ -37,7 +37,7 @@ EncryptedScalar = CipherLike  # 加密标量，例如加密的余弦相似度值
 
 @dataclass
 class OfflineArtifacts:
-    """B 侧离线阶段产生的公开数据。"""
+    """B 侧离线阶段产生的数据。"""
 
     centroids: np.ndarray
     cluster_matrix: np.ndarray
@@ -45,6 +45,8 @@ class OfflineArtifacts:
     scaler_scale: np.ndarray
     cluster_assignments: np.ndarray
     max_size: int
+    projection_dim: int | None = None
+    projection_seed: int = 42
 
 
 @dataclass
@@ -108,7 +110,7 @@ class MatchDebug:
 @dataclass
 class BatchFirstRoundRequest:
     public_context_bytes: bytes
-    encrypted_query_200: list[CipherLike]  # 长度 200，每个密文 m slots
+    encrypted_query_200: list[CipherLike]  # 默认 200 维，投影时为实际聚类维度
     batch_size: int
 
 
@@ -193,20 +195,21 @@ class SlotTileLayout:
 
 @dataclass
 class TiledFirstRoundRequest:
-    """V2 第一轮请求：query-major tiling 的 EncQ200 + 公开 context。"""
+    """V2 第一轮请求：query-major tiling 的聚类查询密文 + 公开 context。"""
 
     public_context_bytes: bytes
-    encrypted_query_200: list[CipherLike]  # 长度 200，每个密文 active_slots
+    encrypted_query_200: list[CipherLike]  # 默认 200 维，投影时为实际聚类维度
     layout: SlotTileLayout
 
 
 @dataclass
 class TiledPartyALocalState:
-    """V2 A 侧本地状态：EncQ50 保留在 A，不发给 B。"""
+    """V2 A 侧本地状态：明文与 EncQ50 均只保留在 A，不发给 B。"""
 
     secret_context: object
     encrypted_query_50: list[CipherLike]  # 长度 50，每个密文 active_slots
     layout: SlotTileLayout
+    query_50_norm: np.ndarray | None = None
 
 
 @dataclass
@@ -223,6 +226,8 @@ class TiledClusterSelectionDebug:
     """V2 A 侧本地 cluster 选择调试信息。"""
 
     selected_clusters: np.ndarray  # (m,)
+    probe_count: int = 1
+    probed_clusters: np.ndarray | None = None  # (m * probe_count,)
 
 
 @dataclass

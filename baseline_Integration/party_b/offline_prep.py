@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 from clustering.kmeans_cosine import run_cosine_kmeans
+from clustering.projection import project_normalized_signatures
 from config.params import (
     KMEANS_ITERATIONS,
     NUM_PERMUTATIONS_CLUSTER,
@@ -24,6 +25,8 @@ def prepare_party_b_offline(
     names_b: Iterable[str],
     k_mode: str = "sqrt",
     random_state: int = 42,
+    projection_dim: int | None = None,
+    projection_seed: int = 42,
 ) -> OfflineArtifacts:
     """Build Party B artifacts for centroid and column-wise matching."""
     names_b = list(names_b)
@@ -36,10 +39,18 @@ def prepare_party_b_offline(
     normalized_200 = l2_normalize(signatures_200)
     normalized_50 = l2_normalize(signatures_50)
 
-    _, standardized_200, scaler_mean, scaler_scale = fit_scaler(normalized_200)
+    if projection_dim is None:
+        _, cluster_features, scaler_mean, scaler_scale = fit_scaler(normalized_200)
+    else:
+        cluster_features = project_normalized_signatures(
+            normalized_200, projection_dim, projection_seed
+        )
+        scaler_mean = np.empty(0, dtype=np.float64)
+        scaler_scale = np.empty(0, dtype=np.float64)
+
     k = choose_k(len(names_b), mode=k_mode)
     centroids, cluster_assignments = run_cosine_kmeans(
-        standardized_200,
+        cluster_features,
         k=k,
         iterations=KMEANS_ITERATIONS,
         random_state=random_state,
@@ -55,6 +66,8 @@ def prepare_party_b_offline(
         scaler_scale=scaler_scale,
         cluster_assignments=cluster_assignments,
         max_size=max_size,
+        projection_dim=projection_dim,
+        projection_seed=projection_seed,
     )
 
 
@@ -118,11 +131,18 @@ def save_offline_artifacts(
     np.save(output_dir / "scaler_scale.npy", artifacts.scaler_scale)
     np.save(output_dir / "cluster_assignments.npy", artifacts.cluster_assignments)
     np.save(output_dir / "max_size.npy", np.array([artifacts.max_size]))
+    projection_dim = -1 if artifacts.projection_dim is None else artifacts.projection_dim
+    np.save(output_dir / "projection_dim.npy", np.array([projection_dim]))
+    np.save(output_dir / "projection_seed.npy", np.array([artifacts.projection_seed]))
 
 
 def load_offline_artifacts(save_dir: str | pathlib.Path) -> OfflineArtifacts:
     """Load offline artifacts saved by :func:`save_offline_artifacts`."""
     input_dir = pathlib.Path(save_dir)
+    projection_path = input_dir / "projection_dim.npy"
+    seed_path = input_dir / "projection_seed.npy"
+    stored_dim = int(np.load(projection_path)[0]) if projection_path.exists() else -1
+    projection_seed = int(np.load(seed_path)[0]) if seed_path.exists() else 42
     return OfflineArtifacts(
         centroids=np.load(input_dir / "centroids.npy"),
         cluster_matrix=np.load(input_dir / "cluster_matrix.npy"),
@@ -130,4 +150,6 @@ def load_offline_artifacts(save_dir: str | pathlib.Path) -> OfflineArtifacts:
         scaler_scale=np.load(input_dir / "scaler_scale.npy"),
         cluster_assignments=np.load(input_dir / "cluster_assignments.npy"),
         max_size=int(np.load(input_dir / "max_size.npy")[0]),
+        projection_dim=stored_dim if stored_dim > 0 else None,
+        projection_seed=projection_seed,
     )

@@ -35,6 +35,7 @@ from config.params import (
     NUM_PERMUTATIONS_MATCH,
     POLY_MODULUS_DEGREE,
 )
+from clustering.projection import project_normalized_signatures
 from minhash.encoder import batch_encode
 from preprocessing.normalizer import l2_normalize
 from protocol.types import (
@@ -47,51 +48,56 @@ from protocol.types import (
 )
 
 
+def _transform_cluster_query(
+    query_200_norm: np.ndarray,
+    scaler_mean: np.ndarray,
+    scaler_scale: np.ndarray,
+    projection_dim: int | None,
+    projection_seed: int,
+) -> np.ndarray:
+    if projection_dim is not None:
+        return project_normalized_signatures(
+            query_200_norm, projection_dim, projection_seed
+        )
+
+    mean = np.asarray(scaler_mean, dtype=np.float64)
+    scale = np.asarray(scaler_scale, dtype=np.float64)
+    if mean.shape != (NUM_PERMUTATIONS_CLUSTER,) or scale.shape != (
+        NUM_PERMUTATIONS_CLUSTER,
+    ):
+        raise ValueError(
+            f"scaler 参数形状不匹配: 期望 ({NUM_PERMUTATIONS_CLUSTER},)，"
+            f"实际 mean {mean.shape}, scale {scale.shape}"
+        )
+    if not np.all(np.isfinite(mean)) or not np.all(np.isfinite(scale)):
+        raise ValueError("scaler 参数包含 NaN 或 Inf 非法数值")
+    if np.any(scale <= 0):
+        raise ValueError("scaler_scale must contain only positive values")
+    return (query_200_norm - mean) / scale
+
+
 def encode_query_vectors(
     query_name: str,
     scaler_mean: np.ndarray,
     scaler_scale: np.ndarray,
+    *,
+    projection_dim: int | None = None,
+    projection_seed: int = 42,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """对查询姓名做 MinHash 编码、L2 归一化和 StandardScaler 标准化。
-
-    处理流程：
-        1. batch_encode → (1, 200) 二维矩阵
-        2. 切片 [:,:50] → (1, 50) 二维矩阵
-        3. 在二维矩阵上调用 l2_normalize（与 B 侧同款 normalizer）
-        4. squeeze 为 (200,) 和 (50,)
-        5. query_200 使用 B 侧传入的 scaler_mean/scaler_scale 做标准化
-        6. query_50 只做 L2 归一化，不做 StandardScaler
-
-    Args:
-        query_name: 查询名字字符串。
-        scaler_mean: 从成员一获取的 StandardScaler mean_，形状 (200,)。
-        scaler_scale: 从成员一获取的 StandardScaler scale_，形状 (200,)。
-
-    Returns:
-        tuple[np.ndarray, np.ndarray]:
-            - query_200_std: 标准化后的 EL=200 向量，形状 (200,)。
-            - query_50_norm: 仅 L2 归一化的 EL=50 向量，形状 (50,)。
-    """
+    """生成聚类查询向量与原 50 维精判向量。"""
     try:
-        # 1. MinHash 编码 → (1, 200)
         query_200_raw = batch_encode([query_name], NUM_PERMUTATIONS_CLUSTER)
-
-        # 2. 切片 → (1, 50)
         query_50_raw = query_200_raw[:, :NUM_PERMUTATIONS_MATCH].copy()
-
-        # 3. 在二维矩阵上做 L2 归一化（与 B 侧同款 normalizer）
         query_200_norm_2d = l2_normalize(query_200_raw)
         query_50_norm_2d = l2_normalize(query_50_raw)
-
-        # 4. squeeze 为 1D 向量
-        query_200_norm = query_200_norm_2d.squeeze()  # (200,)
-        query_50_norm = query_50_norm_2d.squeeze()  # (50,)
-
-        # 5. 对 query_200 做标准化（使用 B 侧传入的 scaler 参数，不在此侧 fit）
-        query_200_std = (query_200_norm - scaler_mean) / scaler_scale
-
-        # 6. query_50 只做 L2 归一化，不做 StandardScaler
-        return query_200_std, query_50_norm
+        query_cluster = _transform_cluster_query(
+            query_200_norm_2d,
+            scaler_mean,
+            scaler_scale,
+            projection_dim,
+            projection_seed,
+        )
+        return query_cluster[0], query_50_norm_2d[0]
     except Exception as e:
         raise RuntimeError(
             f"Failed to encode query vectors for name '{query_name}': {e}"
@@ -121,7 +127,7 @@ def encrypt_query_vectors(
         4. 构造 FirstRoundRequest（第一轮网络 payload）和 PartyALocalState（A 侧本地持有）
 
     Args:
-        query_200_std: 标准化后的 EL=200 查询向量，形状 (200,)。
+        query_200_std: 聚类查询向量；默认形状 (200,)，投影时为指定维度。
         query_50_norm: L2 归一化后的 EL=50 查询向量，形状 (50,)。
         context: 含私钥的 CKKS 上下文。
 
@@ -160,27 +166,20 @@ def prepare_encrypted_query(
     query_name: str,
     scaler_mean: np.ndarray,
     scaler_scale: np.ndarray,
+    *,
+    projection_dim: int | None = None,
+    projection_seed: int = 42,
 ) -> tuple[FirstRoundRequest, PartyALocalState]:
-    """A 侧查询准备的主入口：编码 → 创建上下文 → 加密。
-
-    整合 encode_query_vectors、create_ckks_context 和 encrypt_query_vectors
-    三个步骤，一次性完成 A 侧全部查询预处理。
-
-    Args:
-        query_name: 查询名字字符串。
-        scaler_mean: 从成员一获取的 StandardScaler mean_，形状 (200,)。
-        scaler_scale: 从成员一获取的 StandardScaler scale_，形状 (200,)。
-
-    Returns:
-        tuple[FirstRoundRequest, PartyALocalState]:
-            - FirstRoundRequest: 第一轮请求，可序列化后发送给 B。
-            - PartyALocalState: A 侧本地状态，供后续轮次使用。
-    """
-    query_200_std, query_50_norm = encode_query_vectors(
-        query_name, scaler_mean, scaler_scale
+    """A 侧查询准备主入口：编码、创建上下文、加密。"""
+    query_cluster, query_50_norm = encode_query_vectors(
+        query_name,
+        scaler_mean,
+        scaler_scale,
+        projection_dim=projection_dim,
+        projection_seed=projection_seed,
     )
     context = create_ckks_context()
-    return encrypt_query_vectors(query_200_std, query_50_norm, context)
+    return encrypt_query_vectors(query_cluster, query_50_norm, context)
 
 
 def prepare_encrypted_query_with_context(
@@ -189,17 +188,19 @@ def prepare_encrypted_query_with_context(
     scaler_scale: np.ndarray,
     context: ts.Context,
     public_context_bytes: bytes | None = None,
+    *,
+    projection_dim: int | None = None,
+    projection_seed: int = 42,
 ) -> tuple[FirstRoundRequest, PartyALocalState, bytes]:
-    """Prepare a query using an existing A-side CKKS context.
-
-    This is useful for benchmark/report runs where one Party A issues many
-    queries under the same key material. It avoids regenerating CKKS keys for
-    every query while preserving the same protocol boundary.
-    """
-    query_200_std, query_50_norm = encode_query_vectors(
-        query_name, scaler_mean, scaler_scale
+    """Prepare a query using an existing A-side CKKS context."""
+    query_cluster, query_50_norm = encode_query_vectors(
+        query_name,
+        scaler_mean,
+        scaler_scale,
+        projection_dim=projection_dim,
+        projection_seed=projection_seed,
     )
-    encrypted_query_200 = encrypt(query_200_std, context)
+    encrypted_query_200 = encrypt(query_cluster, context)
     encrypted_query_50 = encrypt(query_50_norm, context)
     if public_context_bytes is None:
         public_context_bytes = serialize_public_context(context)
@@ -222,22 +223,21 @@ def prepare_tiled_query_batch(
     *,
     context: ts.Context | None = None,
     public_context_bytes: bytes | None = None,
+    projection_dim: int | None = None,
+    projection_seed: int = 42,
 ) -> tuple[TiledFirstRoundRequest, TiledPartyALocalState]:
-    """V2 二维 tiling 批量查询准备主入口。
-
-    步骤：
-        1. 一次性 batch encode Q200/Q50。
-        2. 按当前 m 构造 SlotTileLayout。
-        3. 用同一 context 加密 200+50 个 active_slots 长度密文。
-        4. Q200 放入 TiledFirstRoundRequest 发给 B；Q50 留在本地状态。
-    """
+    """V2 二维 tiling 批量查询准备主入口。"""
     if context is None and public_context_bytes is not None:
         raise ValueError(
             "public_context_bytes cannot be supplied without its private context"
         )
 
-    query_200_std, query_50_norm = encode_query_batch(
-        query_names, scaler_mean, scaler_scale
+    query_cluster, query_50_norm = encode_query_batch(
+        query_names,
+        scaler_mean,
+        scaler_scale,
+        projection_dim=projection_dim,
+        projection_seed=projection_seed,
     )
     m = len(query_names)
     layout = make_slot_tile_layout(m)
@@ -260,7 +260,7 @@ def prepare_tiled_query_batch(
                 "public_context_bytes does not match the supplied private context"
             )
 
-    encrypted_query_200 = encrypt_tiled_feature_batch(query_200_std, context, layout)
+    encrypted_query_200 = encrypt_tiled_feature_batch(query_cluster, context, layout)
     encrypted_query_50 = encrypt_tiled_feature_batch(query_50_norm, context, layout)
 
     first_round_req = TiledFirstRoundRequest(
@@ -273,6 +273,7 @@ def prepare_tiled_query_batch(
         secret_context=context,
         encrypted_query_50=encrypted_query_50,
         layout=layout,
+        query_50_norm=query_50_norm,
     )
 
     return first_round_req, local_state
@@ -282,19 +283,11 @@ def encode_query_batch(
     query_names: Sequence[str],
     scaler_mean: np.ndarray,
     scaler_scale: np.ndarray,
+    *,
+    projection_dim: int | None = None,
+    projection_seed: int = 42,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """批量编码查询姓名列表，做 MinHash、L2 归一化和 StandardScaler 标准化。
-
-    Args:
-        query_names: 查询名字字符串序列 (m 条)。
-        scaler_mean: B 侧 StandardScaler mean_，形状 (200,)。
-        scaler_scale: B 侧 StandardScaler scale_，形状 (200,)。
-
-    Returns:
-        tuple[np.ndarray, np.ndarray]:
-            - query_200_std: (m, 200) 标准化矩阵。
-            - query_50_norm: (m, 50) L2 归一化矩阵。
-    """
+    """批量生成聚类查询矩阵与原 50 维精判矩阵。"""
     if len(query_names) == 0:
         raise ValueError("query_names 列表不能为空")
 
@@ -303,36 +296,19 @@ def encode_query_batch(
     if m > max_batch:
         raise ValueError(f"batch_size {m} 超过最大允许值 {max_batch}")
 
-    mean = np.asarray(scaler_mean, dtype=np.float64)
-    scale = np.asarray(scaler_scale, dtype=np.float64)
-
-    if mean.shape != (NUM_PERMUTATIONS_CLUSTER,) or scale.shape != (
-        NUM_PERMUTATIONS_CLUSTER,
-    ):
-        raise ValueError(
-            f"scaler 参数形状不匹配: 期望 ({NUM_PERMUTATIONS_CLUSTER},)，"
-            f"实际 mean {mean.shape}, scale {scale.shape}"
-        )
-    if not np.all(np.isfinite(mean)) or not np.all(np.isfinite(scale)):
-        raise ValueError("scaler 参数包含 NaN 或 Inf 非法数值")
-    if np.any(scale <= 0):
-        raise ValueError("scaler_scale must contain only positive values")
-
     try:
-        # 1. MinHash 批量编码 → (m, 200)
         query_200_raw = batch_encode(list(query_names), NUM_PERMUTATIONS_CLUSTER)
-
-        # 2. 切片 → (m, 50)
         query_50_raw = query_200_raw[:, :NUM_PERMUTATIONS_MATCH].copy()
-
-        # 3. L2 归一化
         query_200_norm_2d = l2_normalize(query_200_raw)
         query_50_norm_2d = l2_normalize(query_50_raw)
-
-        # 4. 对 query_200 做标准化（沿行广播）
-        query_200_std = (query_200_norm_2d - mean) / scale
-
-        return query_200_std, query_50_norm_2d
+        query_cluster = _transform_cluster_query(
+            query_200_norm_2d,
+            scaler_mean,
+            scaler_scale,
+            projection_dim,
+            projection_seed,
+        )
+        return query_cluster, query_50_norm_2d
     except Exception as e:
         if isinstance(e, ValueError):
             raise
@@ -346,6 +322,8 @@ def prepare_encrypted_query_batch(
     *,
     context: ts.Context | None = None,
     public_context_bytes: bytes | None = None,
+    projection_dim: int | None = None,
+    projection_seed: int = 42,
 ) -> tuple[BatchFirstRoundRequest, BatchPartyALocalState]:
     """A 侧批量查询准备主入口：编码 → 创建/共享上下文 → 纵向 SIMD 加密。
 
@@ -362,7 +340,11 @@ def prepare_encrypted_query_batch(
             - BatchPartyALocalState: A 侧本地状态。
     """
     query_200_std, query_50_norm = encode_query_batch(
-        query_names, scaler_mean, scaler_scale
+        query_names,
+        scaler_mean,
+        scaler_scale,
+        projection_dim=projection_dim,
+        projection_seed=projection_seed,
     )
     m = len(query_names)
 

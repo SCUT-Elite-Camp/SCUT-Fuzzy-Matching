@@ -77,7 +77,7 @@ def serialize_tiled_first_round_request(
         public_context_bytes=request.public_context_bytes,
         encrypted_query_200=_serialize_tiled_ciphertexts(
             request.encrypted_query_200,
-            expected_count=200,
+            expected_count=None,
             active_slots=request.layout.active_slots,
         ),
         layout=request.layout,
