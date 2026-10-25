@@ -62,4 +62,5 @@ python scripts/demo_multi_attribute_dataset.py --config config/examples/fused_mu
 - 本次整理记录：[`docs/integration/delivery_2026-10-25.md`](docs/integration/delivery_2026-10-25.md)
 
 `baseline_Integration/` 是主线，实验快照不能整目录覆盖它。原始 ZIP 留在被忽略的
-`deliveries/local/`，Git 只保存去重后的源码、补丁、必要结果和来源清单；新交付放入 `代办/`。
+`deliveries/local/`，Git 只保存去重后的源码、补丁、必要结果和来源清单。`代办/` 已移除，
+后续原始交付也先放入被忽略的 `deliveries/local/`，整理后再提交。
