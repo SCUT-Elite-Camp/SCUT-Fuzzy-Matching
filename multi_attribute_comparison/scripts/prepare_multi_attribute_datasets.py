@@ -21,8 +21,8 @@ dataset4a/4b。再引一份 recordlinkage 的 febrl3 只会得到第三套互不
 3. NCVR 10K：库里只有 ``ncid, full_name`` 两列 —— **单属性**，做不了多属性实验，
    本脚本只记录证据、不生成多属性数据。
 
-输出（``data/multi_attr/``）
-----------------------------
+输出（``multi_attribute_comparison/datasets/``）
+------------------------------------------------
 ``febrl4_A.csv`` / ``febrl4_B.csv`` / ``febrl4_ground_truth.csv``
 ``multiling_A.csv`` / ``multiling_B.csv`` / ``multiling_ground_truth.csv``
 
@@ -31,8 +31,8 @@ ground truth 统一两列 ``A_id, B_id``（多语言额外带 ``label``），一
 用法::
 
     cd ~/projects/SCUT-Fuzzy-Matching
-    python3 scripts/fetch_dataset.py --dataset febrl        # 若 dataset/ 还没下
-    python3 scripts/prepare_multi_attribute_datasets.py
+    python3 baseline_Integration/scripts/fetch_dataset.py --dataset febrl   # 若 dataset/ 还没下
+    python3 multi_attribute_comparison/scripts/prepare_multi_attribute_datasets.py
 """
 
 from __future__ import annotations
@@ -44,9 +44,17 @@ import re
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+_HERE = Path(__file__).resolve().parent
+# 本脚本可能位于仓库根的 scripts/，也可能位于 multi_attribute_comparison/scripts/。
+# 以"哪一级目录里有 baseline_Integration"为准定位仓库根，不写死层级。
+ROOT = next(
+    candidate
+    for candidate in (_HERE.parent, _HERE.parent.parent)
+    if (candidate / "baseline_Integration").is_dir()
+)
 BI = ROOT / "baseline_Integration"
-OUT = ROOT / "data" / "multi_attr"
+MODULE = ROOT / "multi_attribute_comparison"
+OUT = MODULE / "datasets"
 
 FEBRL_DIR = BI / "dataset" / "febrl"
 FUSED_DIR = BI / "data" / "fused_multilingual"
@@ -83,7 +91,8 @@ def _write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
-    print(f"  -> {path.relative_to(ROOT)}  ({len(rows)} rows, {path.stat().st_size / 1024:.0f} KB)")
+    shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+    print(f"  -> {shown}  ({len(rows)} rows, {path.stat().st_size / 1024:.0f} KB)")
 
 
 def build_febrl() -> bool:
@@ -210,14 +219,16 @@ def write_manifest(febrl_ok: bool, multi_ok: bool) -> None:
     }
     path = OUT / "manifest.json"
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"  -> {path.relative_to(ROOT)}")
+    shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+    print(f"  -> {shown}")
 
 
 def main() -> int:
     global OUT
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out", default=str(OUT), help="output dir (default data/multi_attr)")
+    parser.add_argument("--out", default=str(OUT),
+                        help="output dir (default multi_attribute_comparison/datasets)")
     args = parser.parse_args()
 
     OUT = Path(args.out).resolve()

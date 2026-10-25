@@ -2,7 +2,7 @@
 
 > 生成时间：2026-10-25 · 环境：WSL2 / Ubuntu 22.04.5 · Python 3.10.12 · TenSEAL 0.3.16
 > 两个方案的**单姓名**行直接引用组内既有成果；**多属性**行的每个数字都来自本次实跑，
-> 原始日志见 `benchmark_logs/ckks_febrl.log`、`benchmark_logs/ckks_multiling.log`，
+> 原始日志见 `logs/ckks_febrl.log`、`logs/ckks_multiling.log`，
 > 逐条查询的明细见 `baseline_Integration/artifacts/demo/*/demo_multi_attribute_dataset.csv`。
 
 ## 表 1：基于姓名（单属性，引用组内既有成果）
@@ -37,11 +37,11 @@
 ### 实验口径（必读）
 
 1. **P/R/F1 是查询级"检测"口径，不是 identification 口径**。协议只回传一个比特
-   （是否越阈）+ 簇号 + 列号，**从不返回命中记录 id**（见 `multi_attribute/protocol.py`
+   （是否越阈）+ 簇号 + 列号，**从不返回命中记录 id**（见 `baseline_Integration/multi_attribute/protocol.py`
    与 demo 的 NOTE）。所以这里的 TP/FP/FN/TN 是：
    `TP = 标签为真 且 CATCH`、`FP = 标签为假 且 CATCH`、`FN = 标签为真 且 no-catch`。
    FEBRL 的标签由 `rec_id` 推（`rec-<N>-org` ↔ `rec-<N>-dup-0`），多语言的标签由
-   `data/fused_multilingual/labels.csv` 给。
+   `baseline_Integration/data/fused_multilingual/labels.csv` 给。
 2. **时延 = 两轮在线协议总耗时**（不含 Party-B 离线 k-means 与 index 构建，那部分
    FEBRL 仅 1.69 s）。取自日志 `⏱ Encrypted two-round protocol, all queries`。
 3. **通信量是实测字节数 × 实测平均扫描列数**，不是公式猜的：
@@ -51,7 +51,8 @@
      其余同类）；
    - 平均扫描列数取 demo 自报的 `scan_columns_mean`（FEBRL 56.26 列 / 全扫描 5000 列，
      多语言 22.22 列 / 全扫描 300 列）。
-   - 明细见 `artifacts/demo/febrl_ma_100/comm_8q.json`、`artifacts/demo/fused_ma_50/comm_8q.json`。
+   - 明细见 `baseline_Integration/artifacts/demo/febrl_ma_100/comm_8q.json`、
+     `baseline_Integration/artifacts/demo/fused_ma_50/comm_8q.json`。
 4. **查询规模与单姓名那行不同**（5000 库/100 查询 vs 10000 库/200 查询），时延**不可
    逐毫秒对比**，只能看量级与趋势。
 
@@ -88,7 +89,7 @@
 
 | # | 问题 | 影响 | 处置 |
 |---|---|---|---|
-| 1 | `RuntimeError: KSwitchKeys data is invalid`：tenseal 反序列化公开 context 时**间歇**失败 | 首次 200 查询的 FEBRL 跑在第 22 条崩（164 s 处）；同一代码此前 1 条 / 50 条均正常 | 属库级 bug，非数据/参数问题；改为 100 查询重跑并跑通。复现命令与日志见 `benchmark_logs/ckks_febrl.log`（第一次失败）与本文表格（第二次成功） |
+| 1 | `RuntimeError: KSwitchKeys data is invalid`：tenseal 反序列化公开 context 时**间歇**失败 | 首次 200 查询的 FEBRL 跑在第 22 条崩（164 s 处）；同一代码此前 1 条 / 50 条均正常 | 属库级 bug，非数据/参数问题；改为 100 查询重跑并跑通。复现命令与日志见 `logs/ckks_febrl.log`（第一次失败）与本文表格（第二次成功） |
 | 2 | 协议不返回命中 id | 无法算 identification 的 P/R | 统一用 detection 口径并在口径里写明；单姓名那行的口径未知，跨表比较时注意 |
 | 3 | FEBRL 全正例 | precision 无区分度 | 标 `*` 说明；precision 实际由多语言那行给出（1.0，10 条负例） |
 | 4 | 单姓名 6 个数字仓库内不可查 | 无法复核 | 原样引用并注明 |
@@ -98,7 +99,7 @@
 
 ```bash
 cd ~/projects/SCUT-Fuzzy-Matching
-python3 scripts/prepare_multi_attribute_datasets.py          # 生成 data/multi_attr/
+python3 multi_attribute_comparison/scripts/prepare_multi_attribute_datasets.py   # 生成 datasets/
 # （FEBRL 原始数据：cd baseline_Integration && python3 scripts/fetch_dataset.py --dataset febrl）
 
 cd baseline_Integration
@@ -113,12 +114,12 @@ python3 scripts/demo_multi_attribute_dataset.py \
   --output-dir artifacts/demo/fused_ma_50
 
 cd ..
-python3 scripts/evaluate_multi_attribute.py \
+python3 multi_attribute_comparison/scripts/evaluate_multi_attribute.py \
   --run baseline_Integration/artifacts/demo/febrl_ma_100/demo_multi_attribute_dataset.json \
   --queries 100 --online-seconds 748.378
 ```
 
 ## 数据
 
-`data/multi_attr/`（1.1 MB，已入库）：`febrl4_{A,B,ground_truth}.csv`、
-`multiling_{A,B,ground_truth}.csv`、`manifest.json`。字段与真值格式见 `data/README.md`。
+`multi_attribute_comparison/datasets/`（1.1 MB，已入库）：`febrl4_{A,B,ground_truth}.csv`、
+`multiling_{A,B,ground_truth}.csv`、`manifest.json`。字段与真值格式见 `datasets/README.md`。

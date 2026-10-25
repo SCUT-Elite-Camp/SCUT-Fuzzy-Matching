@@ -24,15 +24,16 @@ ApproxPSI 对输入的要求不只是"128 位"，而是**真匹配对的 Hamming
 用法::
 
     # 编码（默认 simhash，128 位：name 64 + dob 24 + address 40）
-    python3 scripts/encode_multi_attr_to_binary.py \
-        --a data/multi_attr/febrl4_A.csv --b data/multi_attr/febrl4_B.csv \
-        --gt data/multi_attr/febrl4_ground_truth.csv \
+    python3 multi_attribute_comparison/scripts/encode_multi_attr_to_binary.py \
+        --a multi_attribute_comparison/datasets/febrl4_A.csv \
+        --b multi_attribute_comparison/datasets/febrl4_B.csv \
+        --gt multi_attribute_comparison/datasets/febrl4_ground_truth.csv \
         --id-a record_id --id-b query_id \
         --attrs name=given_name+surname,dob=date_of_birth,address=address_1 \
-        --out-dir data/multi_attr/febrl4_bits --measure --d 4
+        --out-dir /tmp/febrl4_bits --measure --d 4
 
     # 对照：sha256 模式（预期 d≤4 比例 ≈ 0）
-    python3 scripts/encode_multi_attr_to_binary.py ... --mode hash --measure
+    python3 multi_attribute_comparison/scripts/encode_multi_attr_to_binary.py ... --mode hash --measure
 """
 
 from __future__ import annotations

@@ -17,10 +17,10 @@
 
 用法::
 
-    python3 scripts/measure_multi_attribute_comm.py \
+    python3 multi_attribute_comparison/scripts/measure_multi_attribute_comm.py \
         --config baseline_Integration/config/examples/febrl_multi_attribute.json \
         --db-limit 0 --sample 10 --probes 3 \
-        --out baseline_Integration/artifacts/demo/febrl_ma_200/comm_10q.json
+        --out baseline_Integration/artifacts/demo/febrl_ma_100/comm_10q.json
 """
 
 from __future__ import annotations
@@ -30,7 +30,12 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+_HERE = Path(__file__).resolve().parent
+ROOT = next(
+    candidate
+    for candidate in (_HERE.parent, _HERE.parent.parent)
+    if (candidate / "baseline_Integration").is_dir()
+)
 sys.path.insert(0, str(ROOT / "baseline_Integration"))
 
 import tenseal as ts  # noqa: E402

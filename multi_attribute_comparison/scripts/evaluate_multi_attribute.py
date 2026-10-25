@@ -17,9 +17,9 @@ P = TP/(TP+FP)、R = TP/(TP+FN)、F1 = 2PR/(P+R)。标签取 ``rows[i].label``�
 
 用法::
 
-    python3 scripts/evaluate_multi_attribute.py \
-        --run baseline_Integration/artifacts/demo/febrl_ma_200/demo_multi_attribute_dataset.json \
-        --queries 200 --online-seconds 762.4
+    python3 multi_attribute_comparison/scripts/evaluate_multi_attribute.py \
+        --run baseline_Integration/artifacts/demo/febrl_ma_100/demo_multi_attribute_dataset.json \
+        --queries 100 --online-seconds 748.378
 """
 
 from __future__ import annotations

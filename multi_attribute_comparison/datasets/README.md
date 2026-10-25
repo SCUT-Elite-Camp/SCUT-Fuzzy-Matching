@@ -3,12 +3,12 @@
 本目录存放**多属性**模糊匹配实验用的 A/B/ground-truth 三件套，供
 `baseline_Integration/multi_attribute/` 的 schema 驱动管线使用。
 
-- 生成脚本：`scripts/prepare_multi_attribute_datasets.py`
-- 生成命令（在仓库根目录）：`python3 scripts/prepare_multi_attribute_datasets.py`
+- 生成脚本：`../scripts/prepare_multi_attribute_datasets.py`
+- 生成命令（在仓库根目录执行）：`python3 multi_attribute_comparison/scripts/prepare_multi_attribute_datasets.py`
 - 数据集性质：**仓库既有真实数据**，不是本次新造；脚本只做字段整理与真值导出，不重新采样。
 
 ```
-data/multi_attr/
+datasets/
 ├── febrl4_A.csv                 5000 行   库（database）侧
 ├── febrl4_B.csv                 5000 行   查询（queries）侧
 ├── febrl4_ground_truth.csv      5000 行   真匹配对
@@ -43,6 +43,9 @@ data/multi_attr/
 > **已去掉字段名两侧空格**——带空格的键会让 `row["given_name"]` 取到空串，进而把不同
 > 记录编码成同一个零向量。
 
+原始数据（`baseline_Integration/dataset/febrl/`，已被仓库 `.gitignore` 排除）用
+`baseline_Integration/scripts/fetch_dataset.py --dataset febrl` 下载。
+
 ## 2. fused_multilingual（多语言 + 多属性）
 
 | 文件 | 行数 | 大小 | 说明 |
@@ -56,6 +59,8 @@ data/multi_attr/
 - `name_local`：原生文字（汉字 / 阿拉伯 / 缅甸文 / 拉丁重音）；
 - `name_romanized`：拉丁转写；查询可能只带其中一种，空列按缺失零向量编码；
 - `dob` / `city` / `phone`：合成属性（`phone` 同时存在 E.164 与本地两种写法）。
+
+原始目录：`baseline_Integration/data/fused_multilingual/`。
 
 ## 3. ground truth 格式
 
@@ -71,17 +76,17 @@ data/multi_attr/
 
 - 驱动 `baseline_Integration/scripts/demo_multi_attribute_dataset.py`（需在
   `baseline_Integration/` 下用 job 文件指向这些 CSV）；
-- 作为 `scripts/evaluate_multi_attribute.py` 计算 P/R/F1 的真值来源；
-- 作为 `scripts/encode_multi_attr_to_binary.py` 测量"编码后真匹配对 Hamming 距离"的输入。
+- 作为 `../scripts/evaluate_multi_attribute.py` 计算 P/R/F1 的真值来源；
+- 作为 `../scripts/encode_multi_attr_to_binary.py` 测量"编码后真匹配对 Hamming 距离"的输入。
 
 ## 5. NCVR 10K 为什么不在本目录
 
 `baseline_Integration/data/ncvr_10k/ncvr_10k_database.csv` 只有 `ncid,full_name`
 两列（10000 行），查询只有 `query_ncid,query_name,label`（200 行）——**没有
 dob / address / postcode**，是单属性数据。要凑"NCVR 多属性"只能凭空合成属性，
-那已经不叫 NCVR 了，故不纳入多属性对比表，只在对比文档里注明原因。
+那已经不叫 NCVR 了，故不纳入多属性对比表，只在 `../report.md` 里注明原因。
 
 ## 6. 体量说明
 
 全部文件合计 **1.1 MB**，均小于 GitHub 单文件 10 MB 限制，已随仓库提交；
-原始 `dataset/`（fetch_dataset.py 下载的 1.5 MB）仍按仓库既有 `.gitignore` 排除。
+原始 `baseline_Integration/dataset/`（1.5 MB）仍按仓库既有 `.gitignore` 排除。
