@@ -1,0 +1,34 @@
+{
+  "baseline": {
+    "cap": "原始",
+    "max_size": 483,
+    "tiles": 25,
+    "top1": 0.88,
+    "filter": 0.9886363636363636,
+    "e2e": 0.87,
+    "new_misses": 0,
+    "fixed": 0
+  },
+  "sweep": [
+    {
+      "cap": 483,
+      "max_size": 483,
+      "tiles": 25,
+      "top1": 0.88,
+      "filter": 0.9886363636363636,
+      "e2e": 0.87,
+      "new_misses": 0,
+      "fixed": 0
+    },
+    {
+      "cap": 600,
+      "max_size": 483,
+      "tiles": 25,
+      "top1": 0.88,
+      "filter": 0.9886363636363636,
+      "e2e": 0.87,
+      "new_misses": 0,
+      "fixed": 0
+    }
+  ]
+}

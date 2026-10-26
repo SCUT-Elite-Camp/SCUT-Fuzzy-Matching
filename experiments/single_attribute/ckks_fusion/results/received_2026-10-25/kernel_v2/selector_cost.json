@@ -1,0 +1,17 @@
+{
+  "config": {
+    "columns": 20,
+    "repeats": 3,
+    "m": 200,
+    "k": 50,
+    "d": 50
+  },
+  "encrypted_selector_median_s": 3.250796074004029,
+  "public_cluster_median_s": 0.23748892999719828,
+  "ratio": 13.688200431246962,
+  "numerics": {
+    "max_abs_diff": 4.601316958030566e-05,
+    "sign_agreement": 1.0
+  },
+  "note": "公开簇版本等价于把「选了哪一簇」告诉 B；仅用于测量该隐私属性的成本，不是可用方案。"
+}

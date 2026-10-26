@@ -1,0 +1,69 @@
+{
+  "config": {
+    "data_root": "/mnt/c/Users/32387/Desktop/10_24/10_23/data",
+    "clusters": 50,
+    "batch_size": 200,
+    "ell": 512,
+    "d": 109,
+    "block_size": 20,
+    "out_dir": "/mnt/c/Users/32387/Desktop/10_24/10_23/artifacts/fusion_prototype"
+  },
+  "rows": [
+    {
+      "path": "A_baseline",
+      "mode": "C_fixed_shape",
+      "blocks": 25,
+      "positions": 483,
+      "tiles": 25,
+      "ct_pt_mul": 62500,
+      "ct_ct_mul": 1250,
+      "tiles_vs_baseline": 1.0,
+      "leaks_index": false,
+      "note": "保持簇隐藏；计算量与 baseline 相同，候选缩减未转化为计算缩减"
+    },
+    {
+      "path": "B_public_index",
+      "mode": "B_public_index",
+      "blocks": 11,
+      "positions": 220,
+      "tiles": 11,
+      "ct_pt_mul": 550,
+      "ct_ct_mul": 0,
+      "tiles_vs_baseline": 0.44,
+      "leaks_index": true,
+      "note": "块索引对 B 可见；本轮收益以此换取泄漏，不能称为隐私协议"
+    },
+    {
+      "path": "C_fixed_shape",
+      "mode": "C_fixed_shape",
+      "blocks": 25,
+      "positions": 483,
+      "tiles": 25,
+      "ct_pt_mul": 62500,
+      "ct_ct_mul": 1250,
+      "tiles_vs_baseline": 1.0,
+      "leaks_index": false,
+      "note": "保持簇隐藏；计算量与 baseline 相同，候选缩减未转化为计算缩减"
+    },
+    {
+      "path": "D_psi_fusion",
+      "mode": "blocked",
+      "blocks": null,
+      "positions": null,
+      "tiles": null,
+      "ct_pt_mul": null,
+      "ct_ct_mul": null,
+      "tiles_vs_baseline": null,
+      "leaks_index": null,
+      "note": "secret_share 无法适配到 CKKS：份额不是密文也不是明文；重构需要向一方泄漏，重加密需要 MPC（禁用）或额外乘法深度（当前链只有 2 层，kernel 已用满）。且 Approx-PSI 的实现依赖 emp-ot 与 volePSI，禁用 OT 即无法实现。"
+    }
+  ],
+  "logical_candidates": {
+    "mean": 3.955,
+    "max": 38
+  },
+  "recall": {
+    "target_in_cluster": 0.88,
+    "filter_conditional": 0.9886363636363636
+  }
+}

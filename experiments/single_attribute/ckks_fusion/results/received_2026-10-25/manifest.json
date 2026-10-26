@@ -1,0 +1,132 @@
+{
+  "source_archive": "10_25.zip",
+  "source_sha256": "f395afad7669a311d5a01080e7f4371df8f1d41752c31d8996c43210f5d44f93",
+  "file_count": 31,
+  "files": [
+    {
+      "path": "balanced_layout/cap_sweep.json",
+      "sha256": "d5646d9a23c52208ee529e8cdf34ec0af5a8f0a077173bff9d1449f4a9b40b30"
+    },
+    {
+      "path": "balanced_layout/recall_compare.json",
+      "sha256": "de64655fa16fd85bbf37ae7b876cfa1dcfd91c81d889f781088bd84a42f8e82b"
+    },
+    {
+      "path": "binarization_frontier/distribution.json",
+      "sha256": "b2cc993575d2fbe11fa510b67b9a2c76496e90a9676d69d9f0f5cacdf4b96101"
+    },
+    {
+      "path": "binarization_frontier/frontier.csv",
+      "sha256": "419f4a09ded1b51a1122d0419047d10634b03e799fd7d4694d824e42f1e3e5cf"
+    },
+    {
+      "path": "cluster_conditional_filter/cluster_filter.csv",
+      "sha256": "c38f1fea1a62b5515f5080bef639a7fe68da4a4331022f394f75bce257ab9ba6"
+    },
+    {
+      "path": "cluster_conditional_filter/cluster_filter.json",
+      "sha256": "19234b9704bddb872c99584157da6d9af0476290c80cd6394d0b8904db325bb4"
+    },
+    {
+      "path": "cluster_conditional_filter/per_query.csv",
+      "sha256": "6c9062332bb5cb4dadfed6cee3fb274abeaffb4de9b20ca9ce318c0500908a87"
+    },
+    {
+      "path": "combined/report.json",
+      "sha256": "8f33cff884d7bd1dfb3859126c20476dbb6aba0ea2ba345f96dbd093ffcc0ae4"
+    },
+    {
+      "path": "combined_ckks/report.json",
+      "sha256": "a352982b1871896464e324b3882c013d043d92c36d41945f5161feb9ffb7c87b"
+    },
+    {
+      "path": "compaction/report.json",
+      "sha256": "9106e56f2c07c4306c0bd10c66f9f513a50c13831a1d71d00b62e9a4dffe58ec"
+    },
+    {
+      "path": "compaction_cost/model.json",
+      "sha256": "caef6b26b7118728589938211304c2a775a2a6c0c2fee50d9ec917cab04bb018"
+    },
+    {
+      "path": "compaction_feasibility/feasibility.json",
+      "sha256": "08e4caa94d3faffc08a541bc65d512479f019f1f18fb01f4cbabce2a33ac6880"
+    },
+    {
+      "path": "domain_organization/report.json",
+      "sha256": "caf2f73c02b86edcc80e674d65033508c2f20c53da0f0a804da91a23f5554ddd"
+    },
+    {
+      "path": "end_to_end_d/report.json",
+      "sha256": "000ca815a184e26c687efbb04ad8f12d2b05307dabac830bc25965bb8bd968f4"
+    },
+    {
+      "path": "feature_dim/report.json",
+      "sha256": "1d13c7dc73f85ecf44a27d26b3e0e38e8d43b253106ebe92e7e3407af45c97ad"
+    },
+    {
+      "path": "fusion_prototype/leakage.csv",
+      "sha256": "58d433999944679873447605fa969bc11ea723fd970048b2a77531116871445e"
+    },
+    {
+      "path": "fusion_prototype/results.json",
+      "sha256": "aab23cd7173880c5dcb1cc2b4220870cfdbe5d1e1a72acc10a8f4ccaa0b73562"
+    },
+    {
+      "path": "grouping/report.json",
+      "sha256": "08f0a96bdce3b9a6bf713264253e54bcc4d32b5302cc217edcaf814ebfc163e8"
+    },
+    {
+      "path": "kernel_v2/compare.json",
+      "sha256": "93f437f7bf1ceb3b2b635fa470037f793128c95f464f2d1f6e88689307880640"
+    },
+    {
+      "path": "kernel_v2/selector_cost.json",
+      "sha256": "42e4e21517102662d2cd612b706d284a959454a66e591155a6d337044552a60f"
+    },
+    {
+      "path": "mask_leakage/report.json",
+      "sha256": "e017fa7d042f99b6c100b52f7c8b497b05bad6b0dfe1862961b280c5dc22c864"
+    },
+    {
+      "path": "position_recall/report.json",
+      "sha256": "5592ca8ae86386417cb02011ff0d0c722c12ab6762440a5ebb036f59e7283f50"
+    },
+    {
+      "path": "r3_probe/numeric.json",
+      "sha256": "37c44b85cfc62a32f48ab1fddd8b00b9ccb3b816c45e9bbb23608bc8671ff775"
+    },
+    {
+      "path": "roc/report.json",
+      "sha256": "76e626d04fc22ec54f809b7bc236616db22d6e02fcad4a03438c5fbaedd21ff4"
+    },
+    {
+      "path": "threshold_validation/report.json",
+      "sha256": "396cd333e226cef5d84e13c5b68790329e2add01950bb704b7b416bc627eddbd"
+    },
+    {
+      "path": "tile_scaling/fit.json",
+      "sha256": "844eaa741ceb01b1327a9c0fa5c8df4ac20781a248fb6ce05283c86b21bafc41"
+    },
+    {
+      "path": "tile_scaling/runs.csv",
+      "sha256": "a64f9b4323384b8f7cdc960c391c0a0186e9fb5bd90f02e9bd9de7575bbc2d0a"
+    },
+    {
+      "path": "tile_scaling/summary.csv",
+      "sha256": "f5aa38b40c738f57d8d8e3687bfb65b56b5c36396ae7946b9ca0db5b488d044e"
+    },
+    {
+      "path": "topk_frontier/topk.csv",
+      "sha256": "550b02f458cdd193e6a09aa0eab2e7eb4702716913e6ac79d0775defa381835f"
+    },
+    {
+      "path": "topk_frontier/topk.json",
+      "sha256": "63d7193d5959b9ef98dc3acbe0b1d5301d9a95c59413d71474d6197409968077"
+    },
+    {
+      "path": "verification/report.json",
+      "sha256": "dba58286f93743758745b595d08c318740a5b958765e4e6bf7c3d0809b7bd8b1"
+    }
+  ],
+  "status": "Received evidence, not an independent rerun of full HE/PSI timings."
+}

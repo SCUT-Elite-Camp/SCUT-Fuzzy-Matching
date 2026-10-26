@@ -1,0 +1,8 @@
+# Rebuild patches have byte-level checksums and require canonical LF.
+experiments/single_attribute/cluster_selection/patches/*.patch text eol=lf -whitespace
+
+# Received evidence stays byte-for-byte identical to the source archives.
+experiments/single_attribute/ckks_fusion/results/received_2026-10-25/** -text whitespace=cr-at-eol
+experiments/single_attribute/cluster_selection/results/bad_event_received/** -text whitespace=cr-at-eol
+experiments/single_attribute/rldata_comparison/data/*.csv -text whitespace=cr-at-eol
+docs/reviews/2026-10-25/* -text whitespace=cr-at-eol

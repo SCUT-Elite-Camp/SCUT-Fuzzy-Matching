@@ -63,16 +63,24 @@ def run_single_query_protocol(
     random_state: int = 42,
     tau: float = SIMILARITY_THRESHOLD,
     early_stop: bool = True,
+    projection_dim: int | None = None,
+    projection_seed: int = 42,
 ) -> ProtocolRun:
     """Run the documented baseline flow in one process."""
 
     artifacts = prepare_party_b_offline(
-        names_b, k_mode=k_mode, random_state=random_state
+        names_b,
+        k_mode=k_mode,
+        random_state=random_state,
+        projection_dim=projection_dim,
+        projection_seed=projection_seed,
     )
     first_round_request, party_a_state = prepare_encrypted_query(
         query_name,
         artifacts.scaler_mean,
         artifacts.scaler_scale,
+        projection_dim=artifacts.projection_dim,
+        projection_seed=artifacts.projection_seed,
     )
     encrypted_sim_scores = compare_to_centroids(
         first_round_request,
@@ -111,19 +119,25 @@ def run_batch_query_protocol(
     tau: float = SIMILARITY_THRESHOLD,
     early_stop: bool = True,
     serialize_communication: bool = True,
+    projection_dim: int | None = None,
+    projection_seed: int = 42,
+    probes: int = 1,
+    skip_zero_blocks: bool = False,
 ) -> BatchProtocolRun:
-    """Run the V2 query-by-candidate tiled HE protocol end-to-end.
-
-    The default enforces the real bytes boundary before either request reaches
-    Party B.  ``False`` is retained only for local primitive comparisons.
-    """
+    """Run the V2 query-by-candidate tiled HE protocol end-to-end."""
     artifacts = prepare_party_b_offline(
-        names_b, k_mode=k_mode, random_state=random_state
+        names_b,
+        k_mode=k_mode,
+        random_state=random_state,
+        projection_dim=projection_dim,
+        projection_seed=projection_seed,
     )
     first_round_request, party_a_state = prepare_tiled_query_batch(
         query_names,
         artifacts.scaler_mean,
         artifacts.scaler_scale,
+        projection_dim=artifacts.projection_dim,
+        projection_seed=artifacts.projection_seed,
     )
     first_round_for_b = (
         serialize_tiled_first_round_request(first_round_request)
@@ -139,6 +153,7 @@ def run_batch_query_protocol(
         encrypted_sim_scores,
         party_a_state,
         k=artifacts.centroids.shape[0],
+        probes=probes,
     )
     second_round_for_b = (
         serialize_tiled_second_round_request(second_round_request)
@@ -151,13 +166,16 @@ def run_batch_query_protocol(
         first_round_request.public_context_bytes,
         tau=tau,
         serialize_output=serialize_communication,
+        skip_zero_blocks=skip_zero_blocks,
     )
     tiled_match_result, tiled_match_debug = check_tiled_score_batch_debug(
         encrypted_scores,
         party_a_state.secret_context,
-        layout=party_a_state.layout,
+        layout=second_round_request.layout,
         logical_width=artifacts.max_size,
         early_stop=early_stop,
+        probe_count=tiled_cluster_debug.probe_count,
+        original_batch_size=len(query_names),
     )
     return BatchProtocolRun(
         batch_match_result=BatchMatchResult(catches=tiled_match_result.catches),

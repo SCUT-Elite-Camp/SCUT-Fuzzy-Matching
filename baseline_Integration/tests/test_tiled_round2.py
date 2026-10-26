@@ -242,3 +242,48 @@ def test_tiled_batch_matching_hit_detection(mock_scaler, ckks_ctx):
         else:
             assert not result.catches[q]
             assert match_debug.first_positive_columns[q] == -1
+
+
+@pytest.mark.parametrize("zero_features", [(), (0,), (49,), tuple(range(50))])
+def test_tiled_batch_matching_skip_zero_blocks_is_numerically_identical(
+    mock_scaler, ckks_ctx, zero_features
+):
+    names = ["Q0", "Q1", "Q2"]
+    m = len(names)
+    k, L, d = 2, 7, 50
+    layout = make_slot_tile_layout(m)
+    centroids = np.random.uniform(-1.0, 1.0, size=(k, 200))
+    cluster_matrix = np.random.uniform(-1.0, 1.0, size=(k, L, d))
+    cluster_matrix[0, 2:6, :] = 0.0
+    cluster_matrix[1, 4:, :] = 0.0
+    cluster_matrix[:, :, list(zero_features)] = 0.0
+    req2, _, _, public_context_bytes = build_tiled_second_request(
+        names, centroids, cluster_matrix, mock_scaler, ckks_ctx
+    )
+    fixed_mask = np.full((m, layout.tile_width), 1.0, dtype=np.float64)
+    with patch(
+        "party_b.online_responder._sample_positive_mask_matrix",
+        return_value=fixed_mask,
+    ):
+        reference = list(
+            tiled_batch_matching(
+                cluster_matrix, req2, public_context_bytes, tau=0.5
+            )
+        )
+        sparse = list(
+            tiled_batch_matching(
+                cluster_matrix,
+                req2,
+                public_context_bytes,
+                tau=0.5,
+                skip_zero_blocks=True,
+            )
+        )
+    assert len(reference) == len(sparse)
+    for expected, actual in zip(reference, sparse, strict=True):
+        np.testing.assert_allclose(
+            expected.decrypt(ckks_ctx.secret_key()),
+            actual.decrypt(ckks_ctx.secret_key()),
+            rtol=0.0,
+            atol=1e-4,
+        )

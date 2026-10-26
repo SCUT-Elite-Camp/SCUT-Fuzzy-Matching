@@ -1,0 +1,36 @@
+{
+  "config": {
+    "clusters": 50,
+    "cap": 200,
+    "ell": 512,
+    "d": 109,
+    "seed": 42,
+    "n_db": 10000
+  },
+  "layout_a": {
+    "max_size": 483,
+    "mean_size": 200.0,
+    "p95": 301.24999999999994,
+    "tiles": 25,
+    "n_positive": 100,
+    "top1_recall": 0.88,
+    "in_cluster_filter_recall": 0.9886363636363636,
+    "end_to_end_recall": 0.87
+  },
+  "layout_b": {
+    "max_size": 200,
+    "mean_size": 200.0,
+    "p95": 200.0,
+    "tiles": 10,
+    "n_positive": 100,
+    "top1_recall": 0.75,
+    "in_cluster_filter_recall": 0.9866666666666667,
+    "end_to_end_recall": 0.74
+  },
+  "paired": {
+    "new_misses": 13,
+    "fixed": 0,
+    "both_miss": 13,
+    "delta_recall_end_to_end": -0.13
+  }
+}

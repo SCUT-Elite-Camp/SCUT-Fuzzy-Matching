@@ -1,0 +1,70 @@
+{
+  "tau": 0.9,
+  "mask_range": [
+    1.0,
+    10.0
+  ],
+  "n_candidates": 40140,
+  "n_positive": 87,
+  "prior_width": 0.7103703649544771,
+  "median_abs_d": 0.3063996498166559,
+  "rows": [
+    {
+      "repeats": 1,
+      "median_width": 1.403251387383,
+      "relative_to_prior": 1.9753799660166353,
+      "bits_leaked": -0.9821301836004004,
+      "median_relative_error": 2.0071789303733776
+    },
+    {
+      "repeats": 2,
+      "median_width": 0.8483255191629484,
+      "relative_to_prior": 1.1942017305540495,
+      "bits_leaked": -0.25604656448122326,
+      "median_relative_error": 1.15245390641498
+    },
+    {
+      "repeats": 5,
+      "median_width": 0.3846692579474634,
+      "relative_to_prior": 0.5415052160461596,
+      "bits_leaked": 0.884952860234398,
+      "median_relative_error": 0.5030391688746956
+    },
+    {
+      "repeats": 10,
+      "median_width": 0.2012153516922523,
+      "relative_to_prior": 0.2832541468775191,
+      "bits_leaked": 1.8198310174440846,
+      "median_relative_error": 0.2606010163571352
+    },
+    {
+      "repeats": 50,
+      "median_width": 0.041541573149547026,
+      "relative_to_prior": 0.05847875305469583,
+      "bits_leaked": 4.095943640813139,
+      "median_relative_error": 0.053552179948287544
+    },
+    {
+      "repeats": 100,
+      "median_width": 0.02075267661508859,
+      "relative_to_prior": 0.02921388284042295,
+      "bits_leaked": 5.09720206911741,
+      "median_relative_error": 0.026723242722332077
+    },
+    {
+      "repeats": 500,
+      "median_width": 0.0041414886428665365,
+      "relative_to_prior": 0.005830041408233488,
+      "bits_leaked": 7.422278154368227,
+      "median_relative_error": 0.005333625461258132
+    },
+    {
+      "repeats": 1000,
+      "median_width": 0.0021094042158849857,
+      "relative_to_prior": 0.0029694428708609815,
+      "bits_leaked": 8.395592007791942,
+      "median_relative_error": 0.002727134261336317
+    }
+  ],
+  "note": "A 可重复提交同一查询；B 无速率限制。区间下界取 max(y)/10、上界取 min(y)。"
+}

@@ -1,0 +1,362 @@
+diff --git a/baseline_Integration/projection/__init__.py b/baseline_Integration/projection/__init__.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/projection/__init__.py
+@@ -0,0 +1 @@
++"""Opt-in random-projection candidate filtering; existing Top-1 pipeline untouched."""
+diff --git a/baseline_Integration/projection/random_hyperplane.py b/baseline_Integration/projection/random_hyperplane.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/projection/random_hyperplane.py
+@@ -0,0 +1,38 @@
++"""Random hyperplane LSH on the baseline's EL=50 normalized matching vectors.
++
++This is a plaintext candidate-filtering research module, NOT a secure PSI or
++privacy-preserving access protocol. All projection rounds use independent planes.
++"""
++from __future__ import annotations
++import numpy as np
++
++
++def make_planes(dim: int, rounds: int, bits: int, seed: int) -> np.ndarray:
++    if min(dim, rounds, bits) <= 0:
++        raise ValueError('dim, rounds and bits must be positive')
++    rng = np.random.default_rng(seed)
++    return rng.standard_normal((rounds, bits, dim)).astype(np.float64)
++
++
++def hash_signatures(vectors: np.ndarray, planes: np.ndarray) -> np.ndarray:
++    vectors = np.asarray(vectors, dtype=np.float64)
++    if vectors.ndim == 1:
++        vectors = vectors[None, :]
++    if vectors.ndim != 2 or planes.ndim != 3 or vectors.shape[1] != planes.shape[2]:
++        raise ValueError('signature and projection-plane dimensions do not match')
++    return np.einsum('nd,rsd->nrs', vectors, planes, optimize=True) >= 0
++
++
++def collision_mask(query_signature: np.ndarray, database_signatures: np.ndarray) -> np.ndarray:
++    """Keep a record iff all s bits match in at least one of R rounds."""
++    query_signature = np.asarray(query_signature, dtype=bool)
++    database_signatures = np.asarray(database_signatures, dtype=bool)
++    if query_signature.shape != database_signatures.shape[1:]:
++        raise ValueError('query signature shape mismatch')
++    return np.any(np.all(database_signatures == query_signature[None, :, :], axis=2), axis=1)
++
++
++def projected_candidates(cluster_member_indices: np.ndarray, query_signature: np.ndarray,
++                         database_signatures: np.ndarray) -> np.ndarray:
++    indices = np.asarray(cluster_member_indices, dtype=int)
++    return indices[collision_mask(query_signature, database_signatures[indices])]
+diff --git a/baseline_Integration/scripts/evaluate_top1_projection.py b/baseline_Integration/scripts/evaluate_top1_projection.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/scripts/evaluate_top1_projection.py
+@@ -0,0 +1,181 @@
++"""Evaluate ORIGINAL Top-1 followed by an OPTIONAL plaintext SimHash filter.
++
++No changes to K-Means, top-1 selector, or CKKS protocol; this script deliberately
++measures algorithmic feasibility before implementing a secure retrieval protocol.
++"""
++from __future__ import annotations
++import argparse
++import csv
++import json
++import random
++import sys
++import time
++from pathlib import Path
++
++import numpy as np
++ROOT = Path(__file__).resolve().parent.parent
++if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
++
++from party_b.offline_prep import prepare_party_b_offline
++from minhash.encoder import batch_encode
++from preprocessing.normalizer import l2_normalize
++from preprocessing.text_cleaner import clean_name
++from projection.random_hyperplane import make_planes, hash_signatures, collision_mask
++
++
++def read_ncvr(data_root: Path, query_limit: int, db_limit: int, fuzzy_ratio: float, fuzzy_seed: int):
++    folder = data_root / 'ncvr_10k' if (data_root / 'ncvr_10k').exists() else data_root
++    with (folder / 'ncvr_10k_database.csv').open(newline='', encoding='utf-8') as f:
++        db = list(csv.DictReader(f))
++    with (folder / 'ncvr_10k_queries.csv').open(newline='', encoding='utf-8') as f:
++        queries = list(csv.DictReader(f))
++    if db_limit > 0: db = db[:db_limit]
++    if query_limit > 0: queries = queries[:query_limit]
++    db_names = [clean_name(row['full_name']) for row in db]
++    db_ids = [row['ncid'] for row in db]
++    lookup = {key: i for i, key in enumerate(db_ids)}
++    entries=[]
++    for row in queries:
++        label = str(row['label']).strip().lower() in {'1','true','yes'}
++        entries.append({'id': row['query_ncid'], 'name': clean_name(row['query_name']), 'label': label,
++                        'target_index': lookup.get(row['query_ncid']) if label else None})
++    # Same single-substitution recipe as data_pipeline/perturbations.py, with baseline clean_name.
++    eligible=[i for i,e in enumerate(entries) if e['label'] and any('a'<=c<='z' for c in e['name'])]
++    rng=random.Random(fuzzy_seed)
++    forbidden=set(db_names)
++    for i in rng.sample(eligible, int(len(eligible)*fuzzy_ratio+0.5)):
++        original=entries[i]['name']; positions=[p for p,c in enumerate(original) if 'a'<=c<='z']
++        rng.shuffle(positions)
++        for p in positions:
++            replacements=[c for c in 'abcdefghijklmnopqrstuvwxyz' if c!=original[p]]
++            rng.shuffle(replacements)
++            candidate=next((original[:p]+c+original[p+1:] for c in replacements
++                            if original[:p]+c+original[p+1:] not in forbidden),None)
++            if candidate is not None:
++                entries[i]['name']=candidate; entries[i]['perturbed']=True; break
++    return db_names, db_ids, entries
++
++
++def safe_ratio(a,b):
++    return None if b==0 else a/b
++
++
++def run(args):
++    if not (0<=args.fuzzy_ratio<=1): raise ValueError('fuzzy-ratio must be in [0,1]')
++    if not (0<=args.tau<=1): raise ValueError('tau must be in [0,1]')
++    if args.query_limit==0 or args.db_limit==0: raise ValueError('limits must be -1 or positive')
++    if not args.pairs: raise ValueError('at least one --pairs R S setting is required')
++    data_root=Path(args.data_path)
++    db_names, db_ids, queries=read_ncvr(data_root,args.query_limit,args.db_limit,args.fuzzy_ratio,args.fuzzy_seed)
++    if not db_names or not queries: raise ValueError('empty dataset')
++    t0=time.perf_counter()
++    # ORIGINAL offline stage: exactly the baseline's prepare_party_b_offline.
++    artifacts=prepare_party_b_offline(db_names,k_mode=args.k,random_state=42)
++    offline_sec=time.perf_counter()-t0
++    assignments=artifacts.cluster_assignments
++    # The validation embedding is the SAME EL=50 normalized representation used by CKKS.
++    db_vec=l2_normalize(batch_encode(db_names,200)[:,:50]); db_vec=np.asarray(db_vec)
++    # Recover the baseline's ACTUAL Top-1 argmax: 200D normalized + standardize + dot centroid.
++    query_names=[x['name'] for x in queries]
++    query_raw=batch_encode(query_names,200)
++    query50=l2_normalize(query_raw[:,:50]); query200=l2_normalize(query_raw)
++    query200_scaled=(query200-artifacts.scaler_mean)/(artifacts.scaler_scale+1e-8)
++    selected=np.argmax(query200_scaled @ artifacts.centroids.T,axis=1)
++    members=[np.flatnonzero(assignments==i) for i in range(artifacts.centroids.shape[0])]
++    # Baseline cosine decision on the selected cluster; no projection.
++    base_rows=[]
++    for qi,e in enumerate(queries):
++        idx=members[int(selected[qi])]
++        scores=db_vec[idx] @ query50[qi]
++        covered = e['target_index'] is not None and assignments[e['target_index']]==selected[qi]
++        baseline_match=bool(np.any(scores>=args.tau))
++        base_rows.append({'query_index':qi,'query_id':e['id'],'label':e['label'],'perturbed':bool(e.get('perturbed',False)),
++                          'target_in_database':e['target_index'] is not None,'target_in_top1':bool(covered),
++                          'selected_cluster':int(selected[qi]),'cluster_size':int(len(idx)),
++                          'baseline_plain_match':baseline_match,'query_name':e['name']})
++    outdir=Path(args.output_dir); outdir.mkdir(parents=True,exist_ok=True)
++    def confusion(rows,field):
++        tp=sum(bool(r[field]) and r['label'] for r in rows)
++        fp=sum(bool(r[field]) and not r['label'] for r in rows)
++        fn=sum(not bool(r[field]) and r['label'] for r in rows)
++        tn=sum(not bool(r[field]) and not r['label'] for r in rows)
++        return {'tp':tp,'fp':fp,'fn':fn,'tn':tn,'precision':safe_ratio(tp,tp+fp),
++                'recall':safe_ratio(tp,tp+fn)}
++    pos_with_target=[r for r in base_rows if r['label'] and r['target_in_database']]
++    baseline={'mode':'baseline_top1_no_projection','rounds':0,'bits':0,'mean_candidates':float(np.mean([r['cluster_size'] for r in base_rows])),
++              'candidate_total':int(sum(r['cluster_size'] for r in base_rows)),
++              'target_coverage':safe_ratio(sum(r['target_in_top1'] for r in pos_with_target),len(pos_with_target)),
++              'query_metrics':confusion(base_rows,'baseline_plain_match')}
++    summaries=[baseline]
++    all_rows=[]
++    for R,S in args.pairs:
++        if R<=0 or S<=0: raise ValueError('R and S must be positive')
++        t_proj=time.perf_counter()
++        planes=make_planes(50,R,S,args.projection_seed)
++        db_keys=hash_signatures(db_vec,planes)
++        q_keys=hash_signatures(query50,planes)
++        build_seconds=time.perf_counter()-t_proj
++        rows=[]
++        for qi,e in enumerate(queries):
++            t_query=time.perf_counter()
++            idx=members[int(selected[qi])]
++            mask=collision_mask(q_keys[qi],db_keys[idx])
++            kept=idx[mask]
++            # IMPORTANT: validation only, plaintext exact same EL=50 cosine threshold;
++            # not an encrypted candidate retrieval protocol.
++            pred=bool(np.any((db_vec[kept] @ query50[qi])>=args.tau))
++            target=e['target_index']
++            keep_target=bool(target is not None and np.any(kept==target))
++            rows.append({**base_rows[qi], 'rounds':R,'bits':S,'retained_candidates':int(len(kept)),
++                         'projection_plain_match':pred,'target_after_projection':keep_target,
++                         'projection_query_seconds':time.perf_counter()-t_query})
++        target_rows=[r for r in rows if r['label'] and r['target_in_database']]
++        covered_rows=[r for r in target_rows if r['target_in_top1']]
++        summary={'mode':'top1_plus_projection','rounds':R,'bits':S,
++                 'candidate_total':int(sum(r['retained_candidates'] for r in rows)),
++                 'mean_candidates':float(np.mean([r['retained_candidates'] for r in rows])),
++                 'relative_reduction_within_top1':1-sum(r['retained_candidates'] for r in rows)/max(1,sum(r['cluster_size'] for r in rows)),
++                 'target_coverage':safe_ratio(sum(r['target_after_projection'] for r in target_rows),len(target_rows)),
++                 'conditional_target_recall':safe_ratio(sum(r['target_after_projection'] for r in covered_rows),len(covered_rows)),
++                 'query_metrics':confusion(rows,'projection_plain_match'),
++                 'projection_index_build_seconds':build_seconds,
++                 'projection_filter_total_seconds':sum(r['projection_query_seconds'] for r in rows)}
++        summaries.append(summary)
++        all_rows+=rows
++        print(f'R={R:>3}, s={S:>3}: mean candidates={summary["mean_candidates"]:.1f}; '+
++              f'conditional target recall={summary["conditional_target_recall"]}; '+
++              f'plain recall={summary["query_metrics"]["recall"]}')
++    with (outdir/'summary.json').open('w',encoding='utf8') as f:
++        json.dump({'config':vars(args),'offline_seconds':offline_sec,'baseline':baseline,'results':summaries[1:],
++                   'note':'PLAINTEXT FEASIBILITY ONLY. No encrypted projection or secure retrieval is implemented.'},
++                  f,ensure_ascii=False,indent=2,default=str)
++    def write_csv(filename,rows):
++        if not rows:return
++        with (outdir/filename).open('w',newline='',encoding='utf8') as f:
++            fields=list(dict.fromkeys(key for row in rows for key in row))
++            writer=csv.DictWriter(f,fieldnames=fields);writer.writeheader();writer.writerows(rows)
++    summary_flat=[]
++    for item in summaries:
++        row={k:v for k,v in item.items() if k!='query_metrics'}
++        row.update({'plain_'+k:v for k,v in item['query_metrics'].items()});summary_flat.append(row)
++    write_csv('summary.csv',summary_flat);write_csv('per_query.csv',all_rows)
++    print('Original Top-1 baseline:', baseline)
++    print('Saved:',outdir.resolve())
++
++
++def main():
++    p=argparse.ArgumentParser(description='Top-1 unchanged, followed by optional random-hyperplane projection (plaintext feasibility study).')
++    p.add_argument('--data-path',default=str(ROOT/'data'))
++    p.add_argument('--output-dir',default=str(ROOT/'artifacts'/'top1_projection'))
++    p.add_argument('--query-limit',type=int,default=200)
++    p.add_argument('--db-limit',type=int,default=10000)
++    p.add_argument('--k',type=int,default=50,help='Original K-Means number of clusters, not Top-K; Top-1 remains fixed')
++    p.add_argument('--tau',type=float,default=.9)
++    p.add_argument('--fuzzy-ratio',type=float,default=.3)
++    p.add_argument('--fuzzy-seed',type=int,default=42)
++    p.add_argument('--projection-seed',type=int,default=2026)
++    p.add_argument('--pairs',type=int,nargs=2,action='append',metavar=('R','S'),help='Repeatable: R rounds, S bits per round')
++    args=p.parse_args()
++    if args.pairs is None: args.pairs=[(4,8),(8,8),(16,8),(8,16),(16,16)]
++    run(args)
++if __name__=='__main__': main()
+diff --git a/baseline_Integration/tests/test_random_hyperplane_projection.py b/baseline_Integration/tests/test_random_hyperplane_projection.py
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/tests/test_random_hyperplane_projection.py
+@@ -0,0 +1,21 @@
++import numpy as np
++from projection.random_hyperplane import make_planes, hash_signatures, collision_mask, projected_candidates
++
++def test_identical_vectors_always_collide():
++    vectors=np.array([[1.0,0.0],[1.0,0.0],[-1.0,0.0]])
++    planes=make_planes(2,4,8,seed=6)
++    hashes=hash_signatures(vectors,planes)
++    mask=collision_mask(hashes[0],hashes)
++    assert mask[0] and mask[1]
++    assert not mask[2]
++
++def test_round_union_and_member_restriction():
++    db=np.array([[[0,0],[0,0]],[[1,1],[0,0]],[[1,1],[1,1]]],dtype=bool)
++    q=np.array([[0,0],[0,0]],dtype=bool)
++    assert collision_mask(q,db).tolist()==[True,True,False]
++    assert projected_candidates(np.array([1,2]),q,db).tolist()==[1]
++
++def test_invalid_dimensions():
++    import pytest
++    with pytest.raises(ValueError): make_planes(2,0,8,7)
++    with pytest.raises(ValueError): hash_signatures(np.ones((2,4)), np.ones((3,5,2)))
+diff --git a/baseline_Integration/TOP1_RANDOM_PROJECTION_GUIDE.md b/baseline_Integration/TOP1_RANDOM_PROJECTION_GUIDE.md
+new file mode 100644
+--- /dev/null
++++ b/baseline_Integration/TOP1_RANDOM_PROJECTION_GUIDE.md
+@@ -0,0 +1,96 @@
++# 原始 Top-1 + Random Projection：代码修改及实验指南
++
++## 目标与范围
++
++严格保留原始 baseline 的 **MinHash 特征、K-Means 聚类、200 维标准化与簇中心打分、Top-1 选簇、CKKS 原代码**。在 Top-1 得到的候选簇内部**另外**增加随机投影，测量候选过滤是否有效。这是算法候选阶段的独立明文实验；**没有加入投影的安全 PSI、密文掩码或 CKKS 跳过候选的安全协议**，因此不能宣称本版已经缩减了真实 CKKS 通信量。
++
++## 代码改动清单
++
++| 文件 | 操作 | 说明 |
++| --- | --- | --- |
++| `projection/__init__.py` | 新增 | 独立投影模块入口 |
++| `projection/random_hyperplane.py` | 新增 | 随机超平面生成、二值签名、单轮全位匹配与跨轮 OR 去重 |
++| `scripts/evaluate_top1_projection.py` | 新增 | NCVR 数据预处理、调用原始离线聚类、原始 Top-1、投影扫描、逐查询与汇总数据导出 |
++| `tests/test_random_hyperplane_projection.py` | 新增 | 相同向量碰撞、跨轮 OR、限定簇内、参数校验测试 |
++| `TOP1_RANDOM_PROJECTION_GUIDE.md` | 新增 | 本说明 |
++| `clustering/`、`party_a/`、`party_b/`、`evaluation/benchmark.py` | **不变** | 原 K-Means、Top-1 及 CKKS baseline 完全保留 |
++
++运行本实验时，脚本直接调用 `party_b.offline_prep.prepare_party_b_offline` 构建原 K-Means 结果，然后计算与原 Top-1 同一路径的：
++
++- 数据库：200 维 MinHash → L2 归一化 → StandardScaler → 原 K-Means。
++- 查询：200 维 MinHash → L2 归一化 → 使用数据库 scaler 标准化 → 与 centroid 做点积 → `argmax`（Top-1）。
++- 候选验证：50 维 MinHash 前缀 → L2 归一化 → 余弦阈值 `tau`（默认 0.9）。
++
++**为什么选择随机超平面而非强行使用原 Approx-PSI 的 Hamming 坐标投影？** 原系统的最终匹配定义是 50 维归一化 MinHash 的余弦阈值；原构造二进制数据的 Hamming 距离界不能直接搬过来。对相同的 50 维向量使用独立随机超平面，可利用 `Pr[bit differs] = arccos(cosine) / pi` 的严格碰撞关系，先测试投影方法是否适合该数据。不据此宣称原论文 Hamming-gap 的近线性通信保证。
++
++## 投影算法
++
++对选中簇内每一条 50 维归一化向量 x 以及查询 q，以相同随机种子生成 R 轮、每轮 s 条随机超平面。每一条超平面输出一位 `1[w·x >= 0]`；一轮 s 位全相同视为碰撞；**至少一个轮次碰撞则保留**。仅在 Top-1 已经选中的簇里执行过滤。
++
++对于最终匹配余弦阈值 `tau`，随机独立超平面下，正例一轮碰撞概率至少为 `(1-arccos(tau)/pi)^s`；若各轮独立，R 轮均未碰撞的概率至多为 `[1-(1-arccos(tau)/pi)^s]^R`。本上界针对以余弦阈值定义的正例，而 `target_ncid` 对应的实际记录未必满足这个阈值。二者的保留率必须分别报告。
++
++## 环境及运行方式
++
++在原项目目录安装：
++
++```bash
++python -m pip install -r requirements.txt
++```
++
++先做快速测试（不要求 TenSEAL，也不调用 CKKS）：
++
++```bash
++python -m pytest -q tests/test_random_hyperplane_projection.py
++python scripts/evaluate_top1_projection.py --db-limit 500 --query-limit 20 --k 10 --pairs 4 8 --pairs 8 8
++```
++
++运行完整 NCVR 10K 实验，预设参数扫描：
++
++```bash
++python scripts/evaluate_top1_projection.py --db-limit 10000 --query-limit 200 --k 50 --fuzzy-ratio 0.3 --fuzzy-seed 42
++```
++
++`--k 50` 指原 K-Means **总簇数**（不是 Top-K）；Query 始终是 Top-1。
++
++手动设定多组投影参数，每个 `--pairs` 后是 **R（轮数）和 s（每轮位数）**：
++
++```bash
++python scripts/evaluate_top1_projection.py --pairs 4 8 --pairs 8 8 --pairs 16 8 --pairs 16 16 --projection-seed 2026
++```
++
++对无扰动姓名对照：
++
++```bash
++python scripts/evaluate_top1_projection.py --fuzzy-ratio 0 --pairs 4 8 --pairs 8 16
++```
++
++原始真实 CKKS baseline 仍可用现有入口独立运行，作为安全协议的原始参考：
++
++```bash
++python scripts/evaluate_ncvr_10k.py --k 50 --query-limit 200 --fuzzy-ratio 0.3 --batch-size 0
++```
++
++## 输出文件与含义
++
++位于 `artifacts/top1_projection/`，也可以通过 `--output-dir` 指定。
++
++- `summary.json`：配置、原始 Top-1 明文余弦指标、不同 (R,s) 的统计、耗时。
++- `summary.csv`：适合 Excel 汇总作图；包含基线、每组投影参数的平均候选数、减少率、覆盖率及明文阈值预测指标。
++- `per_query.csv`：每条 Query 的 Top-1 簇编号、原簇规模、投影后候选数量、是否保留对应 ID 的目标、两种明文匹配结果、投影耗时。
++
++**重点关注指标**：`relative_reduction_within_top1`（相对于原簇候选数的缩减）、`conditional_target_recall`（已经进入原 Top-1 簇的标注目标在投影后的保留率）、`target_coverage`（所有数据库内标注目标的最终覆盖率）以及 `query_metrics.recall`（明文最终余弦阈值下的查询级召回率）。
++
++`target_coverage` 与余弦阈值匹配 Recall 的定义不同：标签为正只表示目标记录来自数据库，不代表字符扰动后该对的 50 维余弦相似度仍达 0.9。
++
++## 为什么现在没有直接对 CKKS 加速
++
++原协议使用加密 one-hot 选择完整簇，并通过固定形状按列密文计算。如果在簇选择后向数据库方直接发送真实投影命中的记录 ID 或一个数据相关长度的子集，就会额外泄露查询、访问模式或匹配关系。因此这个版本 **只证明候选生成算法是否值得研究**；CKKS 原代码保持原样。要在安全前提下真正跳过投影过滤的记录，还需要额外设计安全 PSI / 加密掩码 / 私有检索及固定形状执行，另作端到端测试。
++
++## 后续必须验证
++
++1. 相同样本与聚类设置下，原始 Top-1 明文结果和已有 baseline 在标签、候选和阈值定义上是否完全一致；重点核对预处理与加密浮点边界误差。
++2. 在正例目标已入选 Top-1 的条件下，投影是否引入额外丢失；与原本 Top-1 漏检分别统计。
++3. 同时比较负例候选过滤率与真实匹配保留率，扫描 R、s 得到 Pareto 曲线，而非追求最高候选减少率。
++4. 确认独立超平面哈希实验的碰撞频率与余弦理论一致，不继承 Hamming-gap 的复杂度保证。
++5. 多投影随机种子、多组 fuzzy_seed；以及不同数据库总簇数（不改变 Top-1 规则）下重复验证。
++6. 若继续安全协议集成，必须测量隐私候选检索的开销与泄漏函数，不得把明文过滤的时间或节省的候选数直接称为 CKKS 加速。

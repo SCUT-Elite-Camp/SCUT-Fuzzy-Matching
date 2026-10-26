@@ -19,8 +19,8 @@ K_CLUSTERS_AUTO_FACTOR = 1.4
 
 # 多属性路径第二轮默认探测的簇数。
 #
-# 只影响 multi_attribute/ —— 姓名单属性路径（party_a / party_b）走的是
-# 纯 argmax 的 top-1，没有探测逻辑，不受这个值影响。
+# 只影响 multi_attribute/。姓名单属性 tiled 路径默认仍为 top-1，但可在
+# evaluate/benchmark 中显式配置独立多探针；它不使用这个多属性默认值。
 #
 # 为什么是 3 而不是穷举：穷举把簇召回推到 1.0000，但它的省法建立在 early stop
 # 上，而 early stop 需要一个**命中的列**才能停。库里没有对应记录的查询永远撞不到，

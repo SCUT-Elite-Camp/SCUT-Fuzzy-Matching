@@ -1,0 +1,59 @@
+{
+  "base_commit": "3d13953e5b70716c69019959fe02cb17f1f403d2",
+  "purpose": "Historical independent experiments; not applied to the active baseline.",
+  "variants": {
+    "fixed_threshold": {
+      "source_archive": "SCUT_Fuzzy_Matching.zip",
+      "source_sha256": "f150d7ebbdd7bc7df719173459e0acb58edc8285d7c487ae0ca505f3099e3e74",
+      "patch": "patches/fixed_threshold.patch",
+      "patch_sha256": "e0c3cb820980d116955c10f20f1114e8949b8f1982842bae40ccb4c2fa4911a1",
+      "paths": [
+        "party_a/online_querier.py",
+        "evaluation/benchmark.py",
+        "scripts/evaluate_cluster_threshold.py",
+        "tests/test_fixed_threshold.py",
+        "FIXED_THRESHOLD_EXPERIMENT.md"
+      ]
+    },
+    "bad_event": {
+      "source_archive": "SCUT_Fuzzy_Matching_BadEvent.zip",
+      "source_sha256": "3062b314292db072126aa832928bd477a2bc12a4e691dd5bad0dc8da68b584fa",
+      "patch": "patches/bad_event.patch",
+      "patch_sha256": "48e39622a9eeeea56874ad305ac19226104ef5ae6f1aad6f06f0bd8c67e33e0c",
+      "paths": [
+        "clustering/bad_event_topk.py",
+        "scripts/evaluate_bad_event_topk.py",
+        "tests/test_bad_event_topk.py",
+        "BAD_EVENT_TOPK_EXPERIMENT.md"
+      ]
+    },
+    "hyperplane": {
+      "source_archive": "SCUT_Fuzzy_Matching_Top1_projection(1).zip",
+      "source_sha256": "2b183f60f035379670a5328c59762745a61e93aea560f78f5fe64d5ff52d96fc",
+      "patch": "patches/hyperplane.patch",
+      "patch_sha256": "e34301eff66e701f3e71ee5a420bc150f985aa6f6212f13d71e56fd7408529ed",
+      "paths": [
+        "projection/__init__.py",
+        "projection/random_hyperplane.py",
+        "scripts/evaluate_top1_projection.py",
+        "tests/test_random_hyperplane_projection.py",
+        "TOP1_RANDOM_PROJECTION_GUIDE.md"
+      ]
+    },
+    "topk": {
+      "source_archive": "SCUT_Fuzzy_Matching_Top1_Top2_Top3.zip",
+      "source_sha256": "c3a9a90ca63679a31551c834f38f71ecb6aa5c4908fe3136b33ebaa8af9f5406",
+      "patch": "patches/topk.patch",
+      "patch_sha256": "6da4dc0d65a2333a4942e321db77b9523e0c28a87e675e0978c4db7e2f77868e",
+      "paths": [
+        "party_a/online_querier.py",
+        "evaluation/benchmark.py",
+        "scripts/evaluate_ncvr_10k.py",
+        "scripts/compare_topk_ncvr.py",
+        "scripts/measure_topk_cluster_coverage.py",
+        "tests/test_topk_selection.py",
+        "TOPK_EXPERIMENTS.md"
+      ]
+    }
+  }
+}

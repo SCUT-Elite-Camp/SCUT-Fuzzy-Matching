@@ -1,10 +1,10 @@
-#include <emp-tool/runtime/io/net_io_channel.h>
 #include "secure/secure_approx_psi.h"
 
 #include "projection.h"
 #include "hamming.h"
 
 #ifdef APPROX_PSI_HAS_EMP
+#include <emp-tool/runtime/io/net_io_channel.h>
 #include "secure/ss_ham_vmult_impl.h"
 #include "secure/secure_filter_impl.h"
 #include "secure/hamming_threshold.h"
@@ -148,6 +148,7 @@ ExperimentResult SecureApproxPSI::run(
 // -----------------------------------------------------------------------------
 namespace {
 
+#if defined(APPROX_PSI_HAS_EMP) && defined(APPROX_PSI_HAS_VOLEPSI)
 void run_round_secure(
     SecureApproxPSI& self,
     const std::vector<Element>& local,
@@ -335,6 +336,7 @@ ExperimentResult run_two_party(
     result.stats.rounds = config.parameters.k;
     return result;
 }
+#endif
 
 } // namespace
 
@@ -342,14 +344,26 @@ ExperimentResult SecureApproxPSI::run_alice(
     const std::vector<Element>& A,
     coproto::Socket& psi_sock)
 {
+#if defined(APPROX_PSI_HAS_EMP) && defined(APPROX_PSI_HAS_VOLEPSI)
     return run_two_party(*this, A, psi_sock, true, ssPsi_, config_);
+#else
+    (void)A;
+    (void)psi_sock;
+    throw std::runtime_error("run_alice requires both EMP and volePSI support");
+#endif
 }
 
 ExperimentResult SecureApproxPSI::run_bob(
     const std::vector<Element>& B,
     coproto::Socket& psi_sock)
 {
+#if defined(APPROX_PSI_HAS_EMP) && defined(APPROX_PSI_HAS_VOLEPSI)
     return run_two_party(*this, B, psi_sock, false, ssPsi_, config_);
+#else
+    (void)B;
+    (void)psi_sock;
+    throw std::runtime_error("run_bob requires both EMP and volePSI support");
+#endif
 }
 
 EMPContext* SecureApproxPSI::empContext() const

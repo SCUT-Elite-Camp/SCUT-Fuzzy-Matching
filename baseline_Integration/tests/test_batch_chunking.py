@@ -3,10 +3,13 @@
 import importlib
 import os
 
+import numpy as np
 import pytest
 
 import scripts.evaluate_ncvr_10k as evaluate_script
 from evaluation.benchmark import benchmark
+from minhash.encoder import batch_encode
+from preprocessing.normalizer import l2_normalize
 from scripts.evaluate_ncvr_10k import parse_args
 
 _DATA_PATH = os.path.join(
@@ -138,6 +141,13 @@ def test_ncvr_10k_main_forwards_evaluation_options(monkeypatch, tmp_path):
             "0.4",
             "--fuzzy-seed",
             "9",
+            "--projection-dim",
+            "128",
+            "--projection-seed",
+            "43",
+            "--probes",
+            "2",
+            "--skip-zero-blocks",
             "--output-dir",
             str(tmp_path),
         ],
@@ -148,6 +158,10 @@ def test_ncvr_10k_main_forwards_evaluation_options(monkeypatch, tmp_path):
     assert captured["he_batch_size"] == 200
     assert captured["fuzzy_ratio"] == pytest.approx(0.4)
     assert captured["fuzzy_seed"] == 9
+    assert captured["projection_dim"] == 128
+    assert captured["projection_seed"] == 43
+    assert captured["probes"] == 2
+    assert captured["skip_zero_blocks"] is True
 
 
 def test_batch_benchmark_single_tile_early_stop_preserves_results():
@@ -177,6 +191,27 @@ def test_batch_benchmark_single_tile_early_stop_preserves_results():
     assert abs(early_recv - full_recv) < 0.01
 
 
+def test_benchmark_records_effective_probe_count_when_request_exceeds_k():
+    result = benchmark(
+        {
+            "dataset": "ncvr_10k",
+            "data_path": _DATA_PATH,
+            "el_cluster": 200,
+            "el_match": 50,
+            "k": 1,
+            "tau": 0.9,
+            "query_limit": 1,
+            "db_limit": 2,
+            "use_mock": False,
+            "he_batch_size": 1,
+            "probes": 2,
+            "early_stop": False,
+        }
+    )
+    assert result["protocol"]["probes"] == 1
+    assert result["protocol"]["requested_probes"] == 2
+
+
 def test_mock_benchmark_records_nonzero_peak_memory():
     result = benchmark(
         {
@@ -193,3 +228,58 @@ def test_mock_benchmark_records_nonzero_peak_memory():
         }
     )
     assert result["memory_peak_mb"] > 0.0
+
+
+def test_projected_multi_probe_chunks_match_full_database_reference(monkeypatch):
+    database = ["JOHN SMITH", "MARY JONES", "ALICE BROWN", "BOB WILSON"]
+    queries = [database[0], "ZXQV QZXV", database[2], "VVZX QQXZ", database[3]]
+    monkeypatch.setattr(
+        benchmark_module, "_load_benchmark_dataset",
+        lambda config: (queries, database, [True, False, True, False, True], None),
+    )
+    expanded_sizes = []
+    original_matching = benchmark_module.tiled_batch_matching
+
+    def checked_matching(matrix, request, public_context, **kwargs):
+        expanded_sizes.append(request.layout.batch_size)
+        assert all(isinstance(item, bytes) for item in request.encrypted_query_50)
+        assert all(isinstance(item, bytes) for item in request.encrypted_selectors)
+        return original_matching(matrix, request, public_context, **kwargs)
+
+    monkeypatch.setattr(benchmark_module, "tiled_batch_matching", checked_matching)
+    result = benchmark({
+        "use_mock": False, "k": 2, "he_batch_size": 3, "probes": 3,
+        "projection_dim": 4, "skip_zero_blocks": True, "early_stop": False,
+    })
+    q50 = l2_normalize(batch_encode(queries, 200)[:, :50])
+    b50 = l2_normalize(batch_encode(database, 200)[:, :50])
+    scores = q50 @ b50.T
+    assert np.all(np.abs(scores - 0.9) > 1e-3)
+    expected = np.any(scores >= 0.9, axis=1).tolist()
+    assert len(set(expected)) == 2
+    assert result["predictions"] == expected
+    assert expanded_sizes == [6, 4]
+    assert result["protocol"]["probes"] == 2
+    assert result["protocol"]["requested_probes"] == 3
+
+
+@pytest.mark.parametrize("reuse_context", [True, False])
+def test_serial_context_communication_accounting(monkeypatch, reuse_context):
+    names = ["JOHN SMITH", "MARY JONES"]
+    monkeypatch.setattr(
+        benchmark_module, "_load_benchmark_dataset",
+        lambda config: (names, names, [True, True], None),
+    )
+    result = benchmark({
+        "use_mock": False, "k": 1, "he_batch_size": 0,
+        "reuse_context": reuse_context, "early_stop": False,
+    })
+    comm = result["communication_bytes"]
+    assert comm["public_context_setup"] > 0
+    if reuse_context:
+        assert comm["public_context_transmitted"] == 2 * comm["public_context_setup"]
+    else:
+        assert comm["public_context_transmitted"] == comm["public_context_setup"]
+    assert result["communication_mb"]["total_without_public_context"] == pytest.approx(
+        (comm["sent"] + comm["received"] - comm["public_context_transmitted"]) / 1024**2
+    )

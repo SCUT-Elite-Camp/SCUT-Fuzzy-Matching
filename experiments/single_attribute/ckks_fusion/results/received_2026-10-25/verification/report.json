@@ -1,0 +1,151 @@
+{
+  "level": "quick",
+  "elapsed_seconds": 2.2881567029980943,
+  "claims": [
+    {
+      "cid": "C1a",
+      "what": "tile 宽度 T = 4096//200",
+      "expected": 20,
+      "actual": 20,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C1b",
+      "what": "max_size=483 → 25 tiles",
+      "expected": 25,
+      "actual": 25,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C1c",
+      "what": "max_size=200 → 10 tiles",
+      "expected": 10,
+      "actual": 10,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_a-max_size",
+      "what": "layout_a.max_size 与归档一致",
+      "expected": 483,
+      "actual": 483,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_a-tiles",
+      "what": "layout_a.tiles 与归档一致",
+      "expected": 25,
+      "actual": 25,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_a-top1_recall",
+      "what": "layout_a.top1_recall 与归档一致",
+      "expected": 0.88,
+      "actual": 0.88,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_a-in_cluster_filter_recall",
+      "what": "layout_a.in_cluster_filter_recall 与归档一致",
+      "expected": 0.9886363636363636,
+      "actual": 0.9886363636363636,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_a-end_to_end_recall",
+      "what": "layout_a.end_to_end_recall 与归档一致",
+      "expected": 0.87,
+      "actual": 0.87,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_b-max_size",
+      "what": "layout_b.max_size 与归档一致",
+      "expected": 200,
+      "actual": 200,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_b-tiles",
+      "what": "layout_b.tiles 与归档一致",
+      "expected": 10,
+      "actual": 10,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_b-top1_recall",
+      "what": "layout_b.top1_recall 与归档一致",
+      "expected": 0.75,
+      "actual": 0.75,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_b-in_cluster_filter_recall",
+      "what": "layout_b.in_cluster_filter_recall 与归档一致",
+      "expected": 0.9866666666666667,
+      "actual": 0.9866666666666667,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C2-layout_b-end_to_end_recall",
+      "what": "layout_b.end_to_end_recall 与归档一致",
+      "expected": 0.74,
+      "actual": 0.74,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C3-paired-new_misses",
+      "what": "paired.new_misses 与归档一致",
+      "expected": 13,
+      "actual": 13,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C3-paired-fixed",
+      "what": "paired.fixed 与归档一致",
+      "expected": 0,
+      "actual": 0,
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    },
+    {
+      "cid": "C4",
+      "what": "secret_share 被 FusionBlocked 阻断",
+      "expected": "FusionBlocked",
+      "actual": "FusionBlocked",
+      "ok": true,
+      "note": "",
+      "level": "quick"
+    }
+  ],
+  "failed": []
+}

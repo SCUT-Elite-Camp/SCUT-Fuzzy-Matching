@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Privacy-Preserving Fuzzy Name Matching</title>
+<title>Privacy-Preserving Fuzzy Matching — Multi-Attribute Multilingual Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;600&family=Noto+Sans+Myanmar:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -17,7 +17,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Neutral graphite/black (hue ~240, near-zero saturation — no warm cast) */
+  /* Neutral graphite/black theme */
   --bg-primary: #0c0d0f;
   --bg-secondary: #131417;
   --bg-card: #17181c;
@@ -25,9 +25,11 @@
   --bg-elevated: #1c1e22;
   --border: #2a2c32;
   --border-soft: #24262b40;
+  --border-glow: rgba(107, 161, 232, 0.3);
   --text-primary: #e7e9ed;
   --text-secondary: #969aa4;
   --text-dim: #62656f;
+
   /* Semantic colours */
   --accent-blue: #6ba1e8;
   --accent-green: #57c98a;
@@ -35,16 +37,19 @@
   --accent-red: #e87a72;
   --accent-cyan: #4cc6d8;
   --accent-purple: #a78bfa;
-  --primary: #8b9bb4;   /* muted steel-grey action accent (neutral, not gold) */
+  --accent-orange: #fb923c;
+  --primary: #8b9bb4;
   --party-a: #6ba1e8;   /* Requester */
   --party-b: #57c98a;   /* Database holder */
   --radius: 8px;
   --radius-sm: 5px;
+  --radius-pill: 999px;
   --shadow: 0 1px 2px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.18);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.35);
 }
 
 body {
-  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Inter', 'Noto Sans SC', 'Noto Sans Arabic', 'Noto Sans Myanmar', ui-sans-serif, system-ui, -apple-system, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   height: 100vh;
@@ -60,13 +65,13 @@ body {
 .app { display: flex; height: 100vh; }
 
 .sidebar {
-  width: 360px; min-width: 360px;
+  width: 375px; min-width: 375px;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
   overflow-y: auto;
-  padding: 22px 20px;
-  gap: 22px;
+  padding: 20px 18px;
+  gap: 18px;
 }
 
 .main {
@@ -77,17 +82,38 @@ body {
   gap: 22px;
 }
 
-.brand { display: flex; align-items: center; gap: 10px; }
+/* Brand */
+.brand { display: flex; align-items: center; gap: 11px; }
 .brand .mark { color: var(--primary); flex-shrink: 0; display: flex; }
 .brand .brand-text { display: flex; flex-direction: column; gap: 2px; }
 .brand h1 {
-  font-size: 1rem; font-weight: 650; letter-spacing: -0.01em; color: var(--text-primary);
+  font-size: 0.98rem; font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary);
 }
-.brand .subtitle { font-size: 0.7rem; color: var(--text-dim); }
+.brand .subtitle { font-size: 0.68rem; color: var(--text-dim); }
 
-/* ============================================================
-   Section labels
-   ============================================================ */
+/* Demo Switcher */
+.demo-switcher {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+  background: var(--bg-input); padding: 4px;
+  border-radius: var(--radius); border: 1px solid var(--border);
+}
+.demo-switcher button {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 7px 8px; border-radius: var(--radius-sm);
+  background: transparent; border: 1px solid transparent;
+  color: var(--text-secondary); cursor: pointer;
+  text-align: left; transition: all 0.18s ease;
+}
+.demo-switcher button.active {
+  background: var(--bg-card); color: var(--text-primary);
+  border-color: var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.demo-switcher .switcher-icon { font-size: 1.05rem; }
+.demo-switcher .switcher-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.demo-switcher .switcher-text strong { font-size: 0.74rem; font-weight: 650; white-space: nowrap; }
+.demo-switcher .switcher-text small { font-size: 0.58rem; color: var(--text-dim); }
+
+/* Section label */
 .section-label {
   font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.08em; color: var(--text-secondary);
@@ -95,9 +121,7 @@ body {
 }
 .section-label::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
-/* ============================================================
-   Controls
-   ============================================================ */
+/* Controls */
 .controls { display: flex; flex-direction: column; gap: 14px; }
 .control-group { display: flex; flex-direction: column; gap: 6px; }
 .control-group label {
@@ -107,27 +131,61 @@ body {
 .control-group input, .control-group select {
   background: var(--bg-input); color: var(--text-primary);
   border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 9px 11px; font-size: 0.85rem; transition: border-color 0.2s;
+  padding: 8px 10px; font-size: 0.82rem; transition: border-color 0.2s;
+  width: 100%;
 }
 .control-group input:focus, .control-group select:focus {
   outline: none; border-color: var(--primary);
 }
-.params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.query-mode-tabs { display: flex; gap: 5px; }
-.query-mode-tabs button {
-  flex: 1; padding: 8px 4px; font-size: 0.72rem; font-weight: 600;
+/* Tabs */
+.tabs-wrap { display: flex; gap: 4px; }
+.tabs-wrap button {
+  flex: 1; padding: 7px 4px; font-size: 0.7rem; font-weight: 600;
   border: 1px solid var(--border); border-radius: var(--radius-sm);
   background: var(--bg-input); color: var(--text-secondary);
-  cursor: pointer; transition: all 0.18s;
+  cursor: pointer; transition: all 0.18s; text-align: center;
 }
-.query-mode-tabs button.active {
+.tabs-wrap button.active {
   background: var(--bg-elevated); color: var(--text-primary); border-color: var(--text-dim);
 }
 .mode-hint { font-size: 0.68rem; color: var(--text-dim); line-height: 1.5; }
 
+/* Language script selector pills */
+.script-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.script-pill {
+  padding: 4px 8px; font-size: 0.68rem; font-weight: 600;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-input); color: var(--text-secondary);
+  cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 4px;
+}
+.script-pill:hover { border-color: var(--text-dim); }
+.script-pill.active {
+  background: rgba(107, 161, 232, 0.12); color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+
+/* Radio buttons for execution mode */
+.exec-mode-group {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  background: var(--bg-input); padding: 4px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.exec-mode-option {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px 4px; font-size: 0.68rem; font-weight: 600;
+  border-radius: 4px; cursor: pointer; color: var(--text-secondary);
+  border: 1px solid transparent; transition: all 0.15s;
+}
+.exec-mode-option.active {
+  background: var(--bg-card); color: var(--text-primary);
+  border-color: var(--border);
+}
+
+/* Run Button */
 .btn-run {
-  width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 600;
+  width: 100%; padding: 11px; font-size: 0.88rem; font-weight: 600;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   border: 1px solid var(--primary); border-radius: var(--radius-sm);
   background: var(--primary); color: #0c0d0f; cursor: pointer;
@@ -139,28 +197,27 @@ body {
 .btn-run svg { width: 15px; height: 15px; }
 
 /* ============================================================
-   Two-Party Data Panels (left side, transparency view)
+   Two-Party Data Panels
    ============================================================ */
-.parties { display: flex; flex-direction: column; gap: 12px; }
+.parties { display: flex; flex-direction: column; gap: 10px; }
 .party-card {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 13px 14px;
+  border-radius: var(--radius); padding: 12px 13px;
 }
-
-.party-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.party-head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
 .party-head .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .party-head .dot.a { background: var(--party-a); }
 .party-head .dot.b { background: var(--party-b); }
-.party-head .title { font-size: 0.82rem; font-weight: 700; }
+.party-head .title { font-size: 0.8rem; font-weight: 700; }
 .party-head .title .a { color: var(--party-a); }
 .party-head .title .b { color: var(--party-b); }
-.party-role { font-size: 0.68rem; color: var(--text-dim); margin-bottom: 9px; }
+.party-role { font-size: 0.66rem; color: var(--text-dim); margin-bottom: 8px; }
 
 .party-rows { display: flex; flex-direction: column; }
 .party-row {
   display: flex; justify-content: space-between; align-items: baseline;
-  padding: 5px 0; gap: 10px; border-top: 1px solid var(--border-soft);
-  font-size: 0.76rem;
+  padding: 5px 0; gap: 8px; border-top: 1px solid var(--border-soft);
+  font-size: 0.74rem;
 }
 .party-row:first-child { border-top: none; }
 .party-row .k { color: var(--text-dim); flex-shrink: 0; }
@@ -170,32 +227,30 @@ body {
 }
 .party-row .v.enc { color: var(--accent-yellow); font-style: italic; }
 .party-row .v.muted { color: var(--text-dim); }
-.party-empty { font-size: 0.74rem; color: var(--text-dim); padding: 6px 0; }
+.party-empty { font-size: 0.72rem; color: var(--text-dim); padding: 4px 0; }
 
-/* ============================================================
-   Protocol Timeline
-   ============================================================ */
+/* Protocol Timeline */
 .timeline { display: flex; flex-direction: column; gap: 4px; }
 .step-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 9px; border-radius: var(--radius-sm);
   border-left: 3px solid var(--border);
-  transition: all 0.25s; font-size: 0.8rem;
+  transition: all 0.25s; font-size: 0.78rem;
 }
 .step-item .step-num {
-  width: 22px; height: 22px; border-radius: 50%;
+  width: 20px; height: 20px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.7rem; font-weight: 700;
+  font-size: 0.68rem; font-weight: 700;
   background: var(--bg-input); color: var(--text-dim); flex-shrink: 0;
 }
 .step-item .step-info { flex: 1; min-width: 0; }
-.step-item .step-name { font-weight: 500; white-space: nowrap; }
+.step-item .step-name { font-weight: 500; white-space: nowrap; font-size: 0.76rem; }
 .step-item .step-party {
-  font-size: 0.66rem; padding: 1px 6px; border-radius: 3px; font-weight: 600;
+  font-size: 0.62rem; padding: 1px 5px; border-radius: 3px; font-weight: 600;
 }
 .step-item .step-party.party-A { background: rgba(91,156,245,0.15); color: var(--party-a); }
 .step-item .step-party.party-B { background: rgba(74,222,128,0.15); color: var(--party-b); }
-.step-item .step-time { font-size: 0.68rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.step-item .step-time { font-size: 0.66rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .step-item.pending { opacity: 0.38; }
 .step-item.active { border-left-color: var(--accent-yellow); background: rgba(250,204,21,0.06); }
 .step-item.active .step-num { background: var(--accent-yellow); color: #000; }
@@ -203,10 +258,10 @@ body {
 .step-item.done .step-num { background: var(--accent-green); color: #000; }
 
 .status-bar {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 13px; background: var(--bg-card);
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px; background: var(--bg-card);
   border: 1px solid var(--border); border-radius: var(--radius-sm);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
 .status-dot.running { background: var(--accent-yellow); animation: pulse 1s infinite; }
@@ -215,53 +270,75 @@ body {
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 /* ============================================================
-   Main — Flow banner (always-on top bar)
+   Flow Banner
    ============================================================ */
 .flow-banner {
   display: flex; align-items: stretch; gap: 0;
-  background: rgba(19,20,23,0.72);
+  background: rgba(19,20,23,0.78);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
-  padding: 12px 28px; flex-shrink: 0;
+  padding: 12px 24px; flex-shrink: 0;
   position: sticky; top: -24px; z-index: 50;
-  margin: -24px -28px 22px;
+  margin: -24px -28px 20px;
 }
 .flow-step {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  gap: 5px; text-align: center; position: relative;
-  opacity: 0.32; transition: opacity 0.4s ease, transform 0.4s ease;
-  transform: translateY(3px);
+  gap: 4px; text-align: center; position: relative;
+  opacity: 0.32; transition: opacity 0.35s ease, transform 0.35s ease;
+  transform: translateY(2px);
 }
 .flow-step:not(:last-child)::after {
-  content: "→"; position: absolute; right: -8px; top: 13px;
-  color: var(--text-dim); font-size: 0.9rem;
+  content: "→"; position: absolute; right: -8px; top: 12px;
+  color: var(--text-dim); font-size: 0.85rem;
 }
-/* lit = active or done */
 .flow-step.flow-active {
   opacity: 1; transform: translateY(0);
-  animation: flowPulse 0.5s ease-out;
 }
-.flow-step.flow-done { opacity: 0.7; transform: translateY(0); }
-@keyframes flowPulse {
-  0%   { opacity: 0; transform: translateY(6px); }
-  60%  { opacity: 1; transform: translateY(-2px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
+.flow-step.flow-done { opacity: 0.75; transform: translateY(0); }
 .flow-badge {
-  font-size: 0.6rem; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+  font-size: 0.58rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;
   text-transform: uppercase; letter-spacing: 0.05em;
 }
 .flow-badge.a { background: rgba(107,161,232,0.14); color: var(--party-a); }
 .flow-badge.b { background: rgba(87,201,138,0.14); color: var(--party-b); }
-.flow-title { font-size: 0.78rem; font-weight: 600; }
-.flow-desc { font-size: 0.66rem; color: var(--text-dim); line-height: 1.4; max-width: 130px; }
+.flow-title { font-size: 0.76rem; font-weight: 600; }
+.flow-desc { font-size: 0.64rem; color: var(--text-dim); line-height: 1.35; max-width: 125px; }
 
 /* Step 9 + Timing side-by-side inside one card */
 .step9-timing-row { display: flex; gap: 24px; align-items: flex-start; min-width: 0; }
 .step9-main { flex: 3; min-width: 0; }
 .step9-aside {
-  flex: 2; min-width: 220px; max-width: 340px;
+  flex: 2; min-width: 230px; max-width: 350px;
   border-left: 1px solid var(--border); padding-left: 24px;
+}
+
+/* Schema Chips bar in Step 1 */
+.schema-chips-bar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  background: var(--bg-elevated); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 14px;
+}
+.schema-chip {
+  font-size: 0.72rem; color: var(--text-secondary);
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  padding: 3px 8px; border-radius: 4px;
+}
+.schema-chip b { color: var(--text-primary); font-weight: 600; }
+.schema-chip.slot-info {
+  background: rgba(107, 161, 232, 0.08); border-color: rgba(107, 161, 232, 0.25);
+  color: var(--accent-blue);
+}
+.schema-chip-divider {
+  width: 1px; height: 16px; background: var(--border); margin: 0 4px;
+}
+.btn-schema-details {
+  margin-left: auto; background: transparent; border: 1px solid var(--border);
+  color: var(--text-secondary); padding: 3px 8px; border-radius: 4px;
+  font-size: 0.68rem; cursor: pointer; transition: all 0.15s;
+}
+.btn-schema-details:hover {
+  background: var(--bg-card); color: var(--text-primary); border-color: var(--primary);
 }
 
 /* ============================================================
@@ -274,90 +351,119 @@ body {
 .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
 .card-head .titles { display: flex; flex-direction: column; gap: 2px; }
 .card-head .step-tag {
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase; color: var(--text-dim);
 }
 .card-head h3 { font-size: 0.95rem; font-weight: 650; display: flex; align-items: center; gap: 7px; }
-.card-head h3 .h-icon { color: var(--text-dim); display: flex; }
 .card-head .party-pill {
-  font-size: 0.6rem; font-weight: 600; padding: 3px 9px; border-radius: 4px;
+  font-size: 0.6rem; font-weight: 600; padding: 3px 8px; border-radius: 4px;
   text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;
 }
 .card-head .party-pill.a { background: rgba(107,161,232,0.14); color: var(--party-a); }
 .card-head .party-pill.b { background: rgba(87,201,138,0.14); color: var(--party-b); }
 .card-explain {
   font-size: 0.76rem; color: var(--text-secondary); line-height: 1.55;
-  margin-bottom: 16px;
+  margin-bottom: 15px;
 }
 .card-explain .hl-a { color: var(--party-a); font-weight: 600; }
 .card-explain .hl-b { color: var(--party-b); font-weight: 600; }
 .card-explain .hl-y { color: var(--accent-yellow); font-weight: 600; }
+.card-explain .hl-g { color: var(--accent-green); font-weight: 600; }
 
-.charts-row { display: grid; grid-template-columns: 3fr 2fr; gap: 22px; }
-
-/* ============================================================
-   Stat tiles
-   ============================================================ */
+/* Stat grid */
 .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .stat-tile {
-  background: var(--bg-elevated); padding: 14px 12px; border-radius: var(--radius-sm);
+  background: var(--bg-elevated); padding: 13px 10px; border-radius: var(--radius-sm);
   text-align: center; border: 1px solid var(--border-soft);
 }
-.stat-tile .v { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat-tile .v { font-size: 1.45rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .stat-tile .l { font-size: 0.66rem; color: var(--text-secondary); margin-top: 3px; line-height: 1.3; }
 
-/* Step 1 dual view: bar chart + 3D cloud */
-.step1-views { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 18px; }
+/* Step 1 dual view */
+.step1-views { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
 .step1-view { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.view-caption { font-size: 0.7rem; color: var(--text-dim); line-height: 1.45; min-height: 30px; }
+.view-caption { font-size: 0.7rem; color: var(--text-dim); line-height: 1.45; min-height: 28px; }
 .cloud-3d {
-  height: 420px; border-radius: var(--radius-sm);
+  height: 400px; border-radius: var(--radius-sm);
   background: radial-gradient(circle at 50% 40%, #1a1c20 0%, #0a0b0d 100%);
   border: 1px solid var(--border-soft); cursor: grab; overflow: hidden;
 }
 .cloud-3d:active { cursor: grabbing; }
 .cloud-3d canvas { display: block; }
 
-/* Heatmap (Step 4) */
+/* Schema Card Elements */
+.schema-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px; margin-bottom: 16px;
+}
+.schema-attr-box {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.schema-attr-head { display: flex; align-items: center; justify-content: space-between; }
+.schema-attr-name { font-size: 0.85rem; font-weight: 700; color: var(--accent-cyan); }
+.schema-attr-weight {
+  font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+  background: rgba(107,161,232,0.15); color: var(--accent-blue);
+}
+.schema-attr-desc { font-size: 0.7rem; color: var(--text-secondary); line-height: 1.4; }
+.schema-attr-meta { font-size: 0.64rem; color: var(--text-dim); font-family: monospace; }
+
+/* Capacity Bar */
+.capacity-row {
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 10px;
+}
+.capacity-head { display: flex; justify-content: space-between; font-size: 0.72rem; }
+.capacity-bar-track {
+  height: 10px; background: var(--bg-input); border-radius: 5px;
+  overflow: hidden; display: flex; border: 1px solid var(--border-soft);
+}
+.capacity-bar-fill {
+  height: 100%; border-radius: 4px; transition: width 0.4s ease;
+}
+
+/* Heatmap */
 .heatmap-wrap { overflow-x: auto; padding-top: 4px; }
 .heatmap-grid { display: grid; gap: 3px; font-size: 0.72rem; min-width: max-content; }
-.heatmap-corner { }
 .heatmap-colhead, .heatmap-rowhead {
   color: var(--text-secondary); font-size: 0.68rem; display: flex; align-items: center;
 }
 .heatmap-colhead { justify-content: center; padding-bottom: 2px; font-variant-numeric: tabular-nums; }
 .heatmap-rowhead { justify-content: flex-end; padding-right: 10px; white-space: nowrap; gap: 6px; }
-.heatmap-rowhead .tag-fuzzy, .heatmap-rowhead .tag-neg { margin-left: 0; }
 .heatmap-cell {
-  height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
   cursor: default; transition: transform 0.1s; position: relative;
 }
 .heatmap-cell:hover { transform: scale(1.08); z-index: 2; outline: 1px solid rgba(255,255,255,0.3); }
-/* Hit rows: selected cluster gets green outline + checkmark */
 .heatmap-cell.selected-hit {
   outline: 2px solid var(--accent-green); z-index: 1;
 }
 .heatmap-cell.selected-hit::after {
-  content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 0.8rem; font-weight: 700; color: var(--accent-green);
+  content: "★"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 0.82rem; font-weight: 700; color: var(--accent-green);
 }
-/* Miss/absent rows: greyscale, no selected marker */
-.heatmap-cell.grey {
-  filter: grayscale(1) brightness(0.6);
+.heatmap-cell.probed-extra {
+  outline: 1.5px dashed var(--accent-yellow); z-index: 1;
 }
+.heatmap-cell.probed-extra::after {
+  content: "•"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; color: var(--accent-yellow);
+}
+.heatmap-cell.grey { filter: grayscale(1) brightness(0.6); }
+
 .heatmap-legend {
-  display: flex; align-items: center; gap: 10px; margin-top: 14px;
-  font-size: 0.7rem; color: var(--text-dim);
+  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+  font-size: 0.7rem; color: var(--text-dim); flex-wrap: wrap;
 }
 .heatmap-legend .scale {
   height: 10px; width: 140px; border-radius: 5px;
   background: linear-gradient(90deg, rgb(38,22,26), rgb(90,26,32), rgb(168,38,42), rgb(228,64,58), rgb(255,120,96));
 }
-/* Results table row fade-in */
-@keyframes rowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.result-row-in { animation: rowIn 0.3s ease-out both; }
 
-/* Match status grid (Step 9) */
+/* Match Grid */
 .match-grid-wrap { overflow-x: auto; padding-top: 4px; }
 .match-grid { display: grid; gap: 3px; font-size: 0.72rem; min-width: max-content; }
 .match-colhead { color: var(--text-secondary); font-size: 0.62rem; text-align: center; padding-bottom: 2px; }
@@ -365,13 +471,6 @@ body {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding-right: 10px; white-space: nowrap; color: var(--text-secondary); font-size: 0.7rem;
 }
-.match-rowhead .tag-fuzzy, .match-rowhead .tag-neg { margin-left: 0; flex-shrink: 0; }
-.match-rowhead .rh-name { margin-left: auto; }
-
-/* Streaming reveal: rows fade/slide in one by one */
-.match-row-cells { display: contents; }
-.mrow-in { animation: mrowIn 0.32s ease-out both; }
-@keyframes mrowIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
 .match-summary {
   display: flex; align-items: center; padding-left: 10px; white-space: nowrap;
   font-size: 0.66rem; color: var(--text-dim); font-variant-numeric: tabular-nums;
@@ -392,45 +491,101 @@ body {
   box-shadow: 0 0 8px rgba(74,222,128,0.5);
 }
 .match-legend {
-  display: flex; align-items: center; gap: 18px; margin-top: 14px;
+  display: flex; align-items: center; gap: 16px; margin-top: 14px;
   font-size: 0.7rem; color: var(--text-dim); flex-wrap: wrap;
 }
 .match-legend .li { display: flex; align-items: center; gap: 7px; }
-.match-legend .sw { width: 16px; height: 16px; border-radius: 4px; display: inline-block; }
+.match-legend .sw { width: 15px; height: 15px; border-radius: 4px; display: inline-block; }
 .match-legend .sw.neg { background: rgba(248,113,113,0.16); border: 1px solid rgba(248,113,113,0.22); }
 .match-legend .sw.pos { background: rgba(74,222,128,0.30); border: 1px solid rgba(74,222,128,0.45); }
 .match-legend .sw.hit { background: var(--accent-green); }
 .match-legend .sw.skip { background: repeating-linear-gradient(45deg, #24262b, #24262b 3px, #16171b 3px, #16171b 6px); border: 1px solid var(--border-soft); }
 
-/* ============================================================
-   Results Table
-   ============================================================ */
-.results-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+/* Language Script Badges */
+.lang-badge {
+  font-size: 0.6rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  letter-spacing: 0.02em; display: inline-flex; align-items: center; gap: 4px;
+  flex-shrink: 0;
+}
+.lang-badge.latin { background: rgba(107, 161, 232, 0.15); color: var(--accent-blue); }
+.lang-badge.chinese { background: rgba(232, 122, 114, 0.15); color: var(--accent-red); }
+.lang-badge.arabic { background: rgba(87, 201, 138, 0.15); color: var(--accent-green); }
+.lang-badge.burmese { background: rgba(167, 139, 250, 0.15); color: var(--accent-purple); }
+.lang-badge.negative { background: rgba(232, 181, 62, 0.15); color: var(--accent-yellow); }
+
+/* Attribute breakdown pill */
+.attr-breakdown-wrap { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.attr-pill {
+  font-size: 0.65rem; padding: 2px 6px; border-radius: 3px;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  font-family: monospace; display: inline-flex; align-items: center; gap: 3px;
+}
+.attr-pill .an { color: var(--text-dim); }
+.attr-pill .av.high { color: var(--accent-green); font-weight: 700; }
+.attr-pill .av.mid { color: var(--accent-yellow); }
+.attr-pill .av.low { color: var(--accent-red); }
+
+/* Sublinear Savings Highlight Box */
+.savings-banner {
+  background: linear-gradient(135deg, rgba(87,201,138,0.12), rgba(107,161,232,0.08));
+  border: 1px solid rgba(87,201,138,0.3); border-radius: var(--radius);
+  padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; margin-top: 14px;
+}
+.savings-info { display: flex; flex-direction: column; gap: 4px; }
+.savings-title { font-size: 0.86rem; font-weight: 700; color: var(--accent-green); }
+.savings-desc { font-size: 0.74rem; color: var(--text-secondary); line-height: 1.45; }
+.savings-metric {
+  text-align: right; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px;
+}
+.savings-percent { font-size: 1.7rem; font-weight: 800; color: var(--accent-green); }
+.savings-sub { font-size: 0.65rem; color: var(--text-dim); }
+
+/* Calibration Gauge */
+.calibration-box {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 12px; margin-top: 14px;
+}
+.cal-head { display: flex; justify-content: space-between; align-items: center; }
+.cal-title { font-size: 0.84rem; font-weight: 700; }
+.cal-track {
+  height: 28px; border-radius: var(--radius-sm);
+  background: var(--bg-input); border: 1px solid var(--border);
+  position: relative; overflow: hidden; display: flex;
+}
+.cal-zone { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 600; }
+.cal-zone.impostor { background: rgba(232, 122, 114, 0.22); color: var(--accent-red); border-right: 1px dashed var(--accent-red); }
+.cal-zone.window { background: rgba(87, 201, 138, 0.28); color: var(--accent-green); border-right: 1px dashed var(--accent-green); }
+.cal-zone.match { background: rgba(107, 161, 232, 0.22); color: var(--accent-blue); }
+.cal-pin {
+  position: absolute; top: 0; bottom: 0; width: 3px; background: #fff;
+  box-shadow: 0 0 6px rgba(255,255,255,0.8); z-index: 5;
+}
+.cal-pin-label {
+  position: absolute; top: -16px; transform: translateX(-50%);
+  font-size: 0.62rem; font-weight: 700; color: #fff; background: var(--bg-primary);
+  padding: 1px 4px; border-radius: 3px; border: 1px solid var(--border);
+}
+
+/* Results Table */
+.results-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 .results-table th {
   text-align: left; padding: 9px 10px; font-size: 0.66rem;
   text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
   border-bottom: 1px solid var(--border); white-space: nowrap;
 }
 .results-table td { padding: 9px 10px; border-bottom: 1px solid var(--border-soft); }
-.results-table tr.fuzzy-row { background: rgba(250,204,21,0.04); }
-.results-table tr.neg-row td:first-child { color: var(--text-secondary); }
+.results-table tr:hover { background: rgba(255,255,255,0.015); }
 .match-yes { color: var(--accent-green); font-weight: 700; }
 .match-no { color: var(--accent-red); font-weight: 700; }
 .correct-mark { color: var(--accent-green); font-weight: 700; }
 .wrong-mark { color: var(--accent-red); font-weight: 700; }
-.tag-fuzzy {
-  font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 4px;
-  background: rgba(250,204,21,0.16); color: var(--accent-yellow);
-  margin-left: 6px; text-transform: uppercase; letter-spacing: 0.03em;
-}
-.tag-neg {
-  font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 4px;
-  background: rgba(248,113,113,0.14); color: var(--accent-red);
-  margin-left: 6px; text-transform: uppercase; letter-spacing: 0.03em;
-}
-.hit-name { font-size: 0.76rem; color: var(--text-secondary); }
-.hit-name.ok { color: var(--accent-green); }
-.hit-name.bad { color: var(--accent-red); }
+
+/* Raw query attribute table */
+.attr-missing { color: var(--text-dim); }
+#multi-queries-tbody tr { cursor: pointer; }
+#multi-queries-tbody tr:hover td { background: rgba(107,161,232,0.04); }
 
 .accuracy-badge {
   display: inline-flex; align-items: center; gap: 6px;
@@ -440,27 +595,24 @@ body {
 .accuracy-badge.good { background: rgba(250,204,21,0.15); color: var(--accent-yellow); }
 .accuracy-badge.poor { background: rgba(248,113,113,0.15); color: var(--accent-red); }
 
-/* ============================================================
-   Welcome
-   ============================================================ */
+/* Welcome */
 .welcome {
   flex: 1; display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 14px; color: var(--text-dim); text-align: center;
+  min-height: 400px;
 }
 .welcome .icon { color: var(--text-dim); opacity: 0.7; }
-.welcome .icon svg { width: 48px; height: 48px; }
-.welcome h2 { font-size: 1.15rem; color: var(--text-secondary); font-weight: 600; letter-spacing: -0.01em; }
+.welcome .icon svg { width: 50px; height: 50px; }
+.welcome h2 { font-size: 1.15rem; color: var(--text-secondary); font-weight: 600; }
 .welcome .tech { font-size: 0.78rem; }
 .welcome .tech b { color: var(--text-secondary); font-weight: 600; }
 
-/* ============================================================
-   Info button & Modal
-   ============================================================ */
+/* Info modal */
 .info-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 18px; height: 18px; border-radius: 50%;
+  width: 17px; height: 17px; border-radius: 50%;
   background: var(--bg-input); color: var(--text-secondary);
-  font-size: 0.64rem; font-weight: 700; border: 1px solid var(--border);
+  font-size: 0.62rem; font-weight: 700; border: 1px solid var(--border);
   cursor: pointer; vertical-align: middle; transition: all 0.2s; flex-shrink: 0;
 }
 .info-btn:hover { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--text-dim); }
@@ -472,41 +624,34 @@ body {
 .modal-overlay.show { display: flex; }
 .modal-box {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 26px; max-width: 540px; width: 90%;
+  border-radius: var(--radius); padding: 26px; max-width: 580px; width: 92%;
   box-shadow: 0 8px 32px rgba(0,0,0,0.45); animation: modalIn 0.2s ease-out;
 }
 @keyframes modalIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
 .modal-box h2 { font-size: 1.05rem; margin-bottom: 4px; }
-.modal-box .modal-subtitle { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 16px; }
-.modal-box p { font-size: 0.85rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 10px; }
-.modal-box .hl-a { color: var(--party-a); font-weight: 600; }
-.modal-box .hl-b { color: var(--party-b); font-weight: 600; }
-.modal-box .hl-y { color: var(--accent-yellow); font-weight: 600; }
+.modal-box .modal-subtitle { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 14px; }
+.modal-box p { font-size: 0.84rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 10px; }
 .modal-box .note {
   display: flex; gap: 9px; align-items: flex-start; margin-top: 14px;
   padding: 11px 13px; background: var(--bg-input); border-radius: var(--radius-sm);
-  border-left: 2px solid var(--primary); font-size: 0.76rem; color: var(--text-secondary); line-height: 1.6;
+  border-left: 2px solid var(--primary); font-size: 0.75rem; color: var(--text-secondary); line-height: 1.6;
 }
-.modal-box .note svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; color: var(--primary); }
-.modal-box .note b { color: var(--text-primary); }
 .modal-btn-close {
-  margin-top: 14px; padding: 9px 22px; font-size: 0.82rem; font-weight: 600;
+  margin-top: 16px; padding: 8px 22px; font-size: 0.8rem; font-weight: 600;
   border: 1px solid var(--border); border-radius: var(--radius-sm);
   background: var(--bg-input); color: var(--text-primary); cursor: pointer; transition: all 0.2s;
 }
-.modal-btn-close:hover { background: var(--bg-elevated); border-color: var(--text-dim); }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-@media (max-width: 980px) {
+@media (max-width: 1024px) {
   .app { flex-direction: column; }
-  .sidebar { width: 100%; min-width: 0; max-height: 50vh; }
-  .charts-row { grid-template-columns: 1fr; }
-  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .sidebar { width: 100%; min-width: 0; max-height: 48vh; }
   .step1-views { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .flow-banner { flex-wrap: wrap; }
 }
 </style>
@@ -527,35 +672,155 @@ body {
         </svg>
       </span>
       <div class="brand-text">
-        <h1>Fuzzy Name Matching</h1>
-        <span class="subtitle">Privacy-preserving record linkage</span>
+        <h1 id="brand-title">Fuzzy Matching GUI</h1>
+        <span class="subtitle" id="brand-subtitle">Privacy-preserving record linkage</span>
       </div>
     </div>
 
-    <!-- Controls -->
-    <div class="controls">
+    <!-- Demo Mode Switcher -->
+    <div class="demo-switcher">
+      <button id="switch-multi" class="active" onclick="switchDemo('multi')">
+        <div class="switcher-text">
+          <strong>Multi-Attribute</strong>
+          <small>Multilingual demo set</small>
+        </div>
+      </button>
+      <button id="switch-single" onclick="switchDemo('single')">
+        <div class="switcher-text">
+          <strong>Single-Attribute</strong>
+          <small>NCVR-10K names</small>
+        </div>
+      </button>
+    </div>
+
+    <!-- Controls for Multi-Attribute Demo -->
+    <div class="controls" id="controls-multi">
+      <div class="section-label">Configuration</div>
+
+      <!-- Query Set Mode -->
+      <div class="control-group">
+        <label>Query Set</label>
+        <div class="tabs-wrap">
+          <button id="multi-tab-all" class="active" onclick="setMultiQueryMode('all')">All 10</button>
+          <button id="multi-tab-script" onclick="setMultiQueryMode('script')">By Script</button>
+          <button id="multi-tab-single" onclick="setMultiQueryMode('single')">Single</button>
+          <button id="multi-tab-custom" onclick="setMultiQueryMode('custom')">Custom</button>
+        </div>
+        <div class="mode-hint" id="multi-mode-hint">
+          Run all 10 demo queries across 4 scripts (Latin, Chinese, Arabic, Burmese): 7 matches + 3 non-matches.
+        </div>
+      </div>
+
+      <!-- Script selection pills (when in 'script' mode) -->
+      <div class="control-group" id="group-multi-scripts" style="display:none">
+        <label>Script</label>
+        <div class="script-pills">
+          <div class="script-pill active" onclick="selectMultiScript('all')">All</div>
+          <div class="script-pill" onclick="selectMultiScript('Latin')">🇬🇧/🇮🇹 Latin</div>
+          <div class="script-pill" onclick="selectMultiScript('Chinese')">🇨🇳 汉字 (Chinese)</div>
+          <div class="script-pill" onclick="selectMultiScript('Arabic')">🇮🇶 العربية (Arabic)</div>
+          <div class="script-pill" onclick="selectMultiScript('Burmese')">🇲🇲 မြန်မာစာ (Burmese)</div>
+        </div>
+      </div>
+
+      <!-- Single Query dropdown (when in 'single' mode) -->
+      <div class="control-group" id="group-multi-single" style="display:none">
+        <label>Select Query</label>
+        <select id="select-multi-query" onchange="onSelectMultiQueryChange()">
+          <!-- Populated dynamically via /api/multi-attribute/info -->
+        </select>
+      </div>
+
+      <!-- Custom query input fields (when in 'custom' mode) -->
+      <div id="group-multi-custom" style="display:none;flex-direction:column;gap:8px">
+        <div class="control-group">
+          <label>Name (any script)</label>
+          <input type="text" id="multi-input-name" placeholder="e.g. Melao / 曜張羣 / داود سلمان" value="Melao Tobana">
+        </div>
+        <div class="params-grid">
+          <div class="control-group">
+            <label>Date of Birth</label>
+            <input type="text" id="multi-input-dob" placeholder="1973/01/10" value="1973/01/10">
+          </div>
+          <div class="control-group">
+            <label>City</label>
+            <input type="text" id="multi-input-city" placeholder="leribe" value="leribe">
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Phone (optional)</label>
+          <input type="text" id="multi-input-phone" placeholder="+266150968920" value="+266150968920">
+        </div>
+      </div>
+
+      <!-- Protocol Execution Mode: Fast vs Real CKKS -->
+      <div class="control-group">
+        <label>Protocol Mode</label>
+        <div class="exec-mode-group">
+          <div class="exec-mode-option active" id="mode-fast" onclick="setExecMode(false)">
+            <span>Fast (plaintext)</span>
+          </div>
+          <div class="exec-mode-option" id="mode-real" onclick="setExecMode(true)">
+            <span>Real encryption (CKKS)</span>
+          </div>
+        </div>
+        <div class="mode-hint" id="exec-mode-hint">
+          Fast runs plaintext scores; Real runs the full encrypted protocol.
+        </div>
+      </div>
+
+      <!-- Parameters Grid -->
+      <div class="params-grid">
+        <div class="control-group">
+          <label>Threshold τ</label>
+          <input type="number" id="multi-input-tau" value="0.485" min="0.1" max="1.0" step="0.005">
+        </div>
+        <div class="control-group">
+          <label>Probe Clusters</label>
+          <input type="number" id="multi-input-probes" value="3" min="1" max="20">
+        </div>
+        <div class="control-group">
+          <label>K-Mode</label>
+          <input type="text" id="multi-input-kmode" value="sqrt" readonly style="opacity:0.8">
+        </div>
+        <div class="control-group">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;text-transform:none;font-size:0.7rem;margin-top:22px">
+            <input type="checkbox" id="multi-input-early-stop" checked style="width:auto">
+            Early Stopping
+          </label>
+        </div>
+      </div>
+
+      <button class="btn-run" id="btn-run-multi" onclick="runMultiProtocol()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Run Protocol
+      </button>
+    </div>
+
+    <!-- Controls for Single-Attribute Demo (Original) -->
+    <div class="controls" id="controls-single" style="display:none">
       <div class="section-label">Configuration</div>
 
       <div class="control-group">
         <label>Query Set</label>
-        <div class="query-mode-tabs">
-          <button id="tab-demo" class="active" onclick="setQueryMode('demo')">Demo Set</button>
-          <button id="tab-indices" onclick="setQueryMode('indices')">By Index</button>
-          <button id="tab-text" onclick="setQueryMode('text')">Custom</button>
+        <div class="tabs-wrap">
+          <button id="tab-demo" class="active" onclick="setSingleQueryMode('demo')">Demo Set</button>
+          <button id="tab-indices" onclick="setSingleQueryMode('indices')">By Index</button>
+          <button id="tab-text" onclick="setSingleQueryMode('text')">Custom</button>
         </div>
-        <div class="mode-hint" id="mode-hint">
-          5 real names + their misspelled variants + 3 absent names — the same set as the terminal demo.
+        <div class="mode-hint" id="single-mode-hint">
+          5 real names + their misspelled variants + 3 absent names.
         </div>
       </div>
 
       <div class="control-group" id="group-indices" style="display:none">
         <label>Query Indices (comma-separated)</label>
-        <input type="text" id="input-indices" value="2,7,26,49,100" placeholder="e.g. 2,7,26">
+        <input type="text" id="input-indices" value="2,7,26,49,100">
       </div>
 
       <div class="control-group" id="group-text" style="display:none">
         <label>Query Name</label>
-        <input type="text" id="input-query" value="John Smith" placeholder="Enter a name...">
+        <input type="text" id="input-query" value="John Smith">
       </div>
 
       <div class="params-grid">
@@ -572,14 +837,14 @@ body {
           <input type="number" id="input-tau" value="0.9" min="0.1" max="1.0" step="0.05">
         </div>
         <div class="control-group">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:0.72rem">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;text-transform:none;font-size:0.7rem;margin-top:22px">
             <input type="checkbox" id="input-early-stop" checked style="width:auto">
             Early Stopping
           </label>
         </div>
       </div>
 
-      <button class="btn-run" id="btn-run" onclick="runProtocol()">
+      <button class="btn-run" id="btn-run-single" onclick="runSingleProtocol()">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
         Run Protocol
       </button>
@@ -587,14 +852,14 @@ body {
 
     <!-- Two-Party transparency view -->
     <div class="parties">
-      <div class="section-label">What Each Party Sees</div>
+      <div class="section-label">Two-Party View</div>
 
       <div class="party-card b">
         <div class="party-head">
           <span class="dot b"></span>
           <span class="title">Party <span class="b">B</span> · Database Holder</span>
         </div>
-        <div class="party-role">Owns the name database. Computes on ciphertext only.</div>
+        <div class="party-role">Owns the database. Only computes on ciphertexts and masked values.</div>
         <div class="party-rows" id="party-b-rows">
           <div class="party-empty">Run the protocol to populate…</div>
         </div>
@@ -605,7 +870,7 @@ body {
           <span class="dot a"></span>
           <span class="title">Party <span class="a">A</span> · Requester</span>
         </div>
-        <div class="party-role">Holds the queries &amp; the private key. Sees decrypted results.</div>
+        <div class="party-role">Holds the query and the CKKS private key. Receives the decrypted result.</div>
         <div class="party-rows" id="party-a-rows">
           <div class="party-empty">Run the protocol to populate…</div>
         </div>
@@ -618,32 +883,32 @@ body {
       <div class="timeline" id="steps-container" style="margin-top:10px">
         <div class="step-item pending" data-step="1">
           <span class="step-num">1</span>
-          <span class="step-info"><div class="step-name">Clustering</div><span class="step-party party-B">Party B</span></span>
+          <span class="step-info"><div class="step-name">Encode &amp; cluster database</div><span class="step-party party-B">Party B</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="2">
           <span class="step-num">2</span>
-          <span class="step-info"><div class="step-name">Query Encrypt</div><span class="step-party party-A">Party A</span></span>
+          <span class="step-info"><div class="step-name">Encrypt query vector</div><span class="step-party party-A">Party A</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="3">
           <span class="step-num">3</span>
-          <span class="step-info"><div class="step-name">Compare Centroids</div><span class="step-party party-B">Party B</span></span>
+          <span class="step-info"><div class="step-name">Blind centroid compare</div><span class="step-party party-B">Party B</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="4">
           <span class="step-num">4</span>
-          <span class="step-info"><div class="step-name">Select Cluster</div><span class="step-party party-A">Party A</span></span>
+          <span class="step-info"><div class="step-name">Decrypt &amp; pick probe clusters</div><span class="step-party party-A">Party A</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="6">
-          <span class="step-num">6</span>
-          <span class="step-info"><div class="step-name">Column Matching</div><span class="step-party party-B">Party B</span></span>
+          <span class="step-num">5</span>
+          <span class="step-info"><div class="step-name">In-cluster column match</div><span class="step-party party-B">Party B</span></span>
           <span class="step-time"></span>
         </div>
         <div class="step-item pending" data-step="9">
-          <span class="step-num">9</span>
-          <span class="step-info"><div class="step-name">Decrypt &amp; Judge</div><span class="step-party party-A">Party A</span></span>
+          <span class="step-num">6</span>
+          <span class="step-info"><div class="step-name">Threshold check &amp; early stop</div><span class="step-party party-A">Party A</span></span>
           <span class="step-time"></span>
         </div>
       </div>
@@ -659,41 +924,41 @@ body {
        Main Content
        ============================================================ -->
   <main class="main" id="main-content">
-    <!-- Flow banner — always visible at the top, steps light up as protocol runs -->
+    <!-- Flow banner -->
     <div class="flow-banner" id="flow-banner">
       <div class="flow-step" data-flow-step="1">
         <span class="flow-badge b">Party B</span>
-        <span class="flow-title">Cluster DB</span>
-        <span class="flow-desc">Group names into K buckets offline</span>
+        <span class="flow-title">1. Offline clustering</span>
+        <span class="flow-desc">Fused vectors → K buckets</span>
       </div>
       <div class="flow-step" data-flow-step="2">
         <span class="flow-badge a">Party A</span>
-        <span class="flow-title">Encrypt Query</span>
-        <span class="flow-desc">Send encrypted query vector</span>
+        <span class="flow-title">2. Encrypt query</span>
+        <span class="flow-desc">4096-slot CKKS ciphertext</span>
       </div>
       <div class="flow-step" data-flow-step="3">
         <span class="flow-badge b">Party B</span>
-        <span class="flow-title">Find Bucket</span>
-        <span class="flow-desc">Score vs centroids on ciphertext</span>
+        <span class="flow-title">3. Centroid compare</span>
+        <span class="flow-desc">Homomorphic dot products</span>
       </div>
       <div class="flow-step" data-flow-step="4">
         <span class="flow-badge a">Party A</span>
-        <span class="flow-title">Pick Cluster</span>
-        <span class="flow-desc">Decrypt scores, choose best</span>
+        <span class="flow-title">4. Pick probe clusters</span>
+        <span class="flow-desc">Top-K closest clusters</span>
       </div>
       <div class="flow-step" data-flow-step="6">
         <span class="flow-badge b">Party B</span>
-        <span class="flow-title">Match Column</span>
-        <span class="flow-desc">Masked similarity per name</span>
+        <span class="flow-title">5. Masked column match</span>
+        <span class="flow-desc">Blind masked scoring</span>
       </div>
       <div class="flow-step" data-flow-step="9">
         <span class="flow-badge a">Party A</span>
-        <span class="flow-title">Judge Hit</span>
-        <span class="flow-desc">Decrypt &amp; decide match</span>
+        <span class="flow-title">6. Decrypt &amp; early stop</span>
+        <span class="flow-desc">First hit ends the scan</span>
       </div>
     </div>
 
-    <!-- Welcome -->
+    <!-- Welcome Panel -->
     <div class="welcome" id="welcome-panel">
       <div class="icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
@@ -702,15 +967,200 @@ body {
           <path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/>
         </svg>
       </div>
-      <h2>Privacy-Preserving Fuzzy Name Matching</h2>
-      <div>Configure parameters and click <strong style="color:var(--text-secondary)">Run Protocol</strong> to begin.</div>
-      <div class="tech">Pipeline: <b>MinHash</b> → <b>Cosine K-Means</b> → <b>CKKS Homomorphic Encryption</b></div>
+      <h2 id="welcome-heading">Privacy-Preserving Multi-Attribute Matching</h2>
+      <div id="welcome-subtext">Pick a configuration on the left, then press <strong style="color:var(--text-secondary)">Run Protocol</strong> to start the two-round encrypted match.</div>
+      <div class="tech">Pipeline: <b>multi-attribute fused encoding (SAGE + date/city/phone hashing)</b> → <b>cosine K-Means centroid pre-selection</b> → <b>two-round CKKS encrypted matching</b></div>
     </div>
 
-    <!-- Results -->
-    <div id="results-area" style="display:none;flex-direction:column;gap:22px">
+    <!-- Raw Demo Queries (multi-attribute) — visible before any run -->
+    <div class="card" id="card-multi-queries">
+      <div class="card-head">
+        <div class="titles">
+          <span class="step-tag">Demo Data</span>
+          <h3>Query Set <span id="multi-queries-count" style="font-size:0.72rem;color:var(--text-dim);font-weight:500"></span></h3>
+        </div>
+      </div>
+      <div class="card-explain">
+        The raw demo queries, before any protocol run. Click a row to inspect that query on its own.
+      </div>
+      <div style="overflow-x:auto">
+        <table class="results-table" id="multi-queries-table">
+          <thead>
+            <tr>
+              <th>Script</th>
+              <th>Name</th>
+              <th>DOB</th>
+              <th>City</th>
+              <th>Phone</th>
+              <th>Label</th>
+              <th>Perturbation</th>
+            </tr>
+          </thead>
+          <tbody id="multi-queries-tbody"></tbody>
+        </table>
+      </div>
+      <div class="mode-hint" style="margin-top:10px">
+        A grey "—" means the query carries no value for that attribute; a missing attribute simply contributes
+        nothing to the fused score. Matching still works across scripts and partial records — that is the point of this demo.
+      </div>
+    </div>
 
-      <!-- Step 1 -->
+    <!-- Results Area for Multi-Attribute Demo -->
+    <div id="multi-results-area" style="display:none;flex-direction:column;gap:22px">
+
+      <!-- Card 1: Step 1 Database Clustering & 3D PCA Point Cloud -->
+      <div class="card" id="card-multi-step1">
+        <div class="card-head">
+          <div class="titles">
+            <span class="step-tag">Step 1 · Offline</span>
+            <h3>Database &amp; Clustering <span class="info-btn" onclick="showModal('schema')" title="Fusion layout & slot headroom">?</span></h3>
+          </div>
+          <span class="party-pill b">Party B</span>
+        </div>
+        <div class="card-explain">
+          Party <span class="hl-b">B</span> turns multi-attribute records (Name, DOB, City, Phone) into fused vectors and groups them into
+          <span class="hl-b">K clusters</span> offline, so later queries only need to search probed buckets instead of the whole database.
+        </div>
+
+        <!-- Sleek attribute chips & slot capacity strip (populated by initMultiAttribute) -->
+        <div class="schema-chips-bar" id="schema-chips-bar"></div>
+
+        <div class="stat-grid" id="multi-db-stats"></div>
+
+        <div class="step1-views">
+          <div class="step1-view">
+            <div class="view-caption">Cluster Size Distribution — how many records landed in each bucket.</div>
+            <div style="height:400px"><canvas id="chart-multi-cluster-dist"></canvas></div>
+          </div>
+          <div class="step1-view">
+            <div class="view-caption">3D Signature Projection (PCA to 3D). Drag to rotate.</div>
+            <div id="multi-cloud-3d" class="cloud-3d"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Step 4 Centroid Heatmap & Probed Clusters -->
+      <div class="card" id="card-multi-centroids" style="display:none">
+        <div class="card-head">
+          <div class="titles">
+            <span class="step-tag">Step 4 · Online</span>
+            <h3>Query → Cluster Similarity <span class="info-btn" onclick="showModal('step4')" title="About centroid probing">?</span></h3>
+          </div>
+          <span class="party-pill a">Party A</span>
+        </div>
+        <div class="card-explain">
+          Rows are queries, columns are clusters. A <span class="hl-y">brighter cell</span> means higher similarity;
+          the <span class="hl-g">★-marked cell</span> is the top probe cluster and <span class="hl-y">•</span> are extra probe clusters.
+        </div>
+        <div class="heatmap-wrap" id="multi-heatmap-centroids"></div>
+        <div class="heatmap-legend" id="multi-heatmap-legend"></div>
+      </div>
+
+      <!-- Card 3: Step 9 Column Match Grid + Time Breakdown side-by-side -->
+      <div class="card" id="card-multi-columns" style="display:none">
+        <div class="step9-timing-row">
+          <!-- left: match grid -->
+          <div class="step9-main">
+            <div class="card-head" style="margin-bottom:6px">
+              <div class="titles">
+                <span class="step-tag">Step 9 · Online</span>
+                <h3>Column-wise Match <span class="info-btn" onclick="showModal('step9')" title="About the column-wise verdict">?</span></h3>
+              </div>
+              <span class="party-pill a">Party A</span>
+            </div>
+            <div class="card-explain">
+              Within chosen probe clusters, each cell is one candidate record. A <span class="hl-b">positive</span> score beats
+              threshold τ; the <span class="hl-y">first positive (★)</span> is the declared hit. Cells after the hit are skipped by early-stopping.
+            </div>
+            <div class="match-grid-wrap" id="multi-match-grid"></div>
+            <div class="match-legend" id="multi-match-legend"></div>
+          </div>
+          <!-- right: timing -->
+          <div class="step9-aside" id="card-multi-timing" style="display:none">
+            <div class="card-head" style="margin-bottom:6px">
+              <div class="titles">
+                <span class="step-tag">Performance</span>
+                <h3>Time Breakdown</h3>
+              </div>
+            </div>
+            <div class="card-explain">Where wall-clock time goes across steps.</div>
+            <div style="height:280px"><canvas id="chart-multi-timing"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Final Summary, Sublinear Savings & Calibration Gauge -->
+      <div class="card" id="card-multi-results" style="display:none">
+        <div class="card-head">
+          <div class="titles">
+            <span class="step-tag">Outcome</span>
+            <h3>Results Summary</h3>
+          </div>
+          <span id="multi-accuracy-badge"></span>
+        </div>
+        <div class="card-explain">
+          A multi-attribute query is <span class="hl-y">correct</span> only when it hits the <b>right</b> database record
+          (exact or recovered across cross-attribute perturbations), and absent records produce no match.
+        </div>
+
+        <div class="stat-grid" id="multi-summary-stats"></div>
+
+        <!-- Sublinear scan savings banner (driven by run summary; hidden until data arrives) -->
+        <div class="savings-banner" id="savings-banner" style="display:none">
+          <div class="savings-info">
+            <div class="savings-title" id="savings-title"></div>
+            <div class="savings-desc" id="savings-desc"></div>
+          </div>
+          <div class="savings-metric">
+            <div class="savings-percent" id="savings-percent"></div>
+            <div class="savings-sub" id="savings-sub"></div>
+          </div>
+        </div>
+
+        <!-- Threshold calibration gauge (driven by run summary; hidden until data arrives) -->
+        <div class="calibration-box" id="calibration-box" style="display:none">
+          <div class="cal-head">
+            <span class="cal-title">Threshold Calibration Window</span>
+            <span id="tau-guard-badge" style="font-size:0.72rem;font-weight:700"></span>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-secondary)" id="cal-desc"></div>
+          <div class="cal-track">
+            <div class="cal-zone impostor" id="cal-zone-impostor"></div>
+            <div class="cal-zone window" id="cal-zone-window"></div>
+            <div class="cal-zone match" id="cal-zone-match"></div>
+            <div class="cal-pin" id="cal-tau-pin">
+              <div class="cal-pin-label" id="cal-tau-pin-label"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comprehensive Multi-Attribute Results Table -->
+        <div style="overflow-x:auto;margin-top:16px">
+          <table class="results-table" id="multi-results-table">
+            <thead>
+              <tr>
+                <th>Script</th>
+                <th>Query &amp; Perturbation</th>
+                <th>Label</th>
+                <th>Fused Score</th>
+                <th>Best Impostor</th>
+                <th>Per-Attribute Similarities</th>
+                <th>Verdict</th>
+                <th>Cluster</th>
+                <th>Cols Scanned</th>
+                <th style="text-align:center">Correct</th>
+              </tr>
+            </thead>
+            <tbody id="multi-results-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Results Area for Single-Attribute Demo (Original) -->
+    <div id="single-results-area" style="display:none;flex-direction:column;gap:22px">
+      <!-- Step 1 Card -->
       <div class="card" id="card-db">
         <div class="card-head">
           <div class="titles">
@@ -721,22 +1171,22 @@ body {
         </div>
         <div class="card-explain">
           Party <span class="hl-b">B</span> turns every database name into a MinHash signature and groups them into
-          <span class="hl-b">K clusters</span>, so later a query only needs to search one bucket instead of the whole database.
+          <span class="hl-b">K clusters</span>.
         </div>
         <div class="stat-grid" id="db-stats"></div>
         <div class="step1-views">
           <div class="step1-view">
             <div class="view-caption">Cluster Size Distribution — how many names landed in each bucket.</div>
-            <div style="height:420px"><canvas id="chart-cluster-dist"></canvas></div>
+            <div style="height:400px"><canvas id="chart-cluster-dist"></canvas></div>
           </div>
           <div class="step1-view">
-            <div class="view-caption">3D Signature Projection — each dot is one name (PCA to 3D); nearby dots are similar, same colour = same cluster. Drag to rotate.</div>
+            <div class="view-caption">3D Signature Projection (PCA to 3D). Drag to rotate.</div>
             <div id="cloud-3d" class="cloud-3d"></div>
           </div>
         </div>
       </div>
 
-      <!-- Step 4 -->
+      <!-- Step 4 Card -->
       <div class="card" id="card-centroids" style="display:none">
         <div class="card-head">
           <div class="titles">
@@ -745,45 +1195,21 @@ body {
           </div>
           <span class="party-pill a">Party A</span>
         </div>
-        <div class="card-explain">
-          Rows are queries, columns are clusters. A <span class="hl-y">brighter cell</span> means higher similarity;
-          the ★-marked cell is the <span class="hl-y">selected cluster</span> — where the matching name most likely lives.
-        </div>
         <div class="heatmap-wrap" id="heatmap-centroids"></div>
         <div class="heatmap-legend" id="heatmap-legend"></div>
       </div>
 
-      <!-- Step 9 + Timing (same card, side by side) -->
+      <!-- Step 9 Card -->
       <div class="card" id="card-columns" style="display:none">
-        <div class="step9-timing-row">
-          <!-- left: match grid -->
-          <div class="step9-main">
-            <div class="card-head" style="margin-bottom:6px">
-              <div class="titles">
-                <span class="step-tag">Step 9 · Online</span>
-                <h3>Column-wise Match <span class="info-btn" onclick="showModal('step9')" title="What does this mean?">?</span></h3>
-              </div>
-              <span class="party-pill a">Party A</span>
-            </div>
-            <div class="card-explain">
-              Within the chosen cluster, each cell is one candidate name. A <span class="hl-b">positive</span> score beats
-              threshold τ; the <span class="hl-y">first positive (★)</span> is the declared hit. Cells after the hit are skipped by early-stopping.
-            </div>
-            <div class="match-grid-wrap" id="match-grid"></div>
-            <div class="match-legend" id="match-legend"></div>
+        <div class="card-head" style="margin-bottom:6px">
+          <div class="titles">
+            <span class="step-tag">Step 9 · Online</span>
+            <h3>Column-wise Match</h3>
           </div>
-          <!-- right: timing -->
-          <div class="step9-aside" id="card-timing" style="display:none">
-            <div class="card-head" style="margin-bottom:6px">
-              <div class="titles">
-                <span class="step-tag">Performance</span>
-                <h3>Time Breakdown</h3>
-              </div>
-            </div>
-            <div class="card-explain">Where the wall-clock time goes across steps.</div>
-            <div style="height:280px"><canvas id="chart-timing"></canvas></div>
-          </div>
+          <span class="party-pill a">Party A</span>
         </div>
+        <div class="match-grid-wrap" id="match-grid"></div>
+        <div class="match-legend" id="match-legend"></div>
       </div>
 
       <!-- Results table -->
@@ -795,38 +1221,66 @@ body {
           </div>
           <span id="accuracy-badge"></span>
         </div>
-        <div class="card-explain">
-          A query is <span class="hl-y">correct</span> only when it hits the <b>right</b> database name
-          (exact for real names, recovered for misspellings), and absent names produce no match.
-        </div>
         <div style="overflow-x:auto">
           <table class="results-table" id="results-table"></table>
         </div>
       </div>
-
     </div>
+
   </main>
 </div>
 
 <!-- ============================================================
-     Info Modals
+     Modals
      ============================================================ -->
+<div class="modal-overlay" id="modal-schema">
+  <div class="modal-box" style="max-width:680px">
+    <h2>Multi-Attribute Fusion Layout &amp; CKKS 4096-Slot Packing</h2>
+    <div class="modal-subtitle">Schema &amp; vector layout · cross-script multi-attribute design</div>
+    <p>
+      Classic fuzzy matching handles a single Latin name field and breaks on homophone typos or cross-script
+      romanization. This demo fuses several attributes into one vector: each attribute is encoded independently,
+      then the parts are concatenated, so a single encrypted inner product scores all attributes at once.
+    </p>
+
+    <div class="schema-grid" id="schema-grid-container" style="margin-top:12px;margin-bottom:12px">
+      <!-- Populated dynamically via initMultiAttribute -->
+    </div>
+
+    <div class="capacity-row">
+      <div class="capacity-head">
+        <span><strong>Cluster-stage vector (Cluster Dim)</strong>: <span id="cap-cluster-text" style="color:var(--accent-cyan)">–</span></span>
+        <span id="cap-cluster-headroom" style="color:var(--accent-green)"></span>
+      </div>
+      <div class="capacity-bar-track">
+        <div class="capacity-bar-fill" id="cap-cluster-bar" style="width:0%;background:var(--accent-cyan)"></div>
+      </div>
+    </div>
+
+    <div class="capacity-row" style="margin-top:8px">
+      <div class="capacity-head">
+        <span><strong>Match-stage vector (Match Dim)</strong>: <span id="cap-match-text" style="color:var(--accent-yellow)">–</span></span>
+        <span id="cap-match-headroom" style="color:var(--accent-green)"></span>
+      </div>
+      <div class="capacity-bar-track">
+        <div class="capacity-bar-fill" id="cap-match-bar" style="width:0%;background:var(--accent-yellow)"></div>
+      </div>
+    </div>
+
+    <button class="modal-btn-close" onclick="closeModal('schema')">Close</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-step1">
   <div class="modal-box">
-    <h2>Step 1 — Database Clustering</h2>
-    <div class="modal-subtitle">Party B · offline preprocessing · runs once</div>
+    <h2>Step 1 — Offline Encoding &amp; Clustering</h2>
+    <div class="modal-subtitle">Party B · offline preprocessing · done once</div>
     <p>
-      <span class="hl-b">Party B (the database holder)</span> owns a database of real names.
-      Each name is converted into a <b>200-dimensional MinHash signature</b>, then
-      <b>cosine K-Means</b> groups all signatures into <b>K clusters</b>.
-    </p>
-    <p>
-      Like a library shelving books by topic: similar names land in the same cluster.
-      A later query only searches the most relevant cluster instead of scanning everything.
+      Party B turns every database record into a fused multi-attribute vector and groups the vectors into
+      <b>K clusters</b> with cosine K-Means, producing the centroid matrix and the column-wise store used later.
     </p>
     <div class="note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <span><b>Privacy:</b> this step runs entirely on B's machine — no communication, no data leaves B.</span>
+      <span><b>Privacy:</b> this step runs entirely on Party B's side. No network exchange happens and no plaintext ever leaves B.</span>
     </div>
     <button class="modal-btn-close" onclick="closeModal('step1')">Close</button>
   </div>
@@ -834,77 +1288,78 @@ body {
 
 <div class="modal-overlay" id="modal-step4">
   <div class="modal-box">
-    <h2>Step 4 — Cluster Selection</h2>
-    <div class="modal-subtitle">Party A · online · select best cluster after decryption</div>
+    <h2>Step 4 — Centroid Scores &amp; Probe Selection</h2>
+    <div class="modal-subtitle">Party A · online · pick the top-K probe clusters</div>
     <p>
-      <span class="hl-a">Party A (the requester)</span> encrypts its query and sends it to B.
-      B computes the query-to-centroid similarity <b>under encryption</b> and returns
-      <b>K encrypted scores</b>.
+      Party B homomorphically scores the encrypted query against every centroid; Party A decrypts the K similarity
+      values. To avoid missing borderline records, the system probes the <b>few closest clusters</b> (multi-cluster
+      probing) instead of only the best one, and scans them in order.
     </p>
-    <p>
-      A decrypts those scores with its private key. Each row is one query; columns are
-      the K clusters and the colour is cosine similarity. The <span class="hl-y">★ brightest cell</span> marks
-      the <b>most similar cluster</b>, which A selects for exact matching.
-    </p>
-    <div class="note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <span><b>Privacy:</b> B only ever sees an encrypted query and encrypted scores — it never learns which cluster A picked. A learns its chosen cluster but not the names inside it.</span>
-    </div>
     <button class="modal-btn-close" onclick="closeModal('step4')">Close</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="modal-step9">
   <div class="modal-box">
-    <h2>Step 9 — Column-wise Match Detection</h2>
-    <div class="modal-subtitle">Party A · final decision · decrypt column scores</div>
+    <h2>Step 9 — Column Scan &amp; Early Stop</h2>
+    <div class="modal-subtitle">Party A · online · encrypted verdict with sublinear early stop</div>
     <p>
-      A sends B an <b>encrypted selector</b> (the chosen cluster) and its <b>encrypted query vector</b>.
-      B multiplies the selector with the cluster matrix, scores each column under encryption, adds a
-      <b>random mask</b> per column, and returns the ciphertext.
+      Inside each probed cluster, Party B blinds every candidate column with a positive random mask and a threshold
+      shift: <code>mask · (score − τ)</code>. Party A decrypts and declares a hit (CATCH) on the first positive value,
+      then stops immediately — the remaining candidates are skipped, so a typical query scans only a small fraction
+      of the database.
     </p>
-    <p>
-      A decrypts column by column: a <b>positive score</b> means that name beats threshold τ.
-      The <span style="color:var(--accent-green);font-weight:600">first positive (★)</span> is declared the <b>hit</b>.
-      If no column is positive, the query is a <b>miss</b>.
-    </p>
-    <div class="note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <span><b>Privacy:</b> the per-column random mask prevents B from learning the true similarity. A sees scores only for names inside its chosen cluster — never the whole database.</span>
-    </div>
     <button class="modal-btn-close" onclick="closeModal('step9')">Close</button>
   </div>
 </div>
 
 <script>
 // ============================================================
-// State
+// Global State
 // ============================================================
-let queryMode = 'demo';
+let activeDemo = 'multi'; // 'multi' | 'single'
+let multiQueryMode = 'all'; // 'all' | 'script' | 'single' | 'custom'
+let singleQueryMode = 'demo';
+let isEncryptedMode = false; // default fast plaintext mode for silky UI response
 let charts = {};
 let isRunning = false;
-let rawDataStore = {};
-
-const MODE_HINTS = {
-  demo: '5 real names + their misspelled variants + 3 absent names — the same set as the terminal demo.',
-  indices: 'Pick rows by their index in the query dataset (Party A side).',
-  text: 'Type any single name; it has no ground-truth label so accuracy is not computed.',
-};
+let multiInitialInfo = null;
+let currentMultiRows = [];
 
 // ============================================================
 // Helpers
 // ============================================================
 function $(id) { return document.getElementById(id); }
-
-function setQueryMode(mode) {
-  queryMode = mode;
-  $('tab-demo').classList.toggle('active', mode === 'demo');
-  $('tab-indices').classList.toggle('active', mode === 'indices');
-  $('tab-text').classList.toggle('active', mode === 'text');
-  $('group-indices').style.display = mode === 'indices' ? '' : 'none';
-  $('group-text').style.display = mode === 'text' ? '' : 'none';
-  $('mode-hint').textContent = MODE_HINTS[mode];
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
+
+// Auto-scroll helper matching baseline behavior
+let _lastUserScroll = 0;
+document.addEventListener('DOMContentLoaded', () => {
+  ['wheel', 'touchmove', 'pointerdown'].forEach(evt => {
+    window.addEventListener(evt, () => { _lastUserScroll = Date.now(); }, { passive: true });
+  });
+});
+
+function scrollToCard(cardId, force = false) {
+  if (!force && Date.now() - _lastUserScroll < 2000) return;
+  const el = document.getElementById(cardId);
+  if (!el || el.style.display === 'none') return;
+  const main = document.querySelector('.main');
+  if (!main) return;
+  const banner = document.getElementById('flow-banner');
+  const bannerH = banner ? banner.offsetHeight : 0;
+  const offset = Math.max(0, el.offsetTop - bannerH - 16);
+  main.scrollTo({ top: offset, behavior: 'smooth' });
+}
+
+function showModal(id) { const m = $('modal-' + id); if (m) m.classList.add('show'); }
+function closeModal(id) { const m = $('modal-' + id); if (m) m.classList.remove('show'); }
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('show');
+});
 
 function setStatus(state, text) {
   $('status-dot').className = 'status-dot ' + state;
@@ -925,126 +1380,854 @@ function setStepTime(step, ms) {
   t.textContent = ms < 1000 ? ms.toFixed(0) + 'ms' : (ms / 1000).toFixed(1) + 's';
 }
 
+function lightFlowStep(step) {
+  document.querySelectorAll('.flow-step[data-flow-step]').forEach(el => {
+    const s = parseInt(el.dataset.flowStep);
+    if (s < step) { el.classList.remove('flow-active'); el.classList.add('flow-done'); }
+    else if (s === step) { el.classList.remove('flow-done'); el.classList.add('flow-active'); }
+  });
+}
+
 function destroyChart(name) {
   if (charts[name]) { charts[name].destroy(); delete charts[name]; }
 }
 
-function esc(s) {
-  return String(s == null ? '' : s).replace(/[&<>"]/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-}
-
 // ============================================================
-// Modals
+// Demo Switcher
 // ============================================================
-function showModal(step) { const m = $('modal-' + step); if (m) m.classList.add('show'); }
-function closeModal(step) { const m = $('modal-' + step); if (m) m.classList.remove('show'); }
-document.addEventListener('click', e => {
-  if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('show');
-});
-
-// ============================================================
-// Two-Party transparency panels
-// ============================================================
-const LOCK_SVG = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-
-function renderRows(containerId, rows) {
-  if (!rows.length) {
-    $(containerId).innerHTML = '<div class="party-empty">Run the protocol to populate…</div>';
-    return;
-  }
-  $(containerId).innerHTML = rows.map(r =>
-    `<div class="party-row"><span class="k">${r[0]}</span><span class="v ${r[2] || ''}">${r[1]}</span></div>`
-  ).join('');
-}
-
-function updatePartyB(d) {
-  const rows = [];
-  if (d.db_size !== undefined) {
-    rows.push(['Database size', d.db_size + ' names']);
-    rows.push(['Clusters (K)', d.k]);
-    rows.push(['Signature dim', d.signature_dim + ' (MinHash)']);
-  }
-  if (d.sample_names) rows.push(['Sample names', d.sample_names.slice(0, 3).join('<br>')]);
-  if (d.num_queries !== undefined && d.num_centroids !== undefined) {
-    rows.push(['Query received', LOCK_SVG + 'encrypted vector', 'enc']);
-    rows.push(['Computation', `${d.num_queries} × ${d.num_centroids} ciphertext dot-products`]);
-  }
-  if (d.columns_per_query) {
-    const total = d.columns_per_query.reduce((s, q) => s + q.num_columns, 0);
-    rows.push(['Column matches', total + ' ciphertext mults']);
-    rows.push(['Returned', LOCK_SVG + 'masked encrypted scores', 'enc']);
-  }
-  renderRows('party-b-rows', rows);
-}
-
-function updatePartyA(d) {
-  const rows = [];
-  if (d.query_names) {
-    rows.push(['Queries', d.query_names.length + ' names']);
-    rows.push(['Encrypt time', (d.context_time_ms || 0).toFixed(0) + ' ms']);
-    rows.push(['Held locally', 'private key + query vector', 'muted']);
-  }
-  if (d.centroid_scores) {
-    const sel = d.centroid_scores.slice(0, 4).map(q =>
-      `${esc(q.query_name.slice(0, 16))} → C${q.selected_cluster}`).join('<br>');
-    rows.push(['Decrypted', `${d.centroid_scores.length} × ${d.num_centroids} scores`]);
-    rows.push(['Selected cluster', sel]);
-  }
-  if (d.tau !== undefined) rows.push(['Threshold τ', d.tau]);
-  renderRows('party-a-rows', rows);
-}
-
-function refreshParties() {
-  const all = Object.assign({}, ...Object.values(rawDataStore));
-  updatePartyB(all);
-  updatePartyA(all);
-}
-
-// ============================================================
-// Run Protocol
-// ============================================================
-async function runProtocol() {
+function switchDemo(mode) {
   if (isRunning) return;
-  isRunning = true;
-  $('btn-run').disabled = true;
+  activeDemo = mode;
+  $('switch-multi').classList.toggle('active', mode === 'multi');
+  $('switch-single').classList.toggle('active', mode === 'single');
 
-  $('welcome-panel').style.display = 'none';
-  $('results-area').style.display = 'flex';
-  ['card-centroids', 'card-columns', 'card-results'].forEach(id => $(id).style.display = 'none');
-  // card-timing is inside card-columns (.step9-aside), reset it too
-  const timingAside = $('card-timing');
-  if (timingAside) timingAside.style.display = 'none';
-  // Reset flow-step states
-  document.querySelectorAll('.flow-step').forEach(el => {
-    el.classList.remove('flow-active', 'flow-done');
-  });
+  $('controls-multi').style.display = mode === 'multi' ? 'flex' : 'none';
+  $('controls-single').style.display = mode === 'single' ? 'flex' : 'none';
 
+  $('multi-results-area').style.display = 'none';
+  $('single-results-area').style.display = 'none';
+  $('welcome-panel').style.display = 'flex';
+  const queriesCard = $('card-multi-queries');
+  if (queriesCard) queriesCard.style.display = mode === 'multi' ? 'block' : 'none';
+
+  if (mode === 'multi') {
+    $('brand-title').textContent = 'Multi-Attribute Matching';
+    $('brand-subtitle').textContent = 'Cross-script multilingual record linkage';
+    $('welcome-heading').textContent = 'Privacy-Preserving Multi-Attribute Matching';
+    $('welcome-subtext').textContent = 'Four writing systems — Latin, Chinese, Arabic, Burmese — matched privately over fused name, DOB, city, and phone attributes.';
+  } else {
+    $('brand-title').textContent = 'Single-Attribute Matching';
+    $('brand-subtitle').textContent = 'NCVR-10K name matching';
+    $('welcome-heading').textContent = 'Privacy-Preserving Fuzzy Name Matching';
+    $('welcome-subtext').textContent = 'Configure the run and press Run Protocol for MinHash + CKKS name matching.';
+  }
+
+  // Reset steps & status
+  resetTimeline();
+  setStatus('ready', 'Ready');
+}
+
+function resetTimeline() {
+  document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('flow-active', 'flow-done'));
   document.querySelectorAll('.step-item').forEach(el => {
     el.classList.remove('active', 'done');
     el.classList.add('pending');
     el.querySelector('.step-time').textContent = '';
   });
-  Object.keys(charts).forEach(k => destroyChart(k));
-  disposeCloud();
-  if (step9Timer) { clearInterval(step9Timer); step9Timer = null; }
-  $('match-grid').innerHTML = '';
-  rawDataStore = {};
-  renderRows('party-b-rows', []);
-  renderRows('party-a-rows', []);
+}
 
-  setStatus('running', 'Running protocol…');
+// ============================================================
+// Multi-Attribute UI Controls
+// ============================================================
+function setMultiQueryMode(mode) {
+  multiQueryMode = mode;
+  ['all', 'script', 'single', 'custom'].forEach(m => {
+    $('multi-tab-' + m).classList.toggle('active', m === mode);
+  });
+
+  $('group-multi-scripts').style.display = mode === 'script' ? 'flex' : 'none';
+  $('group-multi-single').style.display = mode === 'single' ? 'flex' : 'none';
+  $('group-multi-custom').style.display = mode === 'custom' ? 'flex' : 'none';
+
+  const hints = {
+    all: 'Run all 10 demo queries across 4 scripts (Latin, Chinese, Arabic, Burmese): 7 matches + 3 non-matches.',
+    script: 'Run only the queries of one writing system.',
+    single: 'Run one chosen query and inspect its per-attribute breakdown.',
+    custom: 'Type your own name, DOB, city, and phone, then link them privately.',
+  };
+  $('multi-mode-hint').textContent = hints[mode] || '';
+}
+
+let selectedScriptFilter = 'all';
+function selectMultiScript(sc) {
+  selectedScriptFilter = sc;
+  document.querySelectorAll('.script-pill').forEach(el => {
+    const txt = el.textContent.toLowerCase();
+    el.classList.toggle('active', (sc === 'all' && txt.trim() === 'all') || txt.includes(sc.toLowerCase()));
+  });
+}
+
+function setExecMode(isEnc) {
+  isEncryptedMode = isEnc;
+  $('mode-fast').classList.toggle('active', !isEnc);
+  $('mode-real').classList.toggle('active', isEnc);
+  $('exec-mode-hint').textContent = isEnc
+    ? 'Real runs the full encrypted protocol (TenSEAL CKKS, a few seconds per query).'
+    : 'Fast runs plaintext scores; Real runs the full encrypted protocol.';
+}
+
+function onSelectMultiQueryChange() {
+  // If user picks single query
+}
+
+// Load initial info from backend
+async function initMultiAttribute() {
+  try {
+    const res = await fetch('/api/multi-attribute/info');
+    if (!res.ok) return;
+    multiInitialInfo = await res.json();
+
+    // Populate query dropdown
+    const select = $('select-multi-query');
+    select.innerHTML = '';
+    (multiInitialInfo.queries || []).forEach(q => {
+      const opt = document.createElement('option');
+      opt.value = q.query_id;
+      const flagPrefix = q.flag ? `${q.flag} ` : '';
+      opt.textContent = `${flagPrefix}[${q.script}] ${q.query_id}: ${q.name} · ${q.perturbation || ''}`;
+      select.appendChild(opt);
+    });
+
+    // Raw query attribute table (visible before any run)
+    renderMultiQueriesTable(multiInitialInfo.queries || []);
+
+    // Populate schema grid & chips bar
+    renderSchemaCards(multiInitialInfo.schema);
+    renderSchemaChips(multiInitialInfo.schema);
+  } catch (e) {
+    console.warn('Could not load multi-attribute info:', e);
+  }
+}
+
+// Raw demo query table: one row per query, one column per attribute
+function renderMultiQueriesTable(queries) {
+  const tbody = $('multi-queries-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  const attrKeys = ['name', 'dob', 'city', 'phone'];
+
+  queries.forEach(q => {
+    const vals = q.values || {};
+    const cell = k => {
+      const v = vals[k];
+      return (v === undefined || v === null || v === '')
+        ? '<td class="attr-missing">—</td>'
+        : `<td>${esc(v)}</td>`;
+    };
+    const isNeg = q.label === false;
+    const badgeCls = isNeg ? 'negative' : (q.script || 'latin').toLowerCase();
+    const labelHtml = q.label === true
+      ? '<span class="match-yes">Match</span>'
+      : q.label === false
+        ? '<span class="match-no">No match</span>'
+        : '<span class="attr-missing">—</span>';
+    const pert = q.perturbation || q.note || '';
+
+    const tr = document.createElement('tr');
+    tr.title = 'Click to inspect this query on its own';
+    tr.innerHTML = `
+      <td><span class="lang-badge ${badgeCls}">${q.flag || ''} ${esc(q.lang_name || q.script || '')}</span></td>
+      ${attrKeys.map(cell).join('')}
+      <td>${labelHtml}</td>
+      <td style="font-size:0.72rem;color:var(--text-secondary)">${pert ? esc(pert) : '<span class="attr-missing">—</span>'}</td>
+    `;
+    tr.onclick = () => jumpToMultiQuery(q.query_id);
+    tbody.appendChild(tr);
+  });
+
+  const count = $('multi-queries-count');
+  if (count) count.textContent = queries.length ? `· ${queries.length} queries` : '';
+}
+
+// Clicking a raw query row switches to single-query mode with that query selected
+function jumpToMultiQuery(qid) {
+  setMultiQueryMode('single');
+  const sel = $('select-multi-query');
+  if (sel) sel.value = qid;
+  document.querySelector('.sidebar').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Attribute weight chips + CKKS slot usage, driven by the live schema
+function renderSchemaChips(schema) {
+  const bar = $('schema-chips-bar');
+  if (!bar || !schema) return;
+  const slots = 4096;
+  let html = '';
+  (schema.attributes || []).forEach(a => {
+    html += `<span class="schema-chip">${esc(a.name)} <b>${Math.round(a.weight * 100)}%</b></span>`;
+  });
+  html += `<span class="schema-chip-divider"></span>`;
+  html += `<span class="schema-chip slot-info">Cluster dim <b id="chip-cluster-dim">${schema.cluster_dim}</b> / Match dim <b id="chip-match-dim">${schema.match_dim}</b> (${slots} CKKS slots · headroom ${slots - schema.cluster_dim})</span>`;
+  html += `<button class="btn-schema-details" onclick="showModal('schema')">Details ↗</button>`;
+  bar.innerHTML = html;
+}
+
+function renderSchemaCards(schema) {
+  if (!schema || !schema.attributes) return;
+  const container = $('schema-grid-container');
+  container.innerHTML = '';
+
+  const desc = {
+    name: 'SAGE cross-script embedding + MinHash; tolerant of spelling and romanization variants',
+    dob: 'Block-hashed dates; tolerant of format changes (slash/dash) and year swaps',
+    city: 'Case-folded exact hash; insensitive to letter case',
+    phone: 'Normalized-digit exact hash; strips symbols and spacing',
+  };
+
+  schema.attributes.forEach(attr => {
+    const wPct = Math.round(attr.weight * 100);
+    const box = document.createElement('div');
+    box.className = 'schema-attr-box';
+    box.innerHTML = `
+      <div class="schema-attr-head">
+        <span class="schema-attr-name">${attr.name}</span>
+        <span class="schema-attr-weight">weight ${wPct}%</span>
+      </div>
+      <div class="schema-attr-desc">${desc[attr.name] || attr.kind}</div>
+      <div class="schema-attr-meta">type: ${attr.kind}</div>
+    `;
+    container.appendChild(box);
+  });
+
+  // Fill the CKKS slot capacity bars in the schema modal
+  const slots = 4096;
+  if (schema.cluster_dim) {
+    $('cap-cluster-text').textContent = `${schema.cluster_dim} / ${slots} slots`;
+    $('cap-cluster-headroom').textContent = `headroom ${slots - schema.cluster_dim} slots`;
+    $('cap-cluster-bar').style.width = (schema.cluster_dim / slots * 100).toFixed(1) + '%';
+  }
+  if (schema.match_dim) {
+    $('cap-match-text').textContent = `${schema.match_dim} / ${slots} slots`;
+    $('cap-match-headroom').textContent = `headroom ${slots - schema.match_dim} slots`;
+    $('cap-match-bar').style.width = (schema.match_dim / slots * 100).toFixed(1) + '%';
+  }
+}
+
+// ============================================================
+// Multi-Attribute Run Protocol (SSE Stream)
+// ============================================================
+async function runMultiProtocol() {
+  if (isRunning) return;
+  isRunning = true;
+  $('btn-run-multi').disabled = true;
+
+  $('welcome-panel').style.display = 'none';
+  $('multi-results-area').style.display = 'flex';
+  ['card-multi-step1', 'card-multi-centroids', 'card-multi-columns', 'card-multi-results'].forEach(id => {
+    const el = $(id); if (el) el.style.display = 'none';
+  });
+
+  resetTimeline();
+  setStatus('running', 'Running multi-attribute protocol…');
+
+  currentMultiRows = [];
+  $('multi-results-tbody').innerHTML = '';
+
+  const payload = {
+    query_mode: multiQueryMode,
+    filter_script: multiQueryMode === 'script' ? selectedScriptFilter : null,
+    selected_query_id: multiQueryMode === 'single' ? $('select-multi-query').value : null,
+    encrypted: isEncryptedMode,
+    tau: parseFloat($('multi-input-tau').value) || 0.485,
+    probes: parseInt($('multi-input-probes').value) || 3,
+    k_mode: $('multi-input-kmode').value || 'sqrt',
+    early_stop: $('multi-input-early-stop').checked,
+  };
+
+  if (multiQueryMode === 'custom') {
+    payload.custom_query = {
+      name: $('multi-input-name').value,
+      dob: $('multi-input-dob').value,
+      city: $('multi-input-city').value,
+      phone: $('multi-input-phone').value,
+    };
+  }
+
+  try {
+    const res = await fetch('/api/multi-attribute/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      let eventType = '', dataStr = '';
+      for (const line of lines) {
+        if (line.startsWith('event: ')) eventType = line.slice(7).trim();
+        else if (line.startsWith('data: ')) {
+          dataStr = line.slice(6);
+          if (eventType && dataStr) {
+            try {
+              handleMultiEvent(eventType, JSON.parse(dataStr));
+            } catch (err) {
+              console.warn('Bad multi SSE event:', err, dataStr);
+            }
+            eventType = ''; dataStr = '';
+          }
+        }
+      }
+    }
+  } catch (err) {
+    setStatus('error', 'Error: ' + err.message);
+    console.error(err);
+  } finally {
+    isRunning = false;
+    $('btn-run-multi').disabled = false;
+  }
+}
+
+function handleMultiEvent(type, payload) {
+  if (type === 'error') {
+    setStatus('error', 'Error: ' + payload.message);
+    console.error(payload);
+    return;
+  }
+  if (type === 'step_complete') {
+    handleMultiStepComplete(payload);
+  } else if (type === 'query_progress') {
+    handleMultiQueryProgress(payload);
+  } else if (type === 'complete') {
+    handleMultiComplete(payload.summary);
+  }
+}
+
+function handleMultiStepComplete(evt) {
+  const step = evt.step;
+  setStepState(step, 'done');
+  setStepTime(step, evt.timing_ms);
+  lightFlowStep(step);
+
+  if (step === 1) {
+    renderMultiStep1(evt.data);
+    scrollToCard('card-multi-step1');
+  } else if (step === 2) {
+    updatePartyATransparency(evt.data);
+  } else if (step === 3) {
+    updatePartyBTransparencyCentroids(evt.data);
+  } else if (step === 4) {
+    renderMultiStep4(evt.data);
+    scrollToCard('card-multi-centroids');
+  } else if (step === 6) {
+    updatePartyBTransparencyColumns(evt.data);
+  } else if (step === 9) {
+    renderMultiStep9(evt.data);
+    scrollToCard('card-multi-columns');
+  }
+}
+
+function handleMultiQueryProgress(payload) {
+  // Live row update in results table
+  const row = payload.row;
+  currentMultiRows.push(row);
+  renderMultiTableRow(row, payload.index);
+}
+
+function handleMultiComplete(summary) {
+  document.querySelectorAll('.step-item').forEach(el => {
+    el.classList.remove('pending', 'active');
+    el.classList.add('done');
+  });
+  document.querySelectorAll('.flow-step').forEach(el => {
+    el.classList.remove('flow-active');
+    el.classList.add('flow-done');
+  });
+
+  renderMultiFinalSummary(summary);
+  if (summary && summary.timing_ms) {
+    renderMultiTiming(summary.timing_ms);
+  }
+  setStatus('done', 'Run complete');
+  setTimeout(() => scrollToCard('card-multi-results', true), 120);
+}
+
+// ============================================================
+// Multi-Attribute Visual Renderers
+// ============================================================
+
+// Step 1: Database & 3D PCA
+function renderMultiStep1(data) {
+  $('card-multi-step1').style.display = 'block';
+
+  if ($('chip-cluster-dim') && data.cluster_dim) $('chip-cluster-dim').textContent = data.cluster_dim;
+  if ($('chip-match-dim') && data.match_dim) $('chip-match-dim').textContent = data.match_dim;
+
+  const sizes = data.cluster_sizes || [];
+  const avg = sizes.length ? (sizes.reduce((a, b) => a + b, 0) / sizes.length).toFixed(1) : '–';
+  const mn = sizes.length ? Math.min(...sizes) : '–';
+  const mx = sizes.length ? Math.max(...sizes) : '–';
+
+  $('multi-db-stats').innerHTML = `
+    <div class="stat-tile"><div class="v" style="color:var(--accent-cyan)">${data.db_size}</div><div class="l">Database Records</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-purple)">${data.k}</div><div class="l">Clusters (K)</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-yellow)">${mn}–${mx}</div><div class="l">Cluster Size (avg ${avg})</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-green)">${data.cluster_dim}/${data.match_dim}</div><div class="l">Vector Dims (cluster/match)</div></div>
+  `;
+
+  // Render Bar chart
+  if (sizes.length) {
+    destroyChart('multiClusterDist');
+    const ctx = $('chart-multi-cluster-dist').getContext('2d');
+    charts['multiClusterDist'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: sizes.map((_, i) => `C${i}`),
+        datasets: [{
+          label: 'Records per cluster',
+          data: sizes,
+          backgroundColor: sizes.map((_, i) => `hsla(${i * 360 / sizes.length}, 65%, 58%, 0.72)`),
+          borderColor: sizes.map((_, i) => `hsla(${i * 360 / sizes.length}, 65%, 58%, 1)`),
+          borderWidth: 1, borderRadius: 3,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: c => `${c.raw} records` } }
+        },
+        scales: {
+          x: { ticks: { color: '#a39e92', font: { size: 9 } }, grid: { display: false } },
+          y: { ticks: { color: '#a39e92', font: { size: 9 } }, grid: { color: 'rgba(52,50,43,0.55)' }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // Render 3D Point Cloud
+  renderCloud3D(data.points_3d || [], data.point_clusters || [], data.k || 1, 'multi-cloud-3d');
+
+  // Update Party B transparency
+  const rows = [
+    ['Database size', `${data.db_size} records`],
+    ['Clusters (K)', `${data.k}`],
+    ['Vector dims', `cluster ${data.cluster_dim} · match ${data.match_dim}`],
+    ['CKKS slot headroom', `cluster ${data.headroom_cluster} · match ${data.headroom_match}`],
+    ['Offline ciphertexts', 'encrypted ✓'],
+  ];
+  renderRows('party-b-rows', rows);
+}
+
+function updatePartyATransparency(data) {
+  const rows = [
+    ['Queries', `${data.num_queries}`],
+    ['Mode', data.encrypted ? 'Real encryption (CKKS)' : 'Fast (plaintext)'],
+    ['Private key', 'never leaves Party A', 'muted'],
+  ];
+  renderRows('party-a-rows', rows);
+}
+
+function updatePartyBTransparencyCentroids(data) {
+  const cur = Object.assign([], document.querySelectorAll('#party-b-rows .party-row'));
+  // Add centroid dot product row
+  const rows = [
+    ['Round 1 blind products', `${data.num_queries} × ${data.num_centroids} centroid dot products`],
+    ['Status', 'encrypted scores sent to Party A', 'enc'],
+  ];
+  renderRows('party-b-rows', rows);
+}
+
+function updatePartyBTransparencyColumns(data) {
+  const rows = [
+    ['Round 2 column match', `probing top ${data.probes} clusters`],
+    ['Masking', 'random positive mask: mask·(score − τ)', 'enc'],
+  ];
+  renderRows('party-b-rows', rows);
+}
+
+// Step 4: Centroid Similarity Heatmap
+function renderMultiStep4(data) {
+  $('card-multi-centroids').style.display = 'block';
+  const scoresList = data.centroid_scores || [];
+  const K = data.num_centroids || 17;
+  const grid = $('multi-heatmap-centroids');
+
+  let lo = Infinity, hi = -Infinity;
+  scoresList.forEach(q => q.scores.forEach(s => { if (s < lo) lo = s; if (s > hi) hi = s; }));
+  const span = (hi - lo) || 1;
+  const norm = v => (v - lo) / span;
+
+  let html = `<div class="heatmap-grid" style="grid-template-columns:minmax(180px,max-content) repeat(${K}, minmax(32px, 1fr))">`;
+  html += `<div class="heatmap-corner"></div>`;
+  for (let c = 0; c < K; c++) html += `<div class="heatmap-colhead">C${c}</div>`;
+
+  scoresList.forEach(q => {
+    const isNeg = q.label === false;
+    const badgeCls = isNeg ? 'negative' : (q.script || 'latin').toLowerCase();
+    const tag = `<span class="lang-badge ${badgeCls}">${q.flag || ''} ${q.script || 'Latin'}</span>`;
+    const name = q.query_name.length > 20 ? q.query_name.slice(0, 18) + '…' : q.query_name;
+
+    html += `<div class="heatmap-rowhead" title="${esc(q.query_name)}">${tag}<span>${esc(name)}</span></div>`;
+
+    const topCluster = q.selected_cluster;
+    const probedSet = new Set(q.probed_clusters || []);
+
+    q.scores.forEach((s, ci) => {
+      const bg = heatColor(norm(s));
+      let cls = 'heatmap-cell';
+      if (ci === topCluster) cls += ' selected-hit';
+      else if (probedSet.has(ci)) cls += ' probed-extra';
+
+      html += `<div class="${cls}" style="background:${bg}" title="${esc(q.query_name)} · C${ci} = ${s.toFixed(4)}"></div>`;
+    });
+  });
+  html += `</div>`;
+  grid.innerHTML = html;
+
+  $('multi-heatmap-legend').innerHTML = `
+    <span>Low</span><span class="scale"></span><span>High similarity</span>
+    <span style="margin-left:14px;color:var(--accent-green)">★ = top probe cluster</span>
+    <span style="margin-left:10px;color:var(--accent-yellow)">• = extra probed clusters</span>
+  `;
+}
+
+// Step 9: Column Match Grid
+let multiStep9Timer = null;
+
+function renderMultiStep9(data) {
+  $('card-multi-columns').style.display = 'block';
+  $('card-multi-timing').style.display = 'block';
+  if (multiStep9Timer) { clearInterval(multiStep9Timer); multiStep9Timer = null; }
+
+  const cols = data.column_scores || [];
+  if (!cols.length) { $('multi-match-grid').innerHTML = ''; return; }
+
+  const earlyStop = data.early_stop !== false;
+  const maxCols = Math.max(...cols.map(q => (q.column_scores ? q.column_scores.length : q.checked_columns || 15)), 18);
+  const grid = $('multi-match-grid');
+
+  // 1) Scaffold: header + placeholder cells + outcome
+  let html = `<div class="match-grid" style="grid-template-columns:minmax(180px,max-content) repeat(${maxCols}, minmax(18px, 1fr)) minmax(110px,max-content)">`;
+  html += `<div class="match-colhead"></div>`;
+  for (let c = 0; c < maxCols; c++) html += `<div class="match-colhead">${c}</div>`;
+  html += `<div class="match-colhead" style="text-align:left;padding-left:10px">Outcome</div>`;
+
+  cols.forEach((q, qi) => {
+    const isNeg = q.expected_label === false;
+    const badgeCls = isNeg ? 'negative' : (q.script || 'latin').toLowerCase();
+    const tag = `<span class="lang-badge ${badgeCls}">${q.flag || ''} ${q.script || 'Latin'}</span>`;
+    const name = q.query_name.length > 20 ? q.query_name.slice(0, 18) + '…' : q.query_name;
+    html += `<div class="match-rowhead" title="${esc(q.query_name)}">${tag}<span class="rh-name">${esc(name)}</span></div>`;
+    for (let c = 0; c < maxCols; c++) {
+      html += `<div class="mcell-ph" data-qi="${qi}" data-ci="${c}"></div>`;
+    }
+    html += `<div class="match-summary" data-qi="${qi}"></div>`;
+  });
+  html += `</div>`;
+  grid.innerHTML = html;
+
+  // 2) Animated reveal column by column
+  let colIdx = 0;
+  const revealCol = () => {
+    if (colIdx >= maxCols) {
+      clearInterval(multiStep9Timer);
+      multiStep9Timer = null;
+      cols.forEach((q, qi) => {
+        const sumEl = grid.querySelector(`.match-summary[data-qi="${qi}"]`);
+        if (sumEl && !sumEl.dataset.filled) {
+          sumEl.dataset.filled = '1';
+          sumEl.innerHTML = q.match_found
+            ? `<span class="hit">✓ hit</span>`
+            : `<span class="miss">✗ miss</span>`;
+        }
+      });
+      return;
+    }
+    const c = colIdx;
+    cols.forEach((q, qi) => {
+      const ph = grid.querySelector(`.mcell-ph[data-qi="${qi}"][data-ci="${c}"]`);
+      if (!ph) return;
+      const colScores = q.column_scores || [];
+      const fp = q.first_positive_column;
+      let cls = '';
+      if (earlyStop && fp >= 0 && c > fp) {
+        cls = 'mcell skip';
+        ph.title = `${q.query_name} · Col ${c} (skipped by early stop)`;
+      } else if (c >= colScores.length) {
+        ph.className = '';
+        return;
+      } else if (c === fp) {
+        cls = 'mcell hit';
+        ph.title = `${q.query_name} · Col ${c} (hit)`;
+      } else if (colScores[c] > 0) {
+        cls = 'mcell pos';
+        ph.title = `${q.query_name} · Col ${c}`;
+      } else {
+        cls = 'mcell neg';
+        ph.title = `${q.query_name} · Col ${c}`;
+      }
+      ph.className = cls;
+
+      if (c === maxCols - 1 || c === colScores.length - 1) {
+        const sumEl = grid.querySelector(`.match-summary[data-qi="${qi}"]`);
+        if (sumEl && !sumEl.dataset.filled) {
+          sumEl.dataset.filled = '1';
+          sumEl.innerHTML = q.match_found
+            ? `<span class="hit">✓ hit</span>`
+            : `<span class="miss">✗ miss</span>`;
+        }
+      }
+    });
+    colIdx++;
+  };
+  revealCol();
+  multiStep9Timer = setInterval(revealCol, 80);
+
+  $('multi-match-legend').innerHTML = `
+    <span class="li"><span class="sw hit"></span> Hit (score &gt; τ)</span>
+    <span class="li"><span class="sw neg"></span> Below threshold</span>
+    <span class="li"><span class="sw skip"></span> Skipped (early stop)</span>
+  `;
+
+  if (data.timing_ms) {
+    renderMultiTiming(data.timing_ms);
+  }
+}
+
+function renderMultiTiming(t) {
+  $('card-multi-timing').style.display = 'block';
+  destroyChart('multiTiming');
+  const labels = ['S1 Cluster', 'S2 Encrypt', 'S3 Centroids', 'S4 Select', 'S6 Columns', 'S9 Judge'];
+  const values = [
+    t.step1_clustering || 0,
+    t.step2_encrypt || 0,
+    t.step3_compare_centroids || 0,
+    t.step4_select_cluster || 0,
+    t.step6_column_matching || 0,
+    t.step9_check_sim || 0,
+  ];
+  const colors = [
+    'rgba(87,201,138,0.85)',
+    'rgba(107,161,232,0.85)',
+    'rgba(87,201,138,0.6)',
+    'rgba(107,161,232,0.6)',
+    'rgba(87,201,138,0.42)',
+    'rgba(107,161,232,0.42)',
+  ];
+
+  charts['multiTiming'] = new Chart($('chart-multi-timing').getContext('2d'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: '#17181c', borderWidth: 3 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '58%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#969aa4', font: { size: 10 }, usePointStyle: true, padding: 8,
+            generateLabels: chart => chart.data.labels.map((label, i) => ({
+              text: `${label}: ${(chart.data.datasets[0].data[i] || 0).toFixed(0)}ms`,
+              fillStyle: chart.data.datasets[0].backgroundColor[i],
+              strokeStyle: chart.data.datasets[0].backgroundColor[i],
+              pointStyle: 'circle', index: i, fontColor: '#969aa4',
+            }))
+          }
+        },
+        title: {
+          display: true,
+          text: `Total ${(t.total || 0).toFixed(0)}ms · Offline ${(t.offline || 0).toFixed(0)}ms`,
+          color: '#969aa4', font: { size: 11 },
+        }
+      }
+    }
+  });
+}
+
+// Live table row addition
+function renderMultiTableRow(row, idx) {
+  const tbody = $('multi-results-tbody');
+  const tr = document.createElement('tr');
+
+  const isNeg = row.label === false;
+  const badgeCls = isNeg ? 'negative' : (row.script || 'latin').toLowerCase();
+  const scriptBadge = `<span class="lang-badge ${badgeCls}">${row.flag || ''} ${row.script || 'Latin'}</span>`;
+
+  // Attribute breakdown pills
+  let pills = '';
+  const colors = { name: 'cyan', dob: 'yellow', city: 'green', phone: 'blue' };
+  for (const [k, v] of Object.entries(row.similarities || {})) {
+    const val = Number(v);
+    const scoreCls = val >= 0.9 ? 'high' : val >= 0.5 ? 'mid' : 'low';
+    pills += `<span class="attr-pill"><span class="an">${k}:</span><span class="av ${scoreCls}">${val.toFixed(2)}</span></span>`;
+  }
+
+  const enc = row.encrypted || {};
+  const isCorrect = enc.agrees_with_label !== false;
+  const verdictCls = enc.catch ? 'match-yes' : 'match-no';
+  const verdictTxt = enc.catch ? 'CATCH' : 'no-catch';
+
+  tr.innerHTML = `
+    <td>${scriptBadge}</td>
+    <td>
+      <strong>${esc(row.query_name)}</strong>
+      ${row.perturbation ? `<div style="font-size:0.64rem;color:var(--text-dim);margin-top:2px">${esc(row.perturbation)}</div>` : ''}
+    </td>
+    <td>${row.label ? '<span style="color:var(--accent-green);font-weight:700">Match</span>' : '<span style="color:var(--text-dim)">No match</span>'}</td>
+    <td><strong style="color:${(row.expected_score || 0) >= row.tau ? 'var(--accent-green)' : 'var(--accent-yellow)'}">${row.expected_score !== null ? row.expected_score.toFixed(3) : '–'}</strong></td>
+    <td style="color:${(row.impostor_score || 0) > row.tau ? 'var(--accent-red)' : 'var(--text-dim)'}">${row.impostor_score !== null ? row.impostor_score.toFixed(3) : '–'}</td>
+    <td><div class="attr-breakdown-wrap">${pills}</div></td>
+    <td><span class="${verdictCls}">${verdictTxt}</span></td>
+    <td style="color:var(--accent-cyan);font-family:monospace">C${enc.selected_cluster}</td>
+    <td style="font-family:monospace;color:var(--text-dim)">${enc.checked_columns}</td>
+    <td style="text-align:center">${isCorrect ? '<span class="correct-mark">✓</span>' : '<span class="wrong-mark">✗</span>'}</td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// Final Summary Cards & Calibration
+function renderMultiFinalSummary(summaryData) {
+  $('card-multi-results').style.display = 'block';
+  const s = (summaryData && summaryData.summary) ? summaryData.summary : (summaryData || {});
+  const rows = (summaryData && summaryData.results) ? summaryData.results : currentMultiRows;
+
+  const positives = s.positives != null ? s.positives : rows.filter(r => r.label === true).length;
+  const negatives = s.negatives != null ? s.negatives : rows.filter(r => r.label === false).length;
+  const shouldCatch = s.should_catch_positives != null ? s.should_catch_positives : positives;
+  const caught = s.encrypted_catches_positives != null
+    ? s.encrypted_catches_positives
+    : rows.filter(r => r.label && r.encrypted && r.encrypted.catch).length;
+  const total = s.queries != null ? s.queries : rows.length;
+  const agreements = s.agreements != null ? s.agreements : total;
+  const recallPct = s.recall_should_catch != null
+    ? (s.recall_should_catch * 100).toFixed(1)
+    : (shouldCatch ? (caught / shouldCatch * 100).toFixed(1) : '–');
+  const badgeCls = agreements === total ? 'perfect' : 'good';
+
+  $('multi-accuracy-badge').innerHTML = `
+    <span class="accuracy-badge ${badgeCls}">Recall ${caught}/${shouldCatch} = ${recallPct}% · ${agreements}/${total} correct</span>
+  `;
+
+  const fpCount = s.plaintext_false_positives_at_tau != null
+    ? s.plaintext_false_positives_at_tau
+    : (s.over_reports != null ? s.over_reports : 0);
+  const clusterRecallTxt = s.cluster_recall != null ? (s.cluster_recall * 100).toFixed(0) + '%' : '–';
+  const savingsTxt = typeof s.scan_columns_fraction === 'number'
+    ? ((1 - s.scan_columns_fraction) * 100).toFixed(1) + '%'
+    : '–';
+
+  $('multi-summary-stats').innerHTML = `
+    <div class="stat-tile"><div class="v" style="color:var(--accent-green)">${caught}/${shouldCatch}</div><div class="l">Recall (should-catch)</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-blue)">${fpCount}/${negatives}</div><div class="l">False Positives</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-purple)">${clusterRecallTxt}</div><div class="l">Cluster Recall (probes)</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-yellow)">${savingsTxt}</div><div class="l">Scan Savings vs Full Scan</div></div>
+  `;
+
+  // Sublinear scan savings banner — only when the summary carries scan data
+  const meanCols = s.scan_columns_mean;
+  const fullCols = s.full_scan_columns;
+  if (typeof meanCols === 'number' && typeof fullCols === 'number' && fullCols > 0) {
+    const frac = meanCols / fullCols;
+    $('savings-title').textContent = `Sublinear probing saves ${((1 - frac) * 100).toFixed(1)}% of encrypted column scans`;
+    $('savings-desc').innerHTML =
+      `A full linear scan would check <b>${fullCols}</b> columns per query; with centroid probing and early stop, ` +
+      `the average query scans only <b>${meanCols.toFixed(1)}</b> columns (${(frac * 100).toFixed(1)}% of the database).`;
+    $('savings-percent').textContent = (frac * 100).toFixed(1) + '%';
+    $('savings-sub').textContent = `avg columns scanned / ${fullCols} full scan`;
+    $('savings-banner').style.display = 'flex';
+  } else {
+    $('savings-banner').style.display = 'none';
+  }
+
+  // Calibration window gauge — only when both bounds and tau are known
+  const lo = s.lowest_expected_match_score;
+  const hi = s.highest_impostor_score;
+  const tauVal = typeof s.tau === 'number' ? s.tau : null;
+  if (typeof lo === 'number' && typeof hi === 'number' && tauVal !== null && lo > hi) {
+    $('calibration-box').style.display = 'flex';
+    $('cal-desc').innerHTML =
+      `Highest impostor score (best non-match) = <b style="color:var(--accent-red)">${hi.toFixed(3)}</b>; ` +
+      `lowest true-match score = <b style="color:var(--accent-blue)">${lo.toFixed(3)}</b>. ` +
+      `The current threshold <b>τ = ${tauVal.toFixed(3)}</b> sits inside the separation window between them.`;
+    $('cal-zone-impostor').style.width = (hi * 100).toFixed(1) + '%';
+    $('cal-zone-impostor').textContent = `impostors [0 – ${hi.toFixed(2)}]`;
+    $('cal-zone-window').style.width = ((lo - hi) * 100).toFixed(1) + '%';
+    $('cal-zone-window').textContent = `window (${hi.toFixed(2)}, ${lo.toFixed(2)})`;
+    $('cal-zone-match').style.width = ((1 - lo) * 100).toFixed(1) + '%';
+    $('cal-zone-match').textContent = `true matches [${lo.toFixed(2)} – 1.0]`;
+    $('cal-tau-pin').style.left = (tauVal * 100).toFixed(1) + '%';
+    $('cal-tau-pin-label').textContent = `τ=${tauVal.toFixed(3)}`;
+
+    const dropped = (s.tau_guard && s.tau_guard.positives_dropped_by_tau) || 0;
+    const badge = $('tau-guard-badge');
+    if (tauVal <= hi) {
+      badge.textContent = '⚠ τ below impostor ceiling';
+      badge.style.color = 'var(--accent-red)';
+    } else if (dropped > 0) {
+      badge.textContent = `✓ τ clears impostors · drops ${dropped} positive(s)`;
+      badge.style.color = 'var(--accent-yellow)';
+    } else {
+      badge.textContent = '✓ Safe — no positive dropped';
+      badge.style.color = 'var(--accent-green)';
+    }
+  } else {
+    $('calibration-box').style.display = 'none';
+  }
+
+  // Ensure all rows are rendered in results table
+  const tbody = $('multi-results-tbody');
+  if (tbody.children.length === 0 && rows.length) {
+    rows.forEach((r, idx) => renderMultiTableRow(r, idx));
+  }
+}
+
+// ============================================================
+// Single-Attribute Original Logic
+// ============================================================
+function setSingleQueryMode(mode) {
+  singleQueryMode = mode;
+  $('tab-demo').classList.toggle('active', mode === 'demo');
+  $('tab-indices').classList.toggle('active', mode === 'indices');
+  $('tab-text').classList.toggle('active', mode === 'text');
+  $('group-indices').style.display = mode === 'indices' ? '' : 'none';
+  $('group-text').style.display = mode === 'text' ? '' : 'none';
+  const hints = {
+    demo: '5 real names + their misspelled variants + 3 absent names.',
+    indices: 'Pick rows by their index in the query dataset.',
+    text: 'Type any single name; it has no ground-truth label.',
+  };
+  $('single-mode-hint').textContent = hints[mode] || '';
+}
+
+async function runSingleProtocol() {
+  if (isRunning) return;
+  isRunning = true;
+  $('btn-run-single').disabled = true;
+
+  $('welcome-panel').style.display = 'none';
+  $('single-results-area').style.display = 'flex';
+  ['card-centroids', 'card-columns', 'card-results'].forEach(id => $(id).style.display = 'none');
+
+  resetTimeline();
+  setStatus('running', 'Running single-attribute protocol…');
 
   const body = {
-    query_mode: queryMode,
+    query_mode: singleQueryMode,
     db_limit: parseInt($('input-db-limit').value) || 100,
     k: parseInt($('input-k').value) || 10,
     tau: parseFloat($('input-tau').value) || 0.9,
     early_stop: $('input-early-stop').checked,
   };
-  if (queryMode === 'text') {
-    body.query = ($('input-query').value || '').trim() || 'John Smith';
-  } else if (queryMode === 'indices') {
+  if (singleQueryMode === 'text') body.query = ($('input-query').value || '').trim() || 'John Smith';
+  else if (singleQueryMode === 'indices') {
     const raw = ($('input-indices').value || '2,7,26,49,100').trim();
     body.query_indices = raw.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
   }
@@ -1055,7 +2238,7 @@ async function runProtocol() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error(`Server error: ${res.status} ${res.statusText}`);
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -1072,8 +2255,8 @@ async function runProtocol() {
         else if (line.startsWith('data: ')) {
           dataStr = line.slice(6);
           if (eventType && dataStr) {
-            try { handleEvent(eventType, JSON.parse(dataStr)); }
-            catch (e) { console.warn('Bad SSE data:', e, dataStr); }
+            try { handleSingleEvent(eventType, JSON.parse(dataStr)); }
+            catch (e) { console.warn('Bad single SSE:', e); }
             eventType = ''; dataStr = '';
           }
         }
@@ -1081,183 +2264,149 @@ async function runProtocol() {
     }
   } catch (err) {
     setStatus('error', 'Error: ' + err.message);
-    console.error(err);
   } finally {
     isRunning = false;
-    $('btn-run').disabled = false;
+    $('btn-run-single').disabled = false;
   }
 }
 
-// ============================================================
-// Event Handlers
-// ============================================================
-function handleEvent(type, payload) {
-  if (type === 'error') { setStatus('error', 'Error: ' + payload.message); console.error(payload); return; }
-  if (type === 'step_complete') handleStepComplete(payload);
-  else if (type === 'complete') handleComplete(payload.summary);
+function handleSingleEvent(type, payload) {
+  if (type === 'error') { setStatus('error', 'Error: ' + payload.message); return; }
+  if (type === 'step_complete') {
+    const step = payload.step;
+    setStepState(step, 'done');
+    setStepTime(step, payload.timing_ms);
+    lightFlowStep(step);
+    if (step === 1) renderSingleStep1(payload.data);
+    else if (step === 4) renderSingleStep4(payload.data);
+    else if (step === 9) renderSingleStep9(payload.data);
+  } else if (type === 'complete') {
+    renderSingleResults(payload.summary);
+    setStatus('done', 'Single-attribute run complete');
+  }
 }
 
-function lightFlowStep(step) {
-  // Mark all flow-steps with data-flow-step <= step as done, current as active.
-  document.querySelectorAll('.flow-step[data-flow-step]').forEach(el => {
-    const s = parseInt(el.dataset.flowStep);
-    if (s < step) { el.classList.remove('flow-active'); el.classList.add('flow-done'); }
-    else if (s === step) { el.classList.remove('flow-done'); el.classList.add('flow-active'); }
-  });
-}
-
-function handleStepComplete(evt) {
-  const step = evt.step;
-  document.querySelectorAll('.step-item').forEach(el => {
-    const s = parseInt(el.dataset.step);
-    if (s < step) { el.classList.remove('pending', 'active'); el.classList.add('done'); }
-    else if (s === step) { el.classList.remove('pending', 'done'); el.classList.add('active'); }
-  });
-  setStepTime(step, evt.timing_ms);
-  lightFlowStep(step);
-
-  rawDataStore['step' + step] = evt.data;
-  refreshParties();
-
-  if (step === 1) { renderStep1(evt.data); setTimeout(() => scrollToCard('card-db'), 120); }
-  else if (step === 4) { renderStep4(evt.data); setTimeout(() => scrollToCard('card-centroids'), 120); }
-  else if (step === 9) { renderStep9(evt.data); setTimeout(() => scrollToCard('card-columns'), 120); }
-}
-
-function handleComplete(summary) {
-  document.querySelectorAll('.step-item').forEach(el => {
-    el.classList.remove('pending', 'active'); el.classList.add('done');
-  });
-  // All flow steps done
-  document.querySelectorAll('.flow-step[data-flow-step]').forEach(el => {
-    el.classList.remove('flow-active'); el.classList.add('flow-done'); el.style.opacity = '1';
-  });
-  renderTiming(summary.timing_ms);
-  const a = summary.accuracy;
-  const accTxt = a.total > 0 ? `${a.correct}/${a.total} correct (${a.percent}%)` : 'no labelled queries';
-  setStatus('done', 'Complete — ' + accTxt);
-
-  // Wait for Step9 column animation to finish before showing Results card.
-  const waitAndShowResults = () => {
-    if (step9Timer !== null) {
-      setTimeout(waitAndShowResults, 200);
-      return;
-    }
-    renderResults(summary);
-    setTimeout(() => scrollToCard('card-results'), 120);
-  };
-  waitAndShowResults();
-}
-
-// ============================================================
-// Auto-scroll: scroll to a card once, only if the user hasn't
-// manually scrolled within the last 2s (avoids fighting user).
-// ============================================================
-let _lastUserScroll = 0;
-document.addEventListener('DOMContentLoaded', () => {
-  const main = document.querySelector('.main');
-  if (main) main.addEventListener('scroll', () => { _lastUserScroll = Date.now(); }, { passive: true });
-});
-
-const STEP_CARD_MAP = { 1: 'card-db', 4: 'card-centroids', 9: 'card-columns' };
-
-function scrollToCard(cardId) {
-  if (Date.now() - _lastUserScroll < 2000) return; // user recently scrolled — skip
-  const el = document.getElementById(cardId);
-  if (!el || el.style.display === 'none') return;
-  const main = document.querySelector('.main');
-  const banner = document.getElementById('flow-banner');
-  const bannerH = banner ? banner.offsetHeight : 0;
-  const offset = el.offsetTop - bannerH - 16;
-  main.scrollTo({ top: offset, behavior: 'smooth' });
-}
-
-// ============================================================
-// Chart theme
-// ============================================================
-const AXIS = '#a39e92';
-const GRID = 'rgba(52,50,43,0.55)';
-
-// ============================================================
-// Step 1 — DB & clustering
-// ============================================================
-function renderStep1(data) {
-  $('card-db').style.display = '';
+function renderSingleStep1(data) {
+  $('card-db').style.display = 'block';
   const sizes = data.cluster_sizes || [];
   const avg = sizes.length ? (sizes.reduce((a, b) => a + b, 0) / sizes.length).toFixed(1) : '–';
-  const mn = sizes.length ? Math.min(...sizes) : '–';
-  const mx = sizes.length ? Math.max(...sizes) : '–';
-
   $('db-stats').innerHTML = `
     <div class="stat-tile"><div class="v" style="color:var(--accent-cyan)">${data.db_size}</div><div class="l">Database Records</div></div>
     <div class="stat-tile"><div class="v" style="color:var(--accent-purple)">${data.k}</div><div class="l">Clusters (K)</div></div>
-    <div class="stat-tile"><div class="v" style="color:var(--accent-yellow)">${mn}–${mx}</div><div class="l">Cluster Size (avg ${avg})</div></div>
-    <div class="stat-tile"><div class="v" style="color:var(--accent-green)">${data.signature_dim}/${data.match_dim}</div><div class="l">Sig Dims (cluster/match)</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-yellow)">${Math.min(...sizes)}–${Math.max(...sizes)}</div><div class="l">Cluster Size (avg ${avg})</div></div>
+    <div class="stat-tile"><div class="v" style="color:var(--accent-green)">${data.signature_dim}/${data.match_dim}</div><div class="l">Sig Dims</div></div>
   `;
-
   if (sizes.length) {
-    destroyChart('clusterDist');
+    destroyChart('singleClusterDist');
     const ctx = $('chart-cluster-dist').getContext('2d');
-    charts['clusterDist'] = new Chart(ctx, {
+    charts['singleClusterDist'] = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: sizes.map((_, i) => `C${i}`),
         datasets: [{
-          label: 'Names per cluster',
           data: sizes,
-          backgroundColor: sizes.map((_, i) => `hsla(${i * 360 / sizes.length}, 65%, 58%, 0.7)`),
+          backgroundColor: sizes.map((_, i) => `hsla(${i * 360 / sizes.length}, 65%, 58%, 0.72)`),
           borderColor: sizes.map((_, i) => `hsla(${i * 360 / sizes.length}, 65%, 58%, 1)`),
-          borderWidth: 1, borderRadius: 3,
+          borderWidth: 1,
         }]
       },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          title: { display: true, text: 'Cluster Size Distribution', color: AXIS, font: { size: 11 } },
-          tooltip: { callbacks: { label: c => `${c.raw} names` } }
-        },
-        scales: {
-          x: { ticks: { color: AXIS, font: { size: 9 } }, grid: { display: false } },
-          y: { ticks: { color: AXIS, font: { size: 9 } }, grid: { color: GRID }, beginAtZero: true }
-        }
-      }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
   }
-
-  renderCloud3D(data.points_3d || [], data.point_clusters || [], data.k || 1);
+  renderCloud3D(data.points_3d || [], data.point_clusters || [], data.k || 1, 'cloud-3d');
 }
 
-// ============================================================
-// Step 1 — 3D PCA point cloud (Three.js)
-// ============================================================
-let cloud = null; // { renderer, scene, camera, controls, raf }
+function renderSingleStep4(data) {
+  $('card-centroids').style.display = 'block';
+  const scores = data.centroid_scores || [];
+  const K = data.num_centroids || 10;
+  const grid = $('heatmap-centroids');
+  let lo = Infinity, hi = -Infinity;
+  scores.forEach(q => q.scores.forEach(s => { if (s < lo) lo = s; if (s > hi) hi = s; }));
+  const span = (hi - lo) || 1;
 
-function disposeCloud() {
-  if (!cloud) return;
-  cancelAnimationFrame(cloud.raf);
-  cloud.controls && cloud.controls.dispose();
-  cloud.scene.traverse(o => {
-    if (o.geometry) o.geometry.dispose();
-    if (o.material) o.material.dispose();
+  let html = `<div class="heatmap-grid" style="grid-template-columns:minmax(150px,max-content) repeat(${K}, minmax(32px, 1fr))">`;
+  html += `<div class="heatmap-corner"></div>`;
+  for (let c = 0; c < K; c++) html += `<div class="heatmap-colhead">C${c}</div>`;
+  scores.forEach(q => {
+    html += `<div class="heatmap-rowhead"><span>${esc(q.query_name)}</span></div>`;
+    q.scores.forEach((s, ci) => {
+      const bg = heatColor((s - lo) / span);
+      const isSel = ci === q.selected_cluster;
+      html += `<div class="heatmap-cell ${isSel ? 'selected-hit' : ''}" style="background:${bg}" title="${s.toFixed(4)}"></div>`;
+    });
   });
-  cloud.renderer.dispose();
-  const el = $('cloud-3d');
-  if (el && cloud.renderer.domElement.parentNode === el) el.removeChild(cloud.renderer.domElement);
-  cloud = null;
+  html += `</div>`;
+  grid.innerHTML = html;
 }
 
-function clusterColor(i, k) {
-  // Match the bar-chart palette: hsl wheel by cluster index.
-  const c = new THREE.Color();
-  c.setHSL((i / Math.max(k, 1)) % 1, 0.62, 0.58);
-  return c;
+function renderSingleStep9(data) {
+  $('card-columns').style.display = 'block';
+  const cols = data.column_scores || [];
+  const maxCols = Math.max(...cols.map(q => q.column_scores.length), 1);
+  const grid = $('match-grid');
+  let html = `<div class="match-grid" style="grid-template-columns:minmax(150px,max-content) repeat(${maxCols}, minmax(20px, 1fr)) minmax(120px,max-content)">`;
+  html += `<div class="match-colhead"></div>`;
+  for (let c = 0; c < maxCols; c++) html += `<div class="match-colhead">${c}</div>`;
+  html += `<div class="match-colhead" style="text-align:left">Outcome</div>`;
+  cols.forEach(q => {
+    html += `<div class="match-rowhead"><span>${esc(q.query_name)}</span></div>`;
+    for (let c = 0; c < maxCols; c++) {
+      const v = q.column_scores[c];
+      const isHit = c === q.first_positive_column;
+      const isPos = v > 0;
+      let cls = isHit ? 'hit' : isPos ? 'pos' : 'neg';
+      html += `<div class="mcell ${cls}"></div>`;
+    }
+    html += `<div class="match-summary">${q.match_found ? '✓ hit' : '✗ no match'}</div>`;
+  });
+  html += `</div>`;
+  grid.innerHTML = html;
 }
 
-function renderCloud3D(points, clusterIds, k) {
-  disposeCloud();
+function renderSingleResults(summary) {
+  $('card-results').style.display = 'block';
+  const res = summary.results || [];
+  const a = summary.accuracy || {};
+  $('accuracy-badge').innerHTML = `<span class="accuracy-badge perfect">${a.correct || 0}/${a.total || 0} Correct (${a.percent || 0}%)</span>`;
+  let rowsHtml = '';
+  res.forEach(r => {
+    rowsHtml += `<tr>
+      <td>${esc(r.query_name)}</td>
+      <td class="${r.match_found ? 'match-yes' : 'match-no'}">${r.match_found ? 'YES' : 'NO'}</td>
+      <td>${esc(r.expected_hit_name || '–')}</td>
+      <td>${esc(r.hit_name || '–')}</td>
+      <td style="text-align:center">${r.is_correct ? '✓' : '✗'}</td>
+      <td style="color:var(--text-dim)">C${r.selected_cluster}</td>
+    </tr>`;
+  });
+  $('results-table').innerHTML = `
+    <thead><tr><th>Query</th><th>Match</th><th>Expected</th><th>Hit</th><th style="text-align:center">Correct</th><th>Cluster</th></tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  `;
+}
+
+// ============================================================
+// Shared Visual Components: 3D Point Cloud & Heatmap Color
+// ============================================================
+let activeClouds = {};
+
+function disposeCloud(id) {
+  const c = activeClouds[id];
+  if (!c) return;
+  cancelAnimationFrame(c.raf);
+  c.controls && c.controls.dispose();
+  c.renderer && c.renderer.dispose();
+  const el = $(id);
+  if (el && c.renderer.domElement.parentNode === el) el.removeChild(c.renderer.domElement);
+  delete activeClouds[id];
+}
+
+function renderCloud3D(points, clusterIds, k, containerId) {
+  disposeCloud(containerId);
   if (typeof THREE === 'undefined' || !points.length) return;
-  const el = $('cloud-3d');
+  const el = $(containerId);
+  if (!el) return;
   const w = el.clientWidth || 400, h = el.clientHeight || 200;
 
   const scene = new THREE.Scene();
@@ -1269,40 +2418,43 @@ function renderCloud3D(points, clusterIds, k) {
   renderer.setSize(w, h);
   el.appendChild(renderer.domElement);
 
-  // Geometry: one vertex per name, coloured by cluster.
   const positions = new Float32Array(points.length * 3);
   const colors = new Float32Array(points.length * 3);
   for (let i = 0; i < points.length; i++) {
     positions[i * 3] = points[i][0];
     positions[i * 3 + 1] = points[i][1];
     positions[i * 3 + 2] = points[i][2];
-    const col = clusterColor(clusterIds[i] || 0, k);
+    const col = new THREE.Color();
+    const hue = (((clusterIds[i] || 0) * 0.618033988749895) % 1 + 1) % 1;
+    col.setHSL(hue, 0.72, 0.58);
     colors[i * 3] = col.r; colors[i * 3 + 1] = col.g; colors[i * 3 + 2] = col.b;
   }
+
   const geom = new THREE.BufferGeometry();
   geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  // Circle sprite for round points.
+
   const circleCanvas = document.createElement('canvas');
   circleCanvas.width = circleCanvas.height = 64;
   const cc = circleCanvas.getContext('2d');
   cc.beginPath(); cc.arc(32, 32, 30, 0, Math.PI * 2); cc.fillStyle = '#fff'; cc.fill();
   const circleTex = new THREE.CanvasTexture(circleCanvas);
+
   const mat = new THREE.PointsMaterial({
-    size: 0.07, vertexColors: true, sizeAttenuation: true,
+    size: 0.08, vertexColors: true, sizeAttenuation: true,
     map: circleTex, alphaTest: 0.5, transparent: true,
   });
   const cloudPoints = new THREE.Points(geom, mat);
   scene.add(cloudPoints);
 
-  // Infinite white axes through the origin — bidirectional lines, no arrowheads.
+  // White axes through the origin — bidirectional lines matching baseline design
   const axes = new THREE.Group();
-  const AL = 2.2; // half-length (extends ±AL in each axis direction)
+  const AL = 2.2;
   const axisMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22 });
   [
-    [new THREE.Vector3(-AL,0,0), new THREE.Vector3(AL,0,0)],
-    [new THREE.Vector3(0,-AL,0), new THREE.Vector3(0,AL,0)],
-    [new THREE.Vector3(0,0,-AL), new THREE.Vector3(0,0,AL)],
+    [new THREE.Vector3(-AL, 0, 0), new THREE.Vector3(AL, 0, 0)],
+    [new THREE.Vector3(0, -AL, 0), new THREE.Vector3(0, AL, 0)],
+    [new THREE.Vector3(0, 0, -AL), new THREE.Vector3(0, 0, AL)],
   ].forEach(([a, b]) => {
     const g = new THREE.BufferGeometry().setFromPoints([a, b]);
     axes.add(new THREE.Line(g, axisMat));
@@ -1317,14 +2469,15 @@ function renderCloud3D(points, clusterIds, k) {
     controls.enablePan = false;
     controls.minDistance = 1.8;
     controls.maxDistance = 6;
-    controls.autoRotate = true;        // slow spin around the vertical (Z) axis
+    controls.autoRotate = true;
     controls.autoRotateSpeed = 0.8;
   }
 
-  cloud = { renderer, scene, camera, controls, raf: 0 };
+  const cloudObj = { renderer, scene, camera, controls, raf: 0 };
+  activeClouds[containerId] = cloudObj;
 
   const animate = () => {
-    cloud.raf = requestAnimationFrame(animate);
+    cloudObj.raf = requestAnimationFrame(animate);
     if (controls) controls.update();
     else { cloudPoints.rotation.y += 0.003; axes.rotation.y += 0.003; }
     renderer.render(scene, camera);
@@ -1332,27 +2485,13 @@ function renderCloud3D(points, clusterIds, k) {
   animate();
 }
 
-// Keep the cloud sized to its container.
-window.addEventListener('resize', () => {
-  if (!cloud) return;
-  const el = $('cloud-3d');
-  const w = el.clientWidth || 400, h = el.clientHeight || 200;
-  cloud.camera.aspect = w / h;
-  cloud.camera.updateProjectionMatrix();
-  cloud.renderer.setSize(w, h);
-});
-
-// ============================================================
-// Step 4 — query × cluster similarity heatmap
-// ============================================================
-// Sequential RED ramp: dark (low similarity) → bright red (high similarity).
 function heatColor(t) {
   const stops = [
-    [0.00, [38, 22, 26]],    // near-black maroon
-    [0.30, [90, 26, 32]],    // deep red
-    [0.60, [168, 38, 42]],   // mid red
-    [0.85, [228, 64, 58]],   // bright red
-    [1.00, [255, 120, 96]],  // hot red-orange highlight
+    [0.00, [38, 22, 26]],
+    [0.30, [90, 26, 32]],
+    [0.60, [168, 38, 42]],
+    [0.85, [228, 64, 58]],
+    [1.00, [255, 120, 96]],
   ];
   t = Math.max(0, Math.min(1, t));
   for (let i = 1; i < stops.length; i++) {
@@ -1366,263 +2505,23 @@ function heatColor(t) {
   return 'rgb(255,120,96)';
 }
 
-function renderStep4(data) {
-  $('card-centroids').style.display = '';
-  const scores = data.centroid_scores || [];
-  const K = data.num_centroids || (scores[0] ? scores[0].scores.length : 0);
-  if (!scores.length || !K) return;
-
-  // Global min/max for a shared colour scale across all cells.
-  let lo = Infinity, hi = -Infinity;
-  scores.forEach(q => q.scores.forEach(s => { if (s < lo) lo = s; if (s > hi) hi = s; }));
-  const span = (hi - lo) || 1;
-  const norm = v => (v - lo) / span;
-
-  // Grid template: 1 label column + K cluster columns.
-  const grid = $('heatmap-centroids');
-  let html = `<div class="heatmap-grid" style="grid-template-columns:minmax(150px,max-content) repeat(${K}, minmax(34px, 1fr))">`;
-
-  // Header row
-  html += `<div class="heatmap-corner"></div>`;
-  for (let c = 0; c < K; c++) html += `<div class="heatmap-colhead">C${c}</div>`;
-
-  // Data rows
-  // A row is a "hit" if expected_label !== false (i.e. positive or fuzzy query).
-  // Miss/absent rows: greyscale, no selected-cluster marker.
-  scores.forEach(q => {
-    const isFuzzy = q.is_fuzzy;
-    const isNeg = q.expected_label === false;
-    const isHitRow = !isNeg; // show selected cluster only for positive/fuzzy rows
-    let tag = '';
-    if (isFuzzy) tag = `<span class="tag-fuzzy">fuzzy</span>`;
-    else if (isNeg) tag = `<span class="tag-neg">absent</span>`;
-    const name = q.query_name.length > 22 ? q.query_name.slice(0, 20) + '…' : q.query_name;
-    html += `<div class="heatmap-rowhead" title="${esc(q.query_name)}">${tag}<span>${esc(name)}</span></div>`;
-    q.scores.forEach((s, ci) => {
-      const bg = heatColor(norm(s));
-      let cls = 'heatmap-cell';
-      if (!isHitRow) {
-        cls += ' grey'; // greyscale for miss/absent rows, no selection marker
-      } else if (ci === q.selected_cluster) {
-        cls += ' selected-hit'; // green outline + checkmark
-      }
-      html += `<div class="${cls}" style="background:${bg}" title="${esc(q.query_name)} · C${ci} = ${s.toFixed(4)}"></div>`;
-    });
-  });
-  html += `</div>`;
-  grid.innerHTML = html;
-
-  $('heatmap-legend').innerHTML =
-    `<span>low</span><span class="scale"></span><span>high similarity</span>` +
-    `<span style="margin-left:14px;color:var(--accent-green)">✓ = selected cluster (hit rows only)</span>`;
-}
-
-// ============================================================
-// Step 9 — column scores
-// ============================================================
-// Step 9 — per-column hit-status grid, revealed one query at a time.
-// Only the SIGN of each decrypted score is meaningful (the random per-column
-// mask scrambles the magnitude), so we encode state, not value.
-let step9Timer = null;
-
-function buildStep9Row(q, maxCols, earlyStop) {
-  // Returns the HTML for one query's row (rowhead + cells + outcome).
-  const isFuzzy = q.is_fuzzy;
-  const isNeg = q.expected_label === false;
-  let tag = '';
-  if (isFuzzy) tag = `<span class="tag-fuzzy">fuzzy</span>`;
-  else if (isNeg) tag = `<span class="tag-neg">absent</span>`;
-  const name = q.query_name.length > 22 ? q.query_name.slice(0, 20) + '…' : q.query_name;
-  let html = `<div class="match-rowhead mrow-in" title="${esc(q.query_name)}">${tag}<span class="rh-name">${esc(name)}</span></div>`;
-
-  const fp = q.first_positive_column;
-  for (let ci = 0; ci < maxCols; ci++) {
-    if (ci >= q.column_scores.length) { html += `<div class="mrow-in"></div>`; continue; }
-    const v = q.column_scores[ci];
-    let cls, tip;
-    if (ci === fp) { cls = 'hit'; tip = `Col ${ci}: first positive → HIT`; }
-    else if (earlyStop && fp >= 0 && ci > fp) { cls = 'skip'; tip = `Col ${ci}: skipped (early-stop after hit)`; }
-    else if (v > 0) { cls = 'pos'; tip = `Col ${ci}: positive (beats τ)`; }
-    else { cls = 'neg'; tip = `Col ${ci}: below τ`; }
-    html += `<div class="mcell mrow-in ${cls}" title="${esc(q.query_name)} · ${tip}"></div>`;
+function renderRows(containerId, rows) {
+  const el = $(containerId);
+  if (!el) return;
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="party-empty">Run the protocol to populate…</div>';
+    return;
   }
-
-  let summary;
-  if (q.match_found) summary = `<span class="hit">✓ hit at col ${fp}</span>`;
-  else summary = `<span class="miss">✗ no match (${q.column_scores.length} cols checked)</span>`;
-  html += `<div class="match-summary mrow-in">${summary}</div>`;
-  return html;
+  el.innerHTML = rows.map(r =>
+    `<div class="party-row"><span class="k">${r[0]}</span><span class="v ${r[2] || ''}">${r[1]}</span></div>`
+  ).join('');
 }
 
-function renderStep9(data) {
-  $('card-columns').style.display = '';
-  const cols = data.column_scores || [];
-  if (step9Timer) { clearInterval(step9Timer); step9Timer = null; }
-  if (!cols.length) { $('match-grid').innerHTML = ''; $('match-legend').innerHTML = ''; return; }
-  const earlyStop = data.early_stop !== false;
-  const maxCols = Math.max(...cols.map(q => q.column_scores.length), 1);
-  const grid = $('match-grid');
-
-  // 1) Build full scaffold: header + all rows with rowhead + placeholder cells + outcome placeholder.
-  //    Cells start as empty divs; they get replaced column-by-column in step 2.
-  let html = `<div class="match-grid" style="grid-template-columns:minmax(150px,max-content) repeat(${maxCols}, minmax(22px, 1fr)) minmax(120px,max-content)">`;
-  // header
-  html += `<div class="match-colhead"></div>`;
-  for (let c = 0; c < maxCols; c++) html += `<div class="match-colhead">${c}</div>`;
-  html += `<div class="match-colhead" style="text-align:left;padding-left:10px">Outcome</div>`;
-  // rows
-  cols.forEach((q, qi) => {
-    const isFuzzy = q.is_fuzzy, isNeg = q.expected_label === false;
-    let tag = isFuzzy ? `<span class="tag-fuzzy">fuzzy</span>` : isNeg ? `<span class="tag-neg">absent</span>` : '';
-    const name = q.query_name.length > 22 ? q.query_name.slice(0, 20) + '…' : q.query_name;
-    html += `<div class="match-rowhead" title="${esc(q.query_name)}">${tag}<span class="rh-name">${esc(name)}</span></div>`;
-    for (let c = 0; c < maxCols; c++) {
-      html += `<div class="mcell-ph" data-qi="${qi}" data-ci="${c}"></div>`;
-    }
-    html += `<div class="match-summary" data-qi="${qi}"></div>`;
-  });
-  html += `</div>`;
-  grid.innerHTML = html;
-
-  // 2) Stream: reveal one column at a time (left → right), each ~80ms.
-  let colIdx = 0;
-  const revealCol = () => {
-    if (colIdx >= maxCols) { clearInterval(step9Timer); step9Timer = null; return; }
-    const c = colIdx;
-    cols.forEach((q, qi) => {
-      const ph = grid.querySelector(`.mcell-ph[data-qi="${qi}"][data-ci="${c}"]`);
-      if (!ph) return;
-      if (c >= q.column_scores.length) { ph.className = ''; return; }
-      const v = q.column_scores[c];
-      const fp = q.first_positive_column;
-      let cls;
-      if (c === fp) cls = 'mcell hit';
-      else if (earlyStop && fp >= 0 && c > fp) cls = 'mcell skip';
-      else if (v > 0) cls = 'mcell pos';
-      else cls = 'mcell neg';
-      ph.className = cls;
-      ph.title = `${q.query_name} · Col ${c}`;
-      // reveal outcome after last column of this row is processed
-      if (c === q.column_scores.length - 1 || c === maxCols - 1) {
-        const sumEl = grid.querySelector(`.match-summary[data-qi="${qi}"]`);
-        if (sumEl && !sumEl.dataset.filled) {
-          sumEl.dataset.filled = '1';
-          sumEl.innerHTML = q.match_found
-            ? `<span class="hit">✓ hit at col ${fp}</span>`
-            : `<span class="miss">✗ no match (${q.column_scores.length} cols checked)</span>`;
-        }
-      }
-    });
-    colIdx++;
-  };
-  revealCol(); // col 0 immediately
-  step9Timer = setInterval(revealCol, 160);
-
-  $('match-legend').innerHTML =
-    `<span class="li"><span class="sw neg"></span> below τ</span>` +
-    `<span class="li"><span class="sw pos"></span> positive</span>` +
-    `<span class="li"><span class="sw hit"></span> first match (hit)</span>` +
-    (earlyStop ? `<span class="li"><span class="sw skip"></span> skipped by early-stop</span>` : '');
-}
-
-// ============================================================
-// Timing doughnut
-// ============================================================
-function renderTiming(t) {
-  // card-timing is the .step9-aside inside card-columns; show it alongside the match grid
-  $('card-columns').style.display = '';
-  $('card-timing').style.display = '';
-  destroyChart('timing');
-  const labels = ['S1 Cluster', 'S2 Encrypt', 'S3 Centroids', 'S4 Select', 'S6 Columns', 'S9 Judge'];
-  const values = [t.step1_clustering, t.step2_encrypt, t.step3_compare_centroids, t.step4_select_cluster, t.step6_column_matching, t.step9_check_sim];
-  const colors = ['rgba(87,201,138,0.85)', 'rgba(107,161,232,0.85)', 'rgba(87,201,138,0.6)', 'rgba(107,161,232,0.6)', 'rgba(87,201,138,0.42)', 'rgba(107,161,232,0.42)'];
-
-  charts['timing'] = new Chart($('chart-timing').getContext('2d'), {
-    type: 'doughnut',
-    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: '#17181c', borderWidth: 3 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '58%',
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: AXIS, font: { size: 10 }, usePointStyle: true, padding: 10,
-            generateLabels: chart => chart.data.labels.map((label, i) => ({
-              text: `${label}: ${chart.data.datasets[0].data[i].toFixed(0)}ms`,
-              fillStyle: chart.data.datasets[0].backgroundColor[i],
-              strokeStyle: chart.data.datasets[0].backgroundColor[i],
-              pointStyle: 'circle', index: i, fontColor: AXIS,
-            }))
-          }
-        },
-        title: { display: true, text: `Total ${t.total.toFixed(0)}ms · Offline ${t.offline.toFixed(0)}ms`, color: AXIS, font: { size: 11 } }
-      }
-    }
-  });
-}
-
-// ============================================================
-// Results table
-// ============================================================
-function buildResultRow(r, delay) {
-  const isNeg = r.expected_label === false;
-  const matchTxt = r.match_found ? 'YES' : 'NO';
-  const matchCls = r.match_found ? 'match-yes' : 'match-no';
-  const correct = r.is_correct;
-  const mark = correct === true ? '✓' : correct === false ? '✗' : '–';
-  const markCls = correct === true ? 'correct-mark' : correct === false ? 'wrong-mark' : '';
-
-  let hitCell;
-  if (isNeg) {
-    hitCell = r.match_found
-      ? `<span class="hit-name bad">${esc(r.hit_name)} (should be none)</span>`
-      : `<span class="hit-name ok">— none —</span>`;
-  } else {
-    const want = r.expected_hit_name || '', got = r.hit_name || '';
-    if (!r.match_found) hitCell = `<span class="hit-name bad">no hit</span>`;
-    else if (got === want) hitCell = `<span class="hit-name ok">${esc(got)}</span>`;
-    else hitCell = `<span class="hit-name bad">${esc(got)}</span>`;
-  }
-
-  let tag = '';
-  if (r.is_fuzzy) tag = `<span class="tag-fuzzy">fuzzy</span>`;
-  else if (isNeg) tag = `<span class="tag-neg">absent</span>`;
-
-  const rowCls = (r.is_fuzzy ? 'fuzzy-row' : isNeg ? 'neg-row' : '') + ' result-row-in';
-  const expectTxt = isNeg ? '— none —' : esc(r.expected_hit_name || '');
-  const style = `animation-delay:${delay}ms`;
-
-  return `<tr class="${rowCls}" style="${style}">
-    <td>${esc(r.query_name)}${tag}</td>
-    <td class="${matchCls}">${matchTxt}</td>
-    <td><span class="hit-name">${expectTxt}</span></td>
-    <td>${hitCell}</td>
-    <td class="${markCls}" style="text-align:center">${mark}</td>
-    <td style="color:var(--text-dim)">C${r.selected_cluster}</td>
-  </tr>`;
-}
-
-function renderResults(summary) {
-  $('card-results').style.display = '';
-  const results = summary.results || [];
-  const a = summary.accuracy;
-
-  let cls = 'poor';
-  if (a.percent >= 100) cls = 'perfect';
-  else if (a.percent >= 80) cls = 'good';
-  $('accuracy-badge').innerHTML = a.total > 0
-    ? `<span class="accuracy-badge ${cls}">Accuracy ${a.correct}/${a.total} = ${a.percent}%</span>`
-    : `<span class="accuracy-badge good">No labelled queries</span>`;
-
-  // Build table with staggered animation-delay per row (80ms apart).
-  const rows = results.map((r, i) => buildResultRow(r, i * 80)).join('');
-  $('results-table').innerHTML = `
-    <thead><tr>
-      <th>Query</th><th>Match</th><th>Expected Name</th><th>Hit Name</th>
-      <th style="text-align:center">Correct</th><th>Cluster</th>
-    </tr></thead>
-    <tbody>${rows}</tbody>`;
-}
+// Initial on-load
+document.addEventListener('DOMContentLoaded', () => {
+  initMultiAttribute();
+  switchDemo('multi');
+});
 </script>
 </body>
 </html>

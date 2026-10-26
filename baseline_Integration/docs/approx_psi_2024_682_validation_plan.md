@@ -1,6 +1,6 @@
 # Approx-PSI 2024/682：小规模机制验证与基线对照任务
 
-状态：原始实验设计，E0/E1/E2 已在 `../../对比/` 实现并运行；当前结论及复现命令以 [对比/RESULTS.md](../../对比/RESULTS.md) 和 [对比/README.md](../../对比/README.md) 为准。E3 未实现。本文保留原方案及尚未完成的严谨性要求，不把它们写成已完成事实。
+状态：本文保留原始实验设计及严谨性要求。早期 E0/E1/E2 结果所引用的 `../../对比/` 目录未纳入当前工作区，不能再作为可核验证据。当前新增 `scripts/compare_ncvr_cluster_strategies.py`，用真实 CKKS 全链路评估“随机投影复聚类”“独立多簇探测”和“零填充块跳过”；结果以 `artifacts/evaluation/cluster_strategy_comparison/summary.json` 与逐查询 CSV 为准。该路径不实现 ssPSI/PIR 候选获取，因此不构成 Approx-PSI 安全协议复现，E3 的安全候选获取仍未实现。
 
 目标不是完整复现论文排名，而是判定：二值化、重复投影候选筛选、候选内精确验证，哪些能改善现有姓名匹配；收益来自哪里，是否值得承担隐私协议改造成本。
 
@@ -135,7 +135,7 @@ P/PH 借鉴第8节候选组织方式，但第一阶段只在本机拿到候选�
 
 建议交付：固定数据划分与配置、明文机制单元测试、逐查询CSV和汇总JSON、召回-候选工作量图、二值化错误切片、分阶段耗时/通信图，以及一页取舍结论。完整协议未做时，其对应列明确写“未实现/未测”。
 
-实际实现统一放在相邻的 `../../对比/`，原仓库生产协议未改动，原代码通过导入复用。明文原始结果放在 `../../对比/artifacts/final_comparison/`，HE 数值审计放在 `../../对比/artifacts/he_equivalence_audit.json`，实体不重合便利样本结果放在 `../../对比/artifacts/entity_disjoint_holdout.json`；这些产物不提交 Git。后续若继续做代表性样本与歧义人工审定、E3，再按实际实现更新本节，不修改 `.gitignore`。
+本轮实现直接位于 `baseline_Integration/`：投影复聚类位于 `clustering/projection.py`，独立多探针接入现有 tiled A/B 双方与评测入口，默认配置保持原行为。统一驱动为 `scripts/compare_ncvr_cluster_strategies.py`；原始运行 JSON、逐查询 CSV 和汇总 JSON 位于 `artifacts/evaluation/cluster_strategy_comparison/`。产物明确区分明文候选审计与真实 CKKS 测量，并记录开发/测试划分、配置、环境和逐次结果；后续代表性样本、歧义人工审定及 E3 安全候选获取仍按实际完成情况更新，不把未实现项写成已验证。
 
 最终结论按四类落地：完整路线值得继续；只借鉴投影筛选与原余弦精判；只借鉴二值表示；因距离分布/桶拥挤/隐私代价不适合。负结果必须保留触发原因与反例。
 

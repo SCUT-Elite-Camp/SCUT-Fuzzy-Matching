@@ -32,6 +32,10 @@ graph LR
 | :--- | :--- |
 | `baseline_Integration/` | 主线实现：协议、多语言、多属性、批处理、演示与测试 |
 | `approx-psi-reproduction/` | 新路径复现：近似 PSI 明文算法与安全子协议层 |
+| `fused-secure-filter/` | C++ 融合安全过滤研究分支；后端构建说明与历史测量独立保留 |
+| `experiments/single_attribute/` | 单姓名实验：融合 CKKS 快照、四种选簇/过滤变体、待核验 RLdata 资料 |
+| `multi_attribute_comparison/` | 多属性对比的数据集、脚本、日志与报告，不与单姓名实验混算 |
+| `docs/reviews/`、`deliveries/` | 交付审阅、来源指纹和目录迁移记录 |
 | `specs/` | 需求规约（PRD、术语表、索引、验收证据） |
 | `baseline/` | 早期分工阶段的模块原型与接口规范（历史留档） |
 
@@ -54,3 +58,9 @@ python scripts/demo_multi_attribute_dataset.py --config config/examples/fused_mu
 - 需求规约（PRD）：`specs/matching/matching_fuzzy_match.req.md`
 - 全局术语表：`specs/GLOSSARY_GLOBAL.md`
 - 设计文档与阶段报告：`baseline_Integration/docs/`
+- 单姓名实验入口：[`experiments/single_attribute/README.md`](experiments/single_attribute/README.md)
+- 本次整理记录：[`docs/integration/delivery_2026-10-25.md`](docs/integration/delivery_2026-10-25.md)
+
+`baseline_Integration/` 是主线，实验快照不能整目录覆盖它。原始 ZIP 留在被忽略的
+`deliveries/local/`，Git 只保存去重后的源码、补丁、必要结果和来源清单。`代办/` 已移除，
+后续原始交付也先放入被忽略的 `deliveries/local/`，整理后再提交。

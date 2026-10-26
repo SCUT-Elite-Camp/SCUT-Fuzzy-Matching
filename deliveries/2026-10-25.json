@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-25",
+  "remote_main_integrated": "a84c6e68094a93d9ec3b35861348589d7e6153b2",
+  "items": [
+    {
+      "original_path": "代办/10_25.zip",
+      "sha256": "f395afad7669a311d5a01080e7f4371df8f1d41752c31d8996c43210f5d44f93",
+      "bytes": 1088188,
+      "destinations": [
+        "experiments/single_attribute/ckks_fusion/",
+        "experiments/single_attribute/ckks_fusion/results/received_2026-10-25/"
+      ],
+      "local_original": "deliveries/local/2026-10-25/10_25.zip"
+    },
+    {
+      "original_path": "代办/FIXED_THRESHOLD_EXPERIMENT.md",
+      "sha256": "25f0baae0de320d04625ecb6a560c3d18f1865cef8a96ec77cc246822d82c655",
+      "bytes": 5555,
+      "destinations": [
+        "experiments/single_attribute/cluster_selection/ (rebuildable patches and guides)"
+      ],
+      "local_original": "deliveries/local/2026-10-25/FIXED_THRESHOLD_EXPERIMENT.md"
+    },
+    {
+      "original_path": "代办/multi_attribute_comparison.md",
+      "sha256": "1c95df78e6152d625be7797dbd3b240967a3f0e124419d625dec452702217f77",
+      "bytes": 9007,
+      "destinations": [
+        "multi_attribute_comparison/report.md (same content except terminal newline)"
+      ],
+      "local_original": "deliveries/local/2026-10-25/multi_attribute_comparison.md"
+    },
+    {
+      "original_path": "代办/SCUT_Fuzzy_Matching.zip",
+      "sha256": "f150d7ebbdd7bc7df719173459e0acb58edc8285d7c487ae0ca505f3099e3e74",
+      "bytes": 7966047,
+      "destinations": [
+        "experiments/single_attribute/cluster_selection/ (rebuildable patches and guides)"
+      ],
+      "local_original": "deliveries/local/2026-10-25/SCUT_Fuzzy_Matching.zip"
+    },
+    {
+      "original_path": "代办/SCUT_Fuzzy_Matching_BadEvent.zip",
+      "sha256": "3062b314292db072126aa832928bd477a2bc12a4e691dd5bad0dc8da68b584fa",
+      "bytes": 7980800,
+      "destinations": [
+        "experiments/single_attribute/cluster_selection/ (rebuildable patches and guides)"
+      ],
+      "local_original": "deliveries/local/2026-10-25/SCUT_Fuzzy_Matching_BadEvent.zip"
+    },
+    {
+      "original_path": "代办/SCUT_Fuzzy_Matching_Top1_projection(1).zip",
+      "sha256": "2b183f60f035379670a5328c59762745a61e93aea560f78f5fe64d5ff52d96fc",
+      "bytes": 7967152,
+      "destinations": [
+        "experiments/single_attribute/cluster_selection/ (rebuildable patches and guides)"
+      ],
+      "local_original": "deliveries/local/2026-10-25/SCUT_Fuzzy_Matching_Top1_projection(1).zip"
+    },
+    {
+      "original_path": "代办/SCUT_Fuzzy_Matching_Top1_Top2_Top3.zip",
+      "sha256": "c3a9a90ca63679a31551c834f38f71ecb6aa5c4908fe3136b33ebaa8af9f5406",
+      "bytes": 7984956,
+      "destinations": [
+        "experiments/single_attribute/cluster_selection/ (rebuildable patches and guides)"
+      ],
+      "local_original": "deliveries/local/2026-10-25/SCUT_Fuzzy_Matching_Top1_Top2_Top3.zip"
+    },
+    {
+      "original_path": "代办/TOP1_RANDOM_PROJECTION_GUIDE(1).md",
+      "sha256": "2f4e7757621cf2ecf6b882f3613f82e6f513292254c72623cb817ac9ad1c3dbd",
+      "bytes": 6649,
+      "destinations": [
+        "experiments/single_attribute/cluster_selection/ (rebuildable patches and guides)"
+      ],
+      "local_original": "deliveries/local/2026-10-25/TOP1_RANDOM_PROJECTION_GUIDE(1).md"
+    },
+    {
+      "original_path": "代办/TOPK_EXPERIMENTS.md",
+      "sha256": "4546972fd11d9314264de8d06d818a82bc61de06cc4b5e8d91b3151dbc88b095",
+      "bytes": 4516,
+      "destinations": [
+        "experiments/single_attribute/cluster_selection/ (rebuildable patches and guides)"
+      ],
+      "local_original": "deliveries/local/2026-10-25/TOPK_EXPERIMENTS.md"
+    },
+    {
+      "original_path": "代办/压缩包审阅与整合建议_2026-10-25.md",
+      "sha256": "026bfe06dce72ed70f94881c149cf5f89fb8ae5b092113db9094427f4d128c4a",
+      "bytes": 16733,
+      "destinations": [
+        "docs/reviews/2026-10-25/压缩包审阅与整合建议_2026-10-25.md"
+      ],
+      "local_original": null
+    },
+    {
+      "original_path": "代办/压缩包审阅验证_2026-10-25.json",
+      "sha256": "daccd0e0dc27929cb48c7cd29e91d8c1fa394871010a66e0267444b7ec1c17f5",
+      "bytes": 29662,
+      "destinations": [
+        "docs/reviews/2026-10-25/压缩包审阅验证_2026-10-25.json"
+      ],
+      "local_original": null
+    },
+    {
+      "original_path": "代办/基于姓名单属性在RLdata10000上对比两个算法性能差距.zip",
+      "sha256": "eea3813f718eae62100e29f628069e9942e42a943af1d49eaa45837b1029e983",
+      "bytes": 862076,
+      "destinations": [
+        "experiments/single_attribute/rldata_comparison/"
+      ],
+      "local_original": "deliveries/local/2026-10-25/基于姓名单属性在RLdata10000上对比两个算法性能差距.zip"
+    }
+  ]
+}

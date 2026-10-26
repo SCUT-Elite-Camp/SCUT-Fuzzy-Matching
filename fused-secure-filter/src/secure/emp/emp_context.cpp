@@ -1,8 +1,8 @@
-#include <emp-tool/runtime/io/net_io_channel.h>
 #include "secure/emp/emp_context.h"
 
 
 #ifdef APPROX_PSI_HAS_EMP
+#include <emp-tool/runtime/io/net_io_channel.h>
 #include <emp-sh2pc/emp-sh2pc.h>
 #endif
 

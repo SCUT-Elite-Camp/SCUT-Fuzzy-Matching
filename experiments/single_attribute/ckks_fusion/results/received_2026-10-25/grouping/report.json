@@ -1,0 +1,149 @@
+{
+  "n": 200,
+  "rows": [
+    {
+      "strategy": "固定截断 c=250",
+      "tiles": 13,
+      "mults": 32500,
+      "position_coverage": 0.965,
+      "leak_bits": 0.0,
+      "needs_mask": false
+    },
+    {
+      "strategy": "固定截断 c=300",
+      "tiles": 15,
+      "mults": 37500,
+      "position_coverage": 0.985,
+      "leak_bits": 0.0,
+      "needs_mask": false
+    },
+    {
+      "strategy": "固定截断 c=350",
+      "tiles": 18,
+      "mults": 45000,
+      "position_coverage": 0.99,
+      "leak_bits": 0.0,
+      "needs_mask": false
+    },
+    {
+      "strategy": "固定截断 c=400",
+      "tiles": 20,
+      "mults": 50000,
+      "position_coverage": 0.995,
+      "leak_bits": 0.0,
+      "needs_mask": false
+    },
+    {
+      "strategy": "固定截断 c=483",
+      "tiles": 24,
+      "mults": 60000,
+      "position_coverage": 1.0,
+      "leak_bits": 0.0,
+      "needs_mask": false
+    },
+    {
+      "strategy": "显式分带 cut=250",
+      "tiles": 15,
+      "mults": 37500,
+      "position_coverage": 0.995,
+      "leak_bits": 0.6222126380063135,
+      "needs_mask": true
+    },
+    {
+      "strategy": "随机分组 g=2",
+      "tiles": 100.0,
+      "mults": 250000.0,
+      "position_coverage": 0.9775,
+      "leak_bits": 3.4336980476613213,
+      "needs_mask": true
+    },
+    {
+      "strategy": "随机分组 g=5",
+      "tiles": 40.0,
+      "mults": 100000.0,
+      "position_coverage": 0.99,
+      "leak_bits": 2.003164291387528,
+      "needs_mask": true
+    },
+    {
+      "strategy": "随机分组 g=10",
+      "tiles": 25.0,
+      "mults": 62500.0,
+      "position_coverage": 0.995,
+      "leak_bits": 1.197069650112478,
+      "needs_mask": true
+    },
+    {
+      "strategy": "随机分组 g=20",
+      "tiles": 24.0,
+      "mults": 60000.0,
+      "position_coverage": 0.995,
+      "leak_bits": 0.6787821993486901,
+      "needs_mask": true
+    },
+    {
+      "strategy": "随机分组 g=50",
+      "tiles": 22.0,
+      "mults": 55000.0,
+      "position_coverage": 1.0,
+      "leak_bits": 0.14095525853548735,
+      "needs_mask": true
+    },
+    {
+      "strategy": "随机分组 g=100",
+      "tiles": 24.0,
+      "mults": 60000.0,
+      "position_coverage": 1.0,
+      "leak_bits": 0.0,
+      "needs_mask": true
+    },
+    {
+      "strategy": "按需求排序分组 g=2",
+      "tiles": 100.0,
+      "mults": 250000.0,
+      "position_coverage": 0.96,
+      "leak_bits": 4.8396027537859,
+      "needs_mask": true
+    },
+    {
+      "strategy": "按需求排序分组 g=5",
+      "tiles": 40.0,
+      "mults": 100000.0,
+      "position_coverage": 0.96,
+      "leak_bits": 4.4183110801438135,
+      "needs_mask": true
+    },
+    {
+      "strategy": "按需求排序分组 g=10",
+      "tiles": 21.0,
+      "mults": 52500.0,
+      "position_coverage": 0.96,
+      "leak_bits": 3.89712045229481,
+      "needs_mask": true
+    },
+    {
+      "strategy": "按需求排序分组 g=20",
+      "tiles": 16.0,
+      "mults": 40000.0,
+      "position_coverage": 0.965,
+      "leak_bits": 3.1156679820175452,
+      "needs_mask": true
+    },
+    {
+      "strategy": "按需求排序分组 g=50",
+      "tiles": 15.0,
+      "mults": 37500.0,
+      "position_coverage": 0.97,
+      "leak_bits": 1.8960964047443694,
+      "needs_mask": true
+    },
+    {
+      "strategy": "按需求排序分组 g=100",
+      "tiles": 17.0,
+      "mults": 42500.0,
+      "position_coverage": 0.99,
+      "leak_bits": 0.9618226398830019,
+      "needs_mask": true
+    }
+  ]
+}

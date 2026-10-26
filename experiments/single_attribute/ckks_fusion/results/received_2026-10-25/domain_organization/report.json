@@ -1,0 +1,45 @@
+{
+  "batch": 200,
+  "repeats": 2,
+  "configs": [
+    {
+      "clusters": 50,
+      "columns": 483,
+      "padded_size": 24150,
+      "tiles": 25,
+      "kernel_median_s": 76.96682567749667,
+      "relative_to_baseline": 1.0,
+      "runs": [
+        77.00462558199797,
+        76.92902577299537
+      ]
+    },
+    {
+      "clusters": 100,
+      "columns": 242,
+      "padded_size": 24200,
+      "tiles": 13,
+      "kernel_median_s": 78.83673073300452,
+      "relative_to_baseline": 1.0242949483631174,
+      "runs": [
+        78.4236935450026,
+        79.24976792100642
+      ]
+    },
+    {
+      "clusters": 25,
+      "columns": 966,
+      "padded_size": 24150,
+      "tiles": 49,
+      "kernel_median_s": 77.48482187199988,
+      "relative_to_baseline": 1.0067301228801315,
+      "runs": [
+        76.58172839500185,
+        78.38791534899792
+      ]
+    }
+  ],
+  "spread": 0.024294948363117436,
+  "prediction_supported": true,
+  "note": "固定 K*L=24,150，改变簇数与列宽的搭配。"
+}

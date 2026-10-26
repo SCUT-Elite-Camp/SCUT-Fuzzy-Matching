@@ -15,6 +15,7 @@ from ckks.tiling import (
     decrypt_tiled_score_tile,
     encrypt_tiled_feature_batch,
     iter_tile_slices,
+    make_slot_tile_layout,
 )
 from config.params import BATCH_DECRYPT_EPS, DECRYPT_EPS, POLY_MODULUS_DEGREE
 from protocol.types import (
@@ -138,17 +139,20 @@ def choose_clusters_and_build_tiled_request(
     encrypted_score_tiles: Iterable[CipherLike],
     party_a_state: TiledPartyALocalState,
     k: int,
+    *,
+    probes: int = 1,
 ) -> tuple[TiledSecondRoundRequest, TiledClusterSelectionDebug]:
-    """V2 Step 4-5: 解密 centroid score tiles，按 query argmax 选 cluster，
-    构造第二轮 tiled selector 请求。
-    """
+    """解密质心分数，为每个查询构造一个或多个独立探针。"""
     if k <= 0:
         raise ValueError(f"k must be positive, got {k}")
+    if isinstance(probes, bool) or not isinstance(probes, int):
+        raise ValueError("probes must be an int")
+    if probes <= 0:
+        raise ValueError("probes must be positive")
+    probe_count = min(probes, k)
 
     layout = party_a_state.layout
     m = layout.batch_size
-
-    # Decrypt and unpack all tiles, then concatenate to (m, k).
     score_iter = iter(encrypted_score_tiles)
     tile_arrays = []
     for _, _, valid_width in iter_tile_slices(k, layout):
@@ -179,22 +183,55 @@ def choose_clusters_and_build_tiled_request(
         raise ValueError("decrypted sim_scores contain NaN or Inf")
 
     selected_clusters = np.argmax(scores_matrix, axis=1)
+    if probe_count == 1:
+        selector_matrix = np.zeros((m, k), dtype=np.float64)
+        selector_matrix[np.arange(m), selected_clusters] = 1.0
+        encrypted_selectors = encrypt_tiled_feature_batch(
+            selector_matrix, party_a_state.secret_context, layout
+        )
+        return (
+            TiledSecondRoundRequest(
+                encrypted_query_50=party_a_state.encrypted_query_50,
+                encrypted_selectors=encrypted_selectors,
+                layout=layout,
+            ),
+            TiledClusterSelectionDebug(
+                selected_clusters=selected_clusters,
+                probed_clusters=selected_clusters,
+            ),
+        )
 
-    selector_matrix = np.zeros((m, k), dtype=np.float64)
-    for q in range(m):
-        selector_matrix[q, selected_clusters[q]] = 1.0
+    if party_a_state.query_50_norm is None:
+        raise ValueError("query_50_norm is required when probes > 1")
+    query_50_norm = np.asarray(party_a_state.query_50_norm, dtype=np.float64)
+    if query_50_norm.shape != (m, 50):
+        raise ValueError(
+            f"query_50_norm shape mismatch: expected ({m}, 50), "
+            f"got {query_50_norm.shape}"
+        )
 
-    encrypted_selectors = encrypt_tiled_feature_batch(
-        selector_matrix, party_a_state.secret_context, layout
-    )
+    order = np.argsort(scores_matrix, axis=1)[:, ::-1]
+    probed_clusters = order[:, :probe_count].reshape(-1)
+    selector_matrix = np.zeros((m * probe_count, k), dtype=np.float64)
+    selector_matrix[np.arange(m * probe_count), probed_clusters] = 1.0
+    expanded_layout = make_slot_tile_layout(m * probe_count)
+    expanded_query_50 = np.repeat(query_50_norm, probe_count, axis=0)
 
     return (
         TiledSecondRoundRequest(
-            encrypted_query_50=party_a_state.encrypted_query_50,
-            encrypted_selectors=encrypted_selectors,
-            layout=layout,
+            encrypted_query_50=encrypt_tiled_feature_batch(
+                expanded_query_50, party_a_state.secret_context, expanded_layout
+            ),
+            encrypted_selectors=encrypt_tiled_feature_batch(
+                selector_matrix, party_a_state.secret_context, expanded_layout
+            ),
+            layout=expanded_layout,
         ),
-        TiledClusterSelectionDebug(selected_clusters=selected_clusters),
+        TiledClusterSelectionDebug(
+            selected_clusters=selected_clusters,
+            probe_count=probe_count,
+            probed_clusters=probed_clusters,
+        ),
     )
 
 
@@ -206,22 +243,39 @@ def check_tiled_score_batch_debug(
     logical_width: int,
     early_stop: bool = True,
     eps: float = BATCH_DECRYPT_EPS,
+    probe_count: int = 1,
+    original_batch_size: int | None = None,
 ) -> tuple[TiledMatchResult, TiledMatchDebug]:
-    """V2 Step 9: A 侧按 tile 解密，向量化的命中判断。
-
-    每个 tile 解密为 (m, valid_width)，按列顺序判断正负。
-    early_stop=True 仅当所有 query 均命中时才停止。
-    """
+    """按 tile 解密，并按原查询聚合一个或多个独立探针。"""
     if isinstance(logical_width, bool) or not isinstance(logical_width, int):
         raise ValueError("logical_width must be an int")
     if logical_width <= 0:
         raise ValueError("logical_width must be positive")
     if not np.isfinite(eps) or eps < 0:
         raise ValueError("eps must be finite and non-negative")
+    if isinstance(probe_count, bool) or not isinstance(probe_count, int):
+        raise ValueError("probe_count must be an int")
+    if probe_count <= 0:
+        raise ValueError("probe_count must be positive")
+    if original_batch_size is None:
+        if probe_count != 1:
+            raise ValueError("original_batch_size is required when probe_count > 1")
+        original_batch_size = layout.batch_size
+    if isinstance(original_batch_size, bool) or not isinstance(
+        original_batch_size, int
+    ):
+        raise ValueError("original_batch_size must be an int")
+    if original_batch_size <= 0:
+        raise ValueError("original_batch_size must be positive")
+    if layout.batch_size != original_batch_size * probe_count:
+        raise ValueError(
+            f"layout batch size {layout.batch_size} does not match "
+            f"{original_batch_size} queries × {probe_count} probes"
+        )
 
     score_iter = iter(encrypted_score_tiles)
-    catches = np.zeros(layout.batch_size, dtype=bool)
-    first_positive_columns = np.full(layout.batch_size, -1, dtype=int)
+    catches = np.zeros(original_batch_size, dtype=bool)
+    first_positive_columns = np.full(original_batch_size, -1, dtype=int)
     checked_tiles = 0
     logical_columns_checked = 0
 
@@ -239,13 +293,25 @@ def check_tiled_score_batch_debug(
             layout,
             valid_width,
         )
-        # tile_scores shape (m, valid_width)
         positive = tile_scores > eps
-        has_hit = positive.any(axis=1)
-        local_first = positive.argmax(axis=1)
-
-        new_hit = (~catches) & has_hit
-        first_positive_columns[new_hit] = start + local_first[new_hit]
+        if probe_count == 1:
+            has_hit = positive.any(axis=1)
+            local_first = positive.argmax(axis=1)
+            new_hit = (~catches) & has_hit
+            first_positive_columns[new_hit] = start + local_first[new_hit]
+        else:
+            positive = positive.reshape(
+                original_batch_size, probe_count, valid_width
+            )
+            has_hit = positive.any(axis=(1, 2))
+            new_hit = (~catches) & has_hit
+            if np.any(new_hit):
+                columns = np.arange(start, start + valid_width)
+                positive_columns = np.where(
+                    positive, columns[None, None, :], np.inf
+                )
+                first_columns = positive_columns.min(axis=(1, 2))
+                first_positive_columns[new_hit] = first_columns[new_hit].astype(int)
         catches |= has_hit
         logical_columns_checked += valid_width
 
@@ -277,6 +343,8 @@ def check_tiled_score_batch(
     logical_width: int,
     early_stop: bool = True,
     eps: float = BATCH_DECRYPT_EPS,
+    probe_count: int = 1,
+    original_batch_size: int | None = None,
 ) -> TiledMatchResult:
     result, _ = check_tiled_score_batch_debug(
         encrypted_score_tiles,
@@ -285,6 +353,8 @@ def check_tiled_score_batch(
         logical_width=logical_width,
         early_stop=early_stop,
         eps=eps,
+        probe_count=probe_count,
+        original_batch_size=original_batch_size,
     )
     return result
 

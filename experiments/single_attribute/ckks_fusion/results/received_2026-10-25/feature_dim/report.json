@@ -1,0 +1,54 @@
+{
+  "n": 200,
+  "tau": 0.9,
+  "rows": [
+    {
+      "d": 5,
+      "selector_mults_per_tile": 250,
+      "recall": 0.84,
+      "fpr": 0.1545405111473627
+    },
+    {
+      "d": 10,
+      "selector_mults_per_tile": 500,
+      "recall": 0.83,
+      "fpr": 0.04075584556824361
+    },
+    {
+      "d": 15,
+      "selector_mults_per_tile": 750,
+      "recall": 0.82,
+      "fpr": 0.011528004350190321
+    },
+    {
+      "d": 20,
+      "selector_mults_per_tile": 1000,
+      "recall": 0.82,
+      "fpr": 0.003126699293094073
+    },
+    {
+      "d": 25,
+      "selector_mults_per_tile": 1250,
+      "recall": 0.81,
+      "fpr": 0.0014410005437737901
+    },
+    {
+      "d": 30,
+      "selector_mults_per_tile": 1500,
+      "recall": 0.815,
+      "fpr": 0.0007612833061446438
+    },
+    {
+      "d": 40,
+      "selector_mults_per_tile": 2000,
+      "recall": 0.805,
+      "fpr": 0.0002990755845568244
+    },
+    {
+      "d": 50,
+      "selector_mults_per_tile": 2500,
+      "recall": 0.825,
+      "fpr": 0.0002175095160413268
+    }
+  ]
+}

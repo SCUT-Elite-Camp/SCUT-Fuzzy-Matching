@@ -1,0 +1,30 @@
+{
+  "cut": 100,
+  "L": 483,
+  "n_queries": 200,
+  "tier2_count": 200,
+  "baseline": {
+    "tiles": 25,
+    "mults": 62500
+  },
+  "tier1": {
+    "tiles": 5,
+    "mults": 12500,
+    "seconds": 14.847479522009962
+  },
+  "tier2": {
+    "tiles": 20,
+    "mults": 50000,
+    "seconds": 118.82117430999642
+  },
+  "total": {
+    "tiles": 25,
+    "mults": 62500,
+    "seconds": 133.66865383200638
+  },
+  "baseline_seconds": 137.20747718500206,
+  "mult_reduction": 1.0,
+  "time_ratio": 1.0264745940917699,
+  "sign_agreement": 1.0,
+  "new_observable": "B 得知某查询簇大小 > 100"
+}
