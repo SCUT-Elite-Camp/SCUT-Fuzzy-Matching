@@ -6,3 +6,6 @@ experiments/single_attribute/ckks_fusion/results/received_2026-10-25/** -text wh
 experiments/single_attribute/cluster_selection/results/bad_event_received/** -text whitespace=cr-at-eol
 experiments/single_attribute/rldata_comparison/data/*.csv -text whitespace=cr-at-eol
 docs/reviews/2026-10-25/* -text whitespace=cr-at-eol
+
+# Preserve benchmark CSV bytes for manifest SHA-256 verification.
+baseline_Integration/data/fused_multilingual_10k/*.csv -text whitespace=cr-at-eol
