@@ -1,0 +1,88 @@
+{
+  "seed": 20261040,
+  "config": {
+    "data": "D:\\Fuzzy_matching\\SCUT-Fuzzy-Matching\\experiments\\single_attribute\\rldata_comparison\\data",
+    "probability": 0.11,
+    "rounds": 80,
+    "slots": 8,
+    "distance_threshold": 32,
+    "max_rounds": 0,
+    "max_groups": 0,
+    "limit_records": 0,
+    "limit_queries": 0
+  },
+  "metrics": {
+    "tp": 83,
+    "fp": 18,
+    "fn": 17,
+    "tn": 82,
+    "precision": 0.8217821782178217,
+    "recall": 0.83,
+    "f1": 0.8258706467661692,
+    "accuracy": 0.825
+  },
+  "reference_metrics": {
+    "tp": 83,
+    "fp": 18,
+    "fn": 17,
+    "tn": 82,
+    "precision": 0.8217821782178217,
+    "recall": 0.83,
+    "f1": 0.8258706467661692,
+    "accuracy": 0.825
+  },
+  "predictions_identical": true,
+  "prediction_mismatches": [],
+  "candidate_pairs": {
+    "secure": 1512,
+    "reference": 1512
+  },
+  "client_stats": {
+    "phase1_sec": 7.335883,
+    "phase2_sec": 5.8e-05,
+    "phase3_sec": 0.227814,
+    "total_sec": 7.582522,
+    "psi_bytes_sent": 56463176,
+    "psi_bytes_received": 91481704,
+    "emp_bytes_sent": 582140,
+    "emp_bytes_received": 158178329,
+    "psi_rounds": 80,
+    "psi_input_items": 127832,
+    "psi_bins": 163305,
+    "hit_bins": 7246,
+    "candidates": 1512,
+    "groups": 186,
+    "and_gates": 4856216
+  },
+  "server_stats": {
+    "phase1_sec": 7.335773,
+    "phase2_sec": 0.000456,
+    "phase3_sec": 0.226891,
+    "total_sec": 8.573654,
+    "psi_bytes_sent": 91481704,
+    "psi_bytes_received": 56463176,
+    "emp_bytes_sent": 158178329,
+    "emp_bytes_received": 582140,
+    "psi_rounds": 80,
+    "psi_input_items": 787743,
+    "psi_bins": 163305,
+    "hit_bins": 0,
+    "candidates": 1512,
+    "groups": 186,
+    "and_gates": 4856216
+  },
+  "wall_sec": 8.70508990000235,
+  "logs": {
+    "server": "D:\\Fuzzy_matching\\SCUT-Fuzzy-Matching\\experiments\\single_attribute\\rldata_comparison\\results\\secure\\logs\\seed20261040_server.log",
+    "client": "D:\\Fuzzy_matching\\SCUT-Fuzzy-Matching\\experiments\\single_attribute\\rldata_comparison\\results\\secure\\logs\\seed20261040_client.log"
+  },
+  "export_bytes": {
+    "server": 489364,
+    "client": 16564
+  },
+  "export_sec": {
+    "server": 0.5318295999895781,
+    "client": 0.01446859999850858,
+    "reference_sec": 0.6803209000063362
+  }
+}

@@ -335,6 +335,109 @@ def check_tiled_score_batch_debug(
     )
 
 
+def check_tiled_score_top1_debug(
+    encrypted_score_tiles: Iterable[CipherLike],
+    secret_context: ts.Context,
+    *,
+    layout: SlotTileLayout,
+    logical_width: int,
+    eps: float = BATCH_DECRYPT_EPS,
+) -> tuple[TiledMatchResult, TiledMatchDebug, np.ndarray, np.ndarray]:
+    """按 tile 解密，返回每个查询的 Top-1 候选分数与逻辑列号。
+
+    与 ``check_tiled_score_batch_debug`` 的“命中/未命中”不同，这里要求
+    Party B 使用 ``mask_scope="per_query"``：同一查询的所有候选共享一个
+    正掩码，因此密文分数仍然保持查询内候选的相对排序。函数在每个 tile
+    内取最大值，跨 tile 合并后得到该查询的全局最大分数与列号；最大分数
+    不高于 ``eps`` 时视为未命中，列号返回 ``-1``。
+
+    Returns
+    -------
+    match_result
+        每个查询是否至少有一个候选高于 ``eps``。
+    match_debug
+        tile 计数、已检查逻辑列数，以及每个查询第一个高于 ``eps`` 的列。
+    best_scores
+        ``(m,)``，每个查询的全局最大掩码分数。
+    best_columns
+        ``(m,)``，最大分数对应的逻辑列号；未命中为 ``-1``。
+    """
+    if isinstance(logical_width, bool) or not isinstance(logical_width, int):
+        raise ValueError("logical_width must be an int")
+    if logical_width < 0:
+        raise ValueError("logical_width must be non-negative")
+    if not np.isfinite(eps) or eps < 0:
+        raise ValueError("eps must be finite and non-negative")
+
+    batch_size = layout.batch_size
+    best_scores = np.full(batch_size, -np.inf, dtype=np.float64)
+    best_columns = np.full(batch_size, -1, dtype=int)
+    first_positive_columns = np.full(batch_size, -1, dtype=int)
+    checked_tiles = 0
+    logical_columns_checked = 0
+
+    score_iter = iter(encrypted_score_tiles)
+    for tile_idx, start, valid_width in iter_tile_slices(logical_width, layout):
+        try:
+            encrypted_tile = next(score_iter)
+        except StopIteration as exc:
+            raise ValueError(
+                f"missing encrypted score tile at index {tile_idx}"
+            ) from exc
+
+        checked_tiles += 1
+        tile_scores = decrypt_tiled_score_tile(
+            encrypted_tile,
+            secret_context,
+            layout,
+            valid_width,
+        )
+        if tile_scores.shape != (batch_size, valid_width):
+            raise ValueError(
+                "decrypted score tile shape mismatch: "
+                f"expected {(batch_size, valid_width)}, got {tile_scores.shape}"
+            )
+        if not np.all(np.isfinite(tile_scores)):
+            raise ValueError("decrypted score tile contains NaN or Inf")
+
+        # First column above the acceptance threshold, used for debug output.
+        positive = tile_scores > eps
+        has_positive = positive.any(axis=1)
+        local_first = positive.argmax(axis=1)
+        new_positive = (first_positive_columns < 0) & has_positive
+        first_positive_columns[new_positive] = start + local_first[new_positive]
+
+        # Global argmax within each query, independent of the tile boundary.
+        local_best_index = tile_scores.argmax(axis=1)
+        local_best = tile_scores[np.arange(batch_size), local_best_index]
+        improved = local_best > best_scores
+        best_scores[improved] = local_best[improved]
+        best_columns[improved] = start + local_best_index[improved]
+        logical_columns_checked += valid_width
+    else:
+        try:
+            next(score_iter)
+        except StopIteration:
+            pass
+        else:
+            raise ValueError("received extra encrypted score tile")
+
+    accepted = best_scores > eps
+    best_columns = np.where(accepted, best_columns, -1)
+    first_positive_columns = np.where(accepted, first_positive_columns, -1)
+
+    return (
+        TiledMatchResult(catches=accepted),
+        TiledMatchDebug(
+            checked_tiles=checked_tiles,
+            logical_columns_checked=logical_columns_checked,
+            first_positive_columns=first_positive_columns,
+        ),
+        best_scores,
+        best_columns,
+    )
+
+
 def check_tiled_score_batch(
     encrypted_score_tiles: Iterable[CipherLike],
     secret_context: ts.Context,

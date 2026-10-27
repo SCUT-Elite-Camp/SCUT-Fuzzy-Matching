@@ -1,0 +1,30 @@
+diff --git a/volePSI/RsCpsi.cpp b/volePSI/RsCpsi.cpp
+index c6c9b41..1efbeea 100644
+--- a/volePSI/RsCpsi.cpp
++++ b/volePSI/RsCpsi.cpp
+@@ -39,6 +39,25 @@ namespace volePSI
+         sIdx.init(numBins, mSenderSize, mSsp, 3);
+         sIdx.insertItems(Y, cuckooSeed);
+ 
++        // Local correction: populate the sender-side row -> bin mapping.
++        // Upstream leaves Sharing::mMapping empty, so callers cannot tell
++        // which local input row owns a given PSI bin.
++        {
++            std::array<u64, 3> empty = {~u64(0), ~u64(0), ~u64(0)};
++            ret.mMapping.assign(Y.size(), empty);
++            for (u64 i = 0; i < numBins; ++i)
++            {
++                auto bin = sIdx.mBins[i];
++                auto size = sIdx.mBinSizes[i];
++                for (u64 p = 0; p < size; ++p)
++                {
++                    auto j = bin[p].hashIdx();
++                    auto b = bin[p].idx();
++                    ret.mMapping[b][j] = i;
++                }
++            }
++        }
++
+         setTimePoint("RsCpsiSender::send simpleHash");
+ 
+ 

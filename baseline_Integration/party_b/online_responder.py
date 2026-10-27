@@ -336,11 +336,19 @@ def tiled_batch_matching(
     *,
     serialize_output: bool = False,
     skip_zero_blocks: bool = False,
+    mask_scope: str = "per_pair",
 ) -> Iterator[EncryptedScalar]:
     """V2 Step 6-8: 二维 tiling 同时计算多个 candidate columns。
     外层只遍历 ceil(L / T) tiles；每 tile 输出一个 active_slots 分数密文。
-    每个 (query, column) 使用独立正随机 mask。
+
+    ``mask_scope="per_pair"``（默认）为每个 (query, column) 采样独立正掩码；
+    ``mask_scope="per_query"`` 让同一查询的所有候选共享一个正掩码，保留
+    查询内候选的相对排序，供 Top-1 选择使用。
     """
+    if mask_scope not in {"per_pair", "per_query"}:
+        raise ValueError(
+            f"mask_scope must be 'per_pair' or 'per_query', got {mask_scope!r}"
+        )
     matrix = np.asarray(cluster_matrix, dtype=np.float64)
     if matrix.ndim != 3:
         raise ValueError(f"cluster_matrix must be 3-D, got shape {matrix.shape}")
@@ -371,9 +379,26 @@ def tiled_batch_matching(
         feature_count=k,
         layout=layout,
     )
+    per_query_mask = None
+    if mask_scope == "per_query":
+        # One positive mask per query for the whole round.  Reusing the same
+        # mask across tiles keeps scores comparable when Party A merges the
+        # per-tile argmax into a global Top-1.
+        per_query_mask = np.array(
+            [
+                [_RNG.uniform(RANDOM_MASK_MIN, RANDOM_MASK_MAX)]
+                for _ in range(m)
+            ],
+            dtype=np.float64,
+        )
+
     for _, start, valid_width in iter_tile_slices(L, layout):
-        # Sample independent positive masks for this tile.
-        R = _sample_positive_mask_matrix(m, T)
+        if mask_scope == "per_pair":
+            # Sample independent positive masks for every (query, column).
+            R = _sample_positive_mask_matrix(m, T)
+        else:
+            # Shared by every candidate column of the query, and by every tile.
+            R = np.repeat(per_query_mask, T, axis=1)
         R[:, valid_width:] = (
             1.0  # padding columns: keep mask positive but scores zero later
         )

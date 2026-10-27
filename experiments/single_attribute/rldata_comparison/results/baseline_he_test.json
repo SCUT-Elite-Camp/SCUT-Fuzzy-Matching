@@ -1,0 +1,96 @@
+{
+  "repetitions": [
+    {
+      "repetition": 0,
+      "round1_sec": 13.804090299992822,
+      "round2_sec": 478.55245149997063,
+      "online_total_sec": 492.3565457999939,
+      "sent_bytes": 169193045,
+      "recv_bytes": 3063961,
+      "total_bytes": 172257006,
+      "public_context_bytes": 35473700,
+      "process_rss_peak_mb": 668.68359375,
+      "tp": 72,
+      "fp": 14,
+      "fn": 28,
+      "tn": 86,
+      "precision": 0.8372093023255814,
+      "recall": 0.72,
+      "f1": 0.7741935483870969,
+      "accuracy": 0.79,
+      "agreement_with_plaintext": null
+    },
+    {
+      "repetition": 1,
+      "round1_sec": 14.817373900034,
+      "round2_sec": 323.9253155000042,
+      "online_total_sec": 338.74269090004964,
+      "sent_bytes": 169200880,
+      "recv_bytes": 3063739,
+      "total_bytes": 172264619,
+      "public_context_bytes": 35476129,
+      "process_rss_peak_mb": 823.2890625,
+      "tp": 72,
+      "fp": 14,
+      "fn": 28,
+      "tn": 86,
+      "precision": 0.8372093023255814,
+      "recall": 0.72,
+      "f1": 0.7741935483870969,
+      "accuracy": 0.79,
+      "agreement_with_plaintext": null
+    },
+    {
+      "repetition": 2,
+      "round1_sec": 5.5067018999834545,
+      "round2_sec": 281.24697719997494,
+      "online_total_sec": 286.7536794000189,
+      "sent_bytes": 169197588,
+      "recv_bytes": 3063880,
+      "total_bytes": 172261468,
+      "public_context_bytes": 35481148,
+      "process_rss_peak_mb": 833.34765625,
+      "tp": 71,
+      "fp": 14,
+      "fn": 29,
+      "tn": 86,
+      "precision": 0.8352941176470589,
+      "recall": 0.71,
+      "f1": 0.7675675675675675,
+      "accuracy": 0.785,
+      "agreement_with_plaintext": null
+    }
+  ],
+  "config": {
+    "k": 150,
+    "tau": 0.926,
+    "shingle_size": 2,
+    "batch_size": 200,
+    "he_batch_size": 200,
+    "poly_modulus_degree": 8192,
+    "coeff_mod_bit_sizes": [
+      60,
+      40,
+      40,
+      60
+    ],
+    "scale": 1099511627776,
+    "mask_scope": "per_query",
+    "round2_policy": "top1"
+  },
+  "offline": {
+    "offline_sec": 2.097097699996084,
+    "offline_memory_peak_mb": 88.73217678070068
+  },
+  "calibration_reference": {
+    "tau": 0.926,
+    "tp": 75,
+    "fp": 14,
+    "fn": 25,
+    "tn": 86,
+    "precision": 0.8426966292134831,
+    "recall": 0.75,
+    "f1": 0.7936507936507935,
+    "accuracy": 0.805
+  }
+}

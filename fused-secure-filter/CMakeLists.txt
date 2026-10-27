@@ -124,8 +124,13 @@ if(APPROX_PSI_BUILD_EMP_HAMMING_DEMO)
     )
 
     target_compile_features(ss_hamming_emp PRIVATE cxx_std_20)
+    # emp-sh2pc is header-only in the local install, so ${EMP-SH2PC_LIBRARIES}
+    # is empty and the static emp-tool/emp-ot archives must be linked directly.
     target_link_libraries(ss_hamming_emp PRIVATE
         ${EMP-SH2PC_LIBRARIES}
+        emp-sh2pc::emp-sh2pc
+        emp-ot::emp-ot
+        emp-tool::emp-tool
     )
 
     if(MSVC)
@@ -217,4 +222,58 @@ if(APPROX_PSI_HAS_EMP OR APPROX_PSI_BUILD_FULL_DEMO OR APPROX_PSI_BUILD_EMP_HAMM
   if(TARGET approx_psi_full)
     target_link_libraries(approx_psi_full PRIVATE emp-sh2pc::emp-sh2pc emp-ot::emp-ot emp-tool::emp-tool)
   endif()
+endif()
+
+# -----------------------------------------------------------------------------
+# End-to-end secure name matching: PSI candidates + garbled-circuit Top-1.
+# Inputs are produced by
+# experiments/single_attribute/rldata_comparison/scripts/secure_export.py.
+# -----------------------------------------------------------------------------
+option(APPROX_PSI_BUILD_NAME_PIPELINE
+       "Build the end-to-end secure name-matching pipeline" OFF)
+
+if(APPROX_PSI_BUILD_NAME_PIPELINE)
+  find_package(emp-tool REQUIRED CONFIG)
+  find_package(emp-ot REQUIRED CONFIG)
+  find_package(emp-sh2pc REQUIRED CONFIG)
+  approx_psi_load_volepsi()
+
+  add_executable(name_secure_pipeline
+      secure_demo/name_pipeline_main.cpp
+      src/secure/name_pipeline.cpp
+      src/secure/name_pipeline_io.cpp
+      src/secure/emp/emp_context.cpp
+      src/secure/ss_psi.cpp
+      src/secure/ss_psi_volepsi.cpp
+  )
+  target_include_directories(name_secure_pipeline PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_compile_definitions(name_secure_pipeline PRIVATE
+      APPROX_PSI_HAS_EMP=1
+      APPROX_PSI_HAS_VOLEPSI=1
+  )
+  target_compile_features(name_secure_pipeline PRIVATE cxx_std_20)
+  target_link_libraries(name_secure_pipeline PRIVATE
+      emp-sh2pc::emp-sh2pc
+      emp-ot::emp-ot
+      emp-tool::emp-tool
+      visa::volePSI
+  )
+  if(NOT MSVC)
+    target_compile_options(name_secure_pipeline PRIVATE -maes -msse4.1)
+  endif()
+
+  # Plaintext-oracle and bucketing tests: no volePSI, no network.
+  add_executable(test_name_slot_keys tests/test_name_slot_keys.cpp)
+  target_include_directories(test_name_slot_keys PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_compile_features(test_name_slot_keys PRIVATE cxx_std_20)
+  add_test(NAME secure_name_slot_keys COMMAND test_name_slot_keys)
+
+  add_executable(test_name_top1_clear tests/test_name_top1_clear.cpp)
+  target_include_directories(test_name_top1_clear PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_compile_features(test_name_top1_clear PRIVATE cxx_std_20)
+  target_compile_definitions(test_name_top1_clear PRIVATE APPROX_PSI_HAS_EMP=1)
+  target_link_libraries(test_name_top1_clear PRIVATE emp-tool::emp-tool)
+  add_test(NAME secure_name_top1_clear COMMAND test_name_top1_clear)
 endif()

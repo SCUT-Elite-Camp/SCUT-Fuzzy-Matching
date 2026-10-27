@@ -1,0 +1,56 @@
+{
+  "source": "D:\\Fuzzy_matching\\SCUT-Fuzzy-Matching\\baseline_Integration\\dataset\\rldata10000\\RLdata10000.rda",
+  "seed": 20261023,
+  "database_records": 10000,
+  "database_unique_names": 6601,
+  "database_identities": 9000,
+  "identities_with_duplicate_records": 1000,
+  "records_with_valid_dob": 9950,
+  "test": {
+    "total": 200,
+    "positive": 100,
+    "negative": 100,
+    "perturbations": {
+      "deletion": 11,
+      "exact": 50,
+      "insertion": 6,
+      "recombination": 50,
+      "recombination_deletion": 12,
+      "recombination_insertion": 17,
+      "recombination_substitution": 13,
+      "recombination_transposition": 8,
+      "substitution": 11,
+      "transposition": 12,
+      "umlaut_native": 10
+    },
+    "variants": {
+      "ascii": 190,
+      "umlaut_native": 10
+    }
+  },
+  "calibration": {
+    "total": 200,
+    "positive": 100,
+    "negative": 100,
+    "perturbations": {
+      "deletion": 10,
+      "exact": 50,
+      "insertion": 11,
+      "recombination": 50,
+      "recombination_deletion": 17,
+      "recombination_insertion": 8,
+      "recombination_substitution": 14,
+      "recombination_transposition": 11,
+      "substitution": 12,
+      "transposition": 7,
+      "umlaut_native": 10
+    },
+    "variants": {
+      "ascii": 190,
+      "umlaut_native": 10
+    }
+  },
+  "name_variant_counts": {
+    "1": 10000
+  }
+}
