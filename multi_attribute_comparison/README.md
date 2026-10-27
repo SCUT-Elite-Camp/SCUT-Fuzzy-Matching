@@ -11,6 +11,7 @@
 multi_attribute_comparison/
 ├── README.md              ← 本文件，模块入口
 ├── report.md              ← 对比报告：单姓名 vs 多属性两方案表 + 口径 + 已知问题
+├── table1_multi_attribute.md ← 文档用 Table 1 格式对比表（FEBRL vs Multilingual 双列）
 ├── datasets/              ← 多属性 A/B/ground-truth 数据（1.1 MB，随仓库提交）
 │   ├── README.md          ← 字段、真值格式、NCVR 排除理由
 │   ├── febrl4_{A,B,ground_truth}.csv
