@@ -64,8 +64,11 @@ struct Top1Candidate
 struct Prediction
 {
     std::uint32_t query_index{};
-    std::int32_t identity{-1};
+    std::int32_t identity{-1};  // Top-1 identity, kept for compatibility
     std::uint32_t candidates{};
+    // Ranked identities (Top-k).  Empty when nothing passed the threshold; a
+    // Top-1 run produces either one entry or none.
+    std::vector<std::int32_t> identities;
 };
 
 struct PipelineStats

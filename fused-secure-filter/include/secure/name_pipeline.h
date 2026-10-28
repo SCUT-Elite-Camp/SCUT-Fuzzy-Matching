@@ -29,6 +29,7 @@ struct NamePipelineOptions
     int psi_port = 0;
     std::uint32_t max_rounds = 0;  // 0 = every round (smoke tests set a limit)
     std::uint32_t max_groups = 0;  // 0 = every group
+    std::uint32_t top_k = 1;       // 1 = the original Top-1 circuit
 };
 
 struct NamePipelineResult

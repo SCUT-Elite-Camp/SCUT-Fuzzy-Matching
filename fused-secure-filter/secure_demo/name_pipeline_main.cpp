@@ -33,7 +33,8 @@ void usage(const char* program)
         << "  " << program
         << " --party server|client --emp-port P --psi-port Q\n"
         << "     --input <file.bin> --output <file.json>\n"
-        << "     [--alice-ip 127.0.0.1] [--max-rounds K] [--max-groups G]\n";
+        << "     [--alice-ip 127.0.0.1] [--max-rounds K] [--max-groups G]\n"
+        << "     [--top-k K]  (both parties must use the same K; default 1)\n";
 }
 
 } // namespace
@@ -48,6 +49,7 @@ int main(int argc, char** argv)
     int psi_port = 0;
     std::uint32_t max_rounds = 0;
     std::uint32_t max_groups = 0;
+    std::uint32_t top_k = 1;
 
     try
     {
@@ -72,6 +74,8 @@ int main(int argc, char** argv)
                 max_rounds = static_cast<std::uint32_t>(std::stoul(value("--max-rounds")));
             else if (argument == "--max-groups")
                 max_groups = static_cast<std::uint32_t>(std::stoul(value("--max-groups")));
+            else if (argument == "--top-k")
+                top_k = static_cast<std::uint32_t>(std::stoul(value("--top-k")));
             else if (argument == "--help") { usage(argv[0]); return 0; }
             else throw std::runtime_error("unknown argument: " + argument);
         }
@@ -87,6 +91,10 @@ int main(int argc, char** argv)
         if (emp_port <= 0 || psi_port <= 0)
         {
             throw std::runtime_error("--emp-port and --psi-port are required");
+        }
+        if (top_k == 0 || top_k > 16)
+        {
+            throw std::runtime_error("--top-k must be in 1..16");
         }
     }
     catch (const std::exception& error)
@@ -104,6 +112,7 @@ int main(int argc, char** argv)
     options.psi_port = psi_port;
     options.max_rounds = max_rounds;
     options.max_groups = max_groups;
+    options.top_k = top_k;
 
     try
     {

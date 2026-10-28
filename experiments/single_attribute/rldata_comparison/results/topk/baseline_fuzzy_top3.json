@@ -1,0 +1,2651 @@
+{
+  "scheme": "baseline_Integration",
+  "queries_file": "D:\\Fuzzy_matching\\SCUT-Fuzzy-Matching\\experiments\\single_attribute\\rldata_comparison\\data\\queries.csv",
+  "repetitions": [
+    {
+      "repetition": 0,
+      "round1_sec": 15.005793199999971,
+      "round2_sec": 697.9338510000016,
+      "online_total_sec": 712.9396484999997,
+      "sent_bytes": 169191877,
+      "recv_bytes": 5819413,
+      "total_bytes": 175011290,
+      "public_context_bytes": 35479182,
+      "process_rss_peak_mb": 687.84765625,
+      "probe_count": 3,
+      "mean_probes_used": 2.085,
+      "tp": 75,
+      "fp": 17,
+      "fn": 25,
+      "tn": 83,
+      "precision": 0.8152173913043478,
+      "recall": 0.75,
+      "f1": 0.7812500000000001,
+      "accuracy": 0.79,
+      "per_query": [
+        {
+          "query_id": "T0001",
+          "label": true,
+          "expected_identity": 5150,
+          "selected_cluster": 3,
+          "probed_clusters": [
+            3,
+            18,
+            71
+          ],
+          "probes_used": 1,
+          "identity": 5150
+        },
+        {
+          "query_id": "T0002",
+          "label": true,
+          "expected_identity": 5073,
+          "selected_cluster": 42,
+          "probed_clusters": [
+            42,
+            56,
+            88
+          ],
+          "probes_used": 1,
+          "identity": 5073
+        },
+        {
+          "query_id": "T0003",
+          "label": true,
+          "expected_identity": 5439,
+          "selected_cluster": 3,
+          "probed_clusters": [
+            3,
+            17,
+            14
+          ],
+          "probes_used": 1,
+          "identity": 5439
+        },
+        {
+          "query_id": "T0004",
+          "label": true,
+          "expected_identity": 3736,
+          "selected_cluster": 58,
+          "probed_clusters": [
+            58,
+            57,
+            33
+          ],
+          "probes_used": 1,
+          "identity": 3736
+        },
+        {
+          "query_id": "T0005",
+          "label": true,
+          "expected_identity": 7720,
+          "selected_cluster": 108,
+          "probed_clusters": [
+            108,
+            53,
+            143
+          ],
+          "probes_used": 1,
+          "identity": 7720
+        },
+        {
+          "query_id": "T0006",
+          "label": true,
+          "expected_identity": 567,
+          "selected_cluster": 78,
+          "probed_clusters": [
+            78,
+            68,
+            104
+          ],
+          "probes_used": 1,
+          "identity": 567
+        },
+        {
+          "query_id": "T0007",
+          "label": true,
+          "expected_identity": 1466,
+          "selected_cluster": 61,
+          "probed_clusters": [
+            61,
+            94,
+            12
+          ],
+          "probes_used": 1,
+          "identity": 1466
+        },
+        {
+          "query_id": "T0008",
+          "label": true,
+          "expected_identity": 6113,
+          "selected_cluster": 85,
+          "probed_clusters": [
+            85,
+            109,
+            130
+          ],
+          "probes_used": 1,
+          "identity": 6113
+        },
+        {
+          "query_id": "T0009",
+          "label": true,
+          "expected_identity": 5651,
+          "selected_cluster": 131,
+          "probed_clusters": [
+            131,
+            114,
+            32
+          ],
+          "probes_used": 1,
+          "identity": 5651
+        },
+        {
+          "query_id": "T0010",
+          "label": true,
+          "expected_identity": 2975,
+          "selected_cluster": 26,
+          "probed_clusters": [
+            26,
+            56,
+            86
+          ],
+          "probes_used": 1,
+          "identity": 2975
+        },
+        {
+          "query_id": "T0011",
+          "label": true,
+          "expected_identity": 7869,
+          "selected_cluster": 58,
+          "probed_clusters": [
+            58,
+            135,
+            16
+          ],
+          "probes_used": 1,
+          "identity": 7869
+        },
+        {
+          "query_id": "T0012",
+          "label": true,
+          "expected_identity": 4304,
+          "selected_cluster": 125,
+          "probed_clusters": [
+            125,
+            96,
+            52
+          ],
+          "probes_used": 1,
+          "identity": 4304
+        },
+        {
+          "query_id": "T0013",
+          "label": true,
+          "expected_identity": 3630,
+          "selected_cluster": 41,
+          "probed_clusters": [
+            41,
+            149,
+            39
+          ],
+          "probes_used": 1,
+          "identity": 3630
+        },
+        {
+          "query_id": "T0014",
+          "label": true,
+          "expected_identity": 1135,
+          "selected_cluster": 130,
+          "probed_clusters": [
+            130,
+            125,
+            68
+          ],
+          "probes_used": 1,
+          "identity": 1135
+        },
+        {
+          "query_id": "T0015",
+          "label": true,
+          "expected_identity": 2562,
+          "selected_cluster": 108,
+          "probed_clusters": [
+            108,
+            123,
+            17
+          ],
+          "probes_used": 1,
+          "identity": 2562
+        },
+        {
+          "query_id": "T0016",
+          "label": true,
+          "expected_identity": 4658,
+          "selected_cluster": 115,
+          "probed_clusters": [
+            115,
+            38,
+            17
+          ],
+          "probes_used": 1,
+          "identity": 4658
+        },
+        {
+          "query_id": "T0017",
+          "label": true,
+          "expected_identity": 7612,
+          "selected_cluster": 36,
+          "probed_clusters": [
+            36,
+            110,
+            28
+          ],
+          "probes_used": 1,
+          "identity": 7612
+        },
+        {
+          "query_id": "T0018",
+          "label": true,
+          "expected_identity": 1689,
+          "selected_cluster": 63,
+          "probed_clusters": [
+            63,
+            59,
+            93
+          ],
+          "probes_used": 1,
+          "identity": 1689
+        },
+        {
+          "query_id": "T0019",
+          "label": true,
+          "expected_identity": 1939,
+          "selected_cluster": 59,
+          "probed_clusters": [
+            59,
+            81,
+            93
+          ],
+          "probes_used": 1,
+          "identity": 1939
+        },
+        {
+          "query_id": "T0020",
+          "label": true,
+          "expected_identity": 1127,
+          "selected_cluster": 25,
+          "probed_clusters": [
+            25,
+            6,
+            35
+          ],
+          "probes_used": 1,
+          "identity": 1127
+        },
+        {
+          "query_id": "T0021",
+          "label": true,
+          "expected_identity": 2681,
+          "selected_cluster": 123,
+          "probed_clusters": [
+            123,
+            73,
+            64
+          ],
+          "probes_used": 1,
+          "identity": 2681
+        },
+        {
+          "query_id": "T0022",
+          "label": true,
+          "expected_identity": 7017,
+          "selected_cluster": 58,
+          "probed_clusters": [
+            58,
+            16,
+            135
+          ],
+          "probes_used": 1,
+          "identity": 7017
+        },
+        {
+          "query_id": "T0023",
+          "label": true,
+          "expected_identity": 212,
+          "selected_cluster": 95,
+          "probed_clusters": [
+            95,
+            130,
+            28
+          ],
+          "probes_used": 1,
+          "identity": 212
+        },
+        {
+          "query_id": "T0024",
+          "label": true,
+          "expected_identity": 5625,
+          "selected_cluster": 62,
+          "probed_clusters": [
+            62,
+            143,
+            113
+          ],
+          "probes_used": 1,
+          "identity": 5625
+        },
+        {
+          "query_id": "T0025",
+          "label": true,
+          "expected_identity": 7986,
+          "selected_cluster": 77,
+          "probed_clusters": [
+            77,
+            140,
+            143
+          ],
+          "probes_used": 1,
+          "identity": 7986
+        },
+        {
+          "query_id": "T0026",
+          "label": true,
+          "expected_identity": 4288,
+          "selected_cluster": 67,
+          "probed_clusters": [
+            67,
+            1,
+            105
+          ],
+          "probes_used": 1,
+          "identity": 4288
+        },
+        {
+          "query_id": "T0027",
+          "label": true,
+          "expected_identity": 7489,
+          "selected_cluster": 134,
+          "probed_clusters": [
+            134,
+            11,
+            148
+          ],
+          "probes_used": 1,
+          "identity": 7489
+        },
+        {
+          "query_id": "T0028",
+          "label": true,
+          "expected_identity": 8858,
+          "selected_cluster": 130,
+          "probed_clusters": [
+            130,
+            55,
+            96
+          ],
+          "probes_used": 1,
+          "identity": 8858
+        },
+        {
+          "query_id": "T0029",
+          "label": true,
+          "expected_identity": 4477,
+          "selected_cluster": 3,
+          "probed_clusters": [
+            3,
+            17,
+            123
+          ],
+          "probes_used": 1,
+          "identity": 4477
+        },
+        {
+          "query_id": "T0030",
+          "label": true,
+          "expected_identity": 2897,
+          "selected_cluster": 137,
+          "probed_clusters": [
+            137,
+            24,
+            44
+          ],
+          "probes_used": 1,
+          "identity": 2897
+        },
+        {
+          "query_id": "T0031",
+          "label": true,
+          "expected_identity": 4221,
+          "selected_cluster": 125,
+          "probed_clusters": [
+            125,
+            3,
+            123
+          ],
+          "probes_used": 1,
+          "identity": 4221
+        },
+        {
+          "query_id": "T0032",
+          "label": true,
+          "expected_identity": 531,
+          "selected_cluster": 59,
+          "probed_clusters": [
+            59,
+            142,
+            93
+          ],
+          "probes_used": 1,
+          "identity": 531
+        },
+        {
+          "query_id": "T0033",
+          "label": true,
+          "expected_identity": 4503,
+          "selected_cluster": 6,
+          "probed_clusters": [
+            6,
+            57,
+            92
+          ],
+          "probes_used": 1,
+          "identity": 4503
+        },
+        {
+          "query_id": "T0034",
+          "label": true,
+          "expected_identity": 1379,
+          "selected_cluster": 22,
+          "probed_clusters": [
+            22,
+            114,
+            29
+          ],
+          "probes_used": 1,
+          "identity": 1379
+        },
+        {
+          "query_id": "T0035",
+          "label": true,
+          "expected_identity": 256,
+          "selected_cluster": 125,
+          "probed_clusters": [
+            125,
+            15,
+            83
+          ],
+          "probes_used": 1,
+          "identity": 256
+        },
+        {
+          "query_id": "T0036",
+          "label": true,
+          "expected_identity": 6790,
+          "selected_cluster": 142,
+          "probed_clusters": [
+            142,
+            133,
+            101
+          ],
+          "probes_used": 1,
+          "identity": 6790
+        },
+        {
+          "query_id": "T0037",
+          "label": true,
+          "expected_identity": 5235,
+          "selected_cluster": 144,
+          "probed_clusters": [
+            144,
+            3,
+            123
+          ],
+          "probes_used": 1,
+          "identity": 5235
+        },
+        {
+          "query_id": "T0038",
+          "label": true,
+          "expected_identity": 1746,
+          "selected_cluster": 21,
+          "probed_clusters": [
+            21,
+            122,
+            1
+          ],
+          "probes_used": 1,
+          "identity": 1746
+        },
+        {
+          "query_id": "T0039",
+          "label": true,
+          "expected_identity": 2189,
+          "selected_cluster": 38,
+          "probed_clusters": [
+            38,
+            143,
+            52
+          ],
+          "probes_used": 1,
+          "identity": 2189
+        },
+        {
+          "query_id": "T0040",
+          "label": true,
+          "expected_identity": 2836,
+          "selected_cluster": 79,
+          "probed_clusters": [
+            79,
+            122,
+            100
+          ],
+          "probes_used": 1,
+          "identity": 2836
+        },
+        {
+          "query_id": "T0041",
+          "label": true,
+          "expected_identity": 7450,
+          "selected_cluster": 128,
+          "probed_clusters": [
+            128,
+            57,
+            12
+          ],
+          "probes_used": 1,
+          "identity": 7450
+        },
+        {
+          "query_id": "T0042",
+          "label": true,
+          "expected_identity": 4019,
+          "selected_cluster": 138,
+          "probed_clusters": [
+            138,
+            135,
+            14
+          ],
+          "probes_used": 1,
+          "identity": 4019
+        },
+        {
+          "query_id": "T0043",
+          "label": true,
+          "expected_identity": 6804,
+          "selected_cluster": 107,
+          "probed_clusters": [
+            107,
+            77,
+            53
+          ],
+          "probes_used": 1,
+          "identity": 6804
+        },
+        {
+          "query_id": "T0044",
+          "label": true,
+          "expected_identity": 2587,
+          "selected_cluster": 118,
+          "probed_clusters": [
+            118,
+            78,
+            127
+          ],
+          "probes_used": 1,
+          "identity": 2587
+        },
+        {
+          "query_id": "T0045",
+          "label": true,
+          "expected_identity": 4049,
+          "selected_cluster": 124,
+          "probed_clusters": [
+            124,
+            118,
+            78
+          ],
+          "probes_used": 1,
+          "identity": 4049
+        },
+        {
+          "query_id": "T0046",
+          "label": true,
+          "expected_identity": 1538,
+          "selected_cluster": 72,
+          "probed_clusters": [
+            72,
+            99,
+            147
+          ],
+          "probes_used": 1,
+          "identity": 1538
+        },
+        {
+          "query_id": "T0047",
+          "label": true,
+          "expected_identity": 6417,
+          "selected_cluster": 88,
+          "probed_clusters": [
+            88,
+            42,
+            99
+          ],
+          "probes_used": 1,
+          "identity": 6417
+        },
+        {
+          "query_id": "T0048",
+          "label": true,
+          "expected_identity": 3777,
+          "selected_cluster": 110,
+          "probed_clusters": [
+            110,
+            109,
+            122
+          ],
+          "probes_used": 1,
+          "identity": 3777
+        },
+        {
+          "query_id": "T0049",
+          "label": true,
+          "expected_identity": 3259,
+          "selected_cluster": 30,
+          "probed_clusters": [
+            30,
+            14,
+            104
+          ],
+          "probes_used": 1,
+          "identity": 3259
+        },
+        {
+          "query_id": "T0050",
+          "label": true,
+          "expected_identity": 887,
+          "selected_cluster": 121,
+          "probed_clusters": [
+            121,
+            85,
+            138
+          ],
+          "probes_used": 1,
+          "identity": 887
+        },
+        {
+          "query_id": "T0051",
+          "label": true,
+          "expected_identity": 8624,
+          "selected_cluster": 57,
+          "probed_clusters": [
+            57,
+            143,
+            88
+          ],
+          "probes_used": 1,
+          "identity": 8624
+        },
+        {
+          "query_id": "T0052",
+          "label": true,
+          "expected_identity": 6408,
+          "selected_cluster": 94,
+          "probed_clusters": [
+            94,
+            12,
+            129
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0053",
+          "label": true,
+          "expected_identity": 156,
+          "selected_cluster": 71,
+          "probed_clusters": [
+            71,
+            18,
+            127
+          ],
+          "probes_used": 1,
+          "identity": 156
+        },
+        {
+          "query_id": "T0054",
+          "label": true,
+          "expected_identity": 2536,
+          "selected_cluster": 138,
+          "probed_clusters": [
+            138,
+            85,
+            125
+          ],
+          "probes_used": 1,
+          "identity": 123
+        },
+        {
+          "query_id": "T0055",
+          "label": true,
+          "expected_identity": 2179,
+          "selected_cluster": 33,
+          "probed_clusters": [
+            33,
+            117,
+            49
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0056",
+          "label": true,
+          "expected_identity": 8567,
+          "selected_cluster": 75,
+          "probed_clusters": [
+            75,
+            40,
+            133
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0057",
+          "label": true,
+          "expected_identity": 8047,
+          "selected_cluster": 12,
+          "probed_clusters": [
+            12,
+            53,
+            139
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0058",
+          "label": true,
+          "expected_identity": 5854,
+          "selected_cluster": 24,
+          "probed_clusters": [
+            24,
+            137,
+            59
+          ],
+          "probes_used": 1,
+          "identity": 5854
+        },
+        {
+          "query_id": "T0059",
+          "label": true,
+          "expected_identity": 5780,
+          "selected_cluster": 120,
+          "probed_clusters": [
+            120,
+            83,
+            15
+          ],
+          "probes_used": 1,
+          "identity": 5780
+        },
+        {
+          "query_id": "T0060",
+          "label": true,
+          "expected_identity": 86,
+          "selected_cluster": 112,
+          "probed_clusters": [
+            112,
+            3,
+            23
+          ],
+          "probes_used": 1,
+          "identity": 86
+        },
+        {
+          "query_id": "T0061",
+          "label": true,
+          "expected_identity": 5131,
+          "selected_cluster": 15,
+          "probed_clusters": [
+            15,
+            13,
+            107
+          ],
+          "probes_used": 1,
+          "identity": 5131
+        },
+        {
+          "query_id": "T0062",
+          "label": true,
+          "expected_identity": 4371,
+          "selected_cluster": 76,
+          "probed_clusters": [
+            76,
+            139,
+            118
+          ],
+          "probes_used": 1,
+          "identity": 4371
+        },
+        {
+          "query_id": "T0063",
+          "label": true,
+          "expected_identity": 1433,
+          "selected_cluster": 126,
+          "probed_clusters": [
+            126,
+            29,
+            114
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0064",
+          "label": true,
+          "expected_identity": 3748,
+          "selected_cluster": 94,
+          "probed_clusters": [
+            94,
+            4,
+            66
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0065",
+          "label": true,
+          "expected_identity": 7540,
+          "selected_cluster": 113,
+          "probed_clusters": [
+            113,
+            143,
+            100
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0066",
+          "label": true,
+          "expected_identity": 2574,
+          "selected_cluster": 104,
+          "probed_clusters": [
+            104,
+            88,
+            116
+          ],
+          "probes_used": 1,
+          "identity": 2574
+        },
+        {
+          "query_id": "T0067",
+          "label": true,
+          "expected_identity": 2912,
+          "selected_cluster": 109,
+          "probed_clusters": [
+            109,
+            102,
+            31
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0068",
+          "label": true,
+          "expected_identity": 4809,
+          "selected_cluster": 145,
+          "probed_clusters": [
+            145,
+            134,
+            61
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0069",
+          "label": true,
+          "expected_identity": 1776,
+          "selected_cluster": 126,
+          "probed_clusters": [
+            126,
+            22,
+            29
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0070",
+          "label": true,
+          "expected_identity": 6762,
+          "selected_cluster": 13,
+          "probed_clusters": [
+            13,
+            133,
+            89
+          ],
+          "probes_used": 1,
+          "identity": 6762
+        },
+        {
+          "query_id": "T0071",
+          "label": true,
+          "expected_identity": 2273,
+          "selected_cluster": 41,
+          "probed_clusters": [
+            41,
+            149,
+            51
+          ],
+          "probes_used": 1,
+          "identity": 2273
+        },
+        {
+          "query_id": "T0072",
+          "label": true,
+          "expected_identity": 4041,
+          "selected_cluster": 54,
+          "probed_clusters": [
+            54,
+            140,
+            39
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0073",
+          "label": true,
+          "expected_identity": 3292,
+          "selected_cluster": 121,
+          "probed_clusters": [
+            121,
+            113,
+            6
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0074",
+          "label": true,
+          "expected_identity": 4050,
+          "selected_cluster": 71,
+          "probed_clusters": [
+            71,
+            18,
+            26
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0075",
+          "label": true,
+          "expected_identity": 665,
+          "selected_cluster": 25,
+          "probed_clusters": [
+            25,
+            13,
+            85
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0076",
+          "label": true,
+          "expected_identity": 6661,
+          "selected_cluster": 101,
+          "probed_clusters": [
+            101,
+            45,
+            105
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0077",
+          "label": true,
+          "expected_identity": 2140,
+          "selected_cluster": 43,
+          "probed_clusters": [
+            43,
+            49,
+            33
+          ],
+          "probes_used": 1,
+          "identity": 2275
+        },
+        {
+          "query_id": "T0078",
+          "label": true,
+          "expected_identity": 3396,
+          "selected_cluster": 112,
+          "probed_clusters": [
+            112,
+            23,
+            13
+          ],
+          "probes_used": 1,
+          "identity": 3396
+        },
+        {
+          "query_id": "T0079",
+          "label": true,
+          "expected_identity": 2047,
+          "selected_cluster": 73,
+          "probed_clusters": [
+            73,
+            68,
+            81
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0080",
+          "label": true,
+          "expected_identity": 8078,
+          "selected_cluster": 84,
+          "probed_clusters": [
+            84,
+            82,
+            132
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0081",
+          "label": true,
+          "expected_identity": 8230,
+          "selected_cluster": 5,
+          "probed_clusters": [
+            5,
+            79,
+            44
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0082",
+          "label": true,
+          "expected_identity": 7500,
+          "selected_cluster": 37,
+          "probed_clusters": [
+            37,
+            62,
+            51
+          ],
+          "probes_used": 2,
+          "identity": 7500
+        },
+        {
+          "query_id": "T0083",
+          "label": true,
+          "expected_identity": 3989,
+          "selected_cluster": 76,
+          "probed_clusters": [
+            76,
+            47,
+            98
+          ],
+          "probes_used": 1,
+          "identity": 3989
+        },
+        {
+          "query_id": "T0084",
+          "label": true,
+          "expected_identity": 8188,
+          "selected_cluster": 68,
+          "probed_clusters": [
+            68,
+            39,
+            38
+          ],
+          "probes_used": 1,
+          "identity": 4944
+        },
+        {
+          "query_id": "T0085",
+          "label": true,
+          "expected_identity": 3149,
+          "selected_cluster": 103,
+          "probed_clusters": [
+            103,
+            39,
+            117
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0086",
+          "label": true,
+          "expected_identity": 1211,
+          "selected_cluster": 82,
+          "probed_clusters": [
+            82,
+            14,
+            30
+          ],
+          "probes_used": 3,
+          "identity": 1211
+        },
+        {
+          "query_id": "T0087",
+          "label": true,
+          "expected_identity": 3616,
+          "selected_cluster": 32,
+          "probed_clusters": [
+            32,
+            126,
+            52
+          ],
+          "probes_used": 3,
+          "identity": 173
+        },
+        {
+          "query_id": "T0088",
+          "label": true,
+          "expected_identity": 7772,
+          "selected_cluster": 6,
+          "probed_clusters": [
+            6,
+            92,
+            141
+          ],
+          "probes_used": 1,
+          "identity": 7772
+        },
+        {
+          "query_id": "T0089",
+          "label": true,
+          "expected_identity": 8124,
+          "selected_cluster": 142,
+          "probed_clusters": [
+            142,
+            13,
+            28
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0090",
+          "label": true,
+          "expected_identity": 7861,
+          "selected_cluster": 12,
+          "probed_clusters": [
+            12,
+            134,
+            11
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0091",
+          "label": true,
+          "expected_identity": 8593,
+          "selected_cluster": 101,
+          "probed_clusters": [
+            101,
+            45,
+            11
+          ],
+          "probes_used": 1,
+          "identity": 8593
+        },
+        {
+          "query_id": "T0092",
+          "label": true,
+          "expected_identity": 3390,
+          "selected_cluster": 69,
+          "probed_clusters": [
+            69,
+            119,
+            104
+          ],
+          "probes_used": 1,
+          "identity": 3390
+        },
+        {
+          "query_id": "T0093",
+          "label": true,
+          "expected_identity": 4432,
+          "selected_cluster": 123,
+          "probed_clusters": [
+            123,
+            73,
+            17
+          ],
+          "probes_used": 1,
+          "identity": 4432
+        },
+        {
+          "query_id": "T0094",
+          "label": true,
+          "expected_identity": 1265,
+          "selected_cluster": 63,
+          "probed_clusters": [
+            63,
+            18,
+            91
+          ],
+          "probes_used": 1,
+          "identity": 1265
+        },
+        {
+          "query_id": "T0095",
+          "label": true,
+          "expected_identity": 3955,
+          "selected_cluster": 104,
+          "probed_clusters": [
+            104,
+            17,
+            85
+          ],
+          "probes_used": 1,
+          "identity": 3955
+        },
+        {
+          "query_id": "T0096",
+          "label": true,
+          "expected_identity": 8863,
+          "selected_cluster": 22,
+          "probed_clusters": [
+            22,
+            126,
+            29
+          ],
+          "probes_used": 1,
+          "identity": 8863
+        },
+        {
+          "query_id": "T0097",
+          "label": true,
+          "expected_identity": 8781,
+          "selected_cluster": 101,
+          "probed_clusters": [
+            101,
+            94,
+            27
+          ],
+          "probes_used": 1,
+          "identity": 8781
+        },
+        {
+          "query_id": "T0098",
+          "label": true,
+          "expected_identity": 6713,
+          "selected_cluster": 94,
+          "probed_clusters": [
+            94,
+            66,
+            12
+          ],
+          "probes_used": 1,
+          "identity": 6713
+        },
+        {
+          "query_id": "T0099",
+          "label": true,
+          "expected_identity": 8700,
+          "selected_cluster": 104,
+          "probed_clusters": [
+            104,
+            64,
+            38
+          ],
+          "probes_used": 1,
+          "identity": 8700
+        },
+        {
+          "query_id": "T0100",
+          "label": true,
+          "expected_identity": 612,
+          "selected_cluster": 1,
+          "probed_clusters": [
+            1,
+            67,
+            9
+          ],
+          "probes_used": 1,
+          "identity": 612
+        },
+        {
+          "query_id": "T0101",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 117,
+          "probed_clusters": [
+            117,
+            103,
+            64
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0102",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 135,
+          "probed_clusters": [
+            135,
+            14,
+            136
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0103",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 39,
+          "probed_clusters": [
+            39,
+            144,
+            9
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0104",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 18,
+          "probed_clusters": [
+            18,
+            82,
+            71
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0105",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 81,
+          "probed_clusters": [
+            81,
+            9,
+            117
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0106",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 116,
+          "probed_clusters": [
+            116,
+            23,
+            112
+          ],
+          "probes_used": 2,
+          "identity": 6844
+        },
+        {
+          "query_id": "T0107",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 71,
+          "probed_clusters": [
+            71,
+            18,
+            142
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0108",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 99,
+          "probed_clusters": [
+            99,
+            20,
+            112
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0109",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 125,
+          "probed_clusters": [
+            125,
+            96,
+            50
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0110",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 92,
+          "probed_clusters": [
+            92,
+            132,
+            89
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0111",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 2,
+          "probed_clusters": [
+            2,
+            111,
+            99
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0112",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 30,
+          "probed_clusters": [
+            30,
+            14,
+            132
+          ],
+          "probes_used": 1,
+          "identity": 805
+        },
+        {
+          "query_id": "T0113",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 35,
+          "probed_clusters": [
+            35,
+            15,
+            142
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0114",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 91,
+          "probed_clusters": [
+            91,
+            55,
+            140
+          ],
+          "probes_used": 3,
+          "identity": 6001
+        },
+        {
+          "query_id": "T0115",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 149,
+          "probed_clusters": [
+            149,
+            108,
+            16
+          ],
+          "probes_used": 1,
+          "identity": 5174
+        },
+        {
+          "query_id": "T0116",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 73,
+          "probed_clusters": [
+            73,
+            123,
+            17
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0117",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 56,
+          "probed_clusters": [
+            56,
+            86,
+            26
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0118",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 99,
+          "probed_clusters": [
+            99,
+            89,
+            133
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0119",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 3,
+          "probed_clusters": [
+            3,
+            59,
+            73
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0120",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 85,
+          "probed_clusters": [
+            85,
+            9,
+            123
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0121",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 74,
+          "probed_clusters": [
+            74,
+            86,
+            83
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0122",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 93,
+          "probed_clusters": [
+            93,
+            52,
+            59
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0123",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 115,
+          "probed_clusters": [
+            115,
+            140,
+            99
+          ],
+          "probes_used": 1,
+          "identity": 1499
+        },
+        {
+          "query_id": "T0124",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 56,
+          "probed_clusters": [
+            56,
+            86,
+            26
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0125",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 3,
+          "probed_clusters": [
+            3,
+            123,
+            23
+          ],
+          "probes_used": 1,
+          "identity": 8837
+        },
+        {
+          "query_id": "T0126",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 62,
+          "probed_clusters": [
+            62,
+            46,
+            28
+          ],
+          "probes_used": 1,
+          "identity": 5120
+        },
+        {
+          "query_id": "T0127",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 78,
+          "probed_clusters": [
+            78,
+            121,
+            75
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0128",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 81,
+          "probed_clusters": [
+            81,
+            3,
+            9
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0129",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 74,
+          "probed_clusters": [
+            74,
+            83,
+            37
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0130",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 101,
+          "probed_clusters": [
+            101,
+            45,
+            86
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0131",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 76,
+          "probed_clusters": [
+            76,
+            128,
+            57
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0132",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 11,
+          "probed_clusters": [
+            11,
+            118,
+            26
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0133",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 98,
+          "probed_clusters": [
+            98,
+            80,
+            28
+          ],
+          "probes_used": 1,
+          "identity": 6881
+        },
+        {
+          "query_id": "T0134",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 142,
+          "probed_clusters": [
+            142,
+            47,
+            22
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0135",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 15,
+          "probed_clusters": [
+            15,
+            68,
+            39
+          ],
+          "probes_used": 1,
+          "identity": 5478
+        },
+        {
+          "query_id": "T0136",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 69,
+          "probed_clusters": [
+            69,
+            122,
+            72
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0137",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 75,
+          "probed_clusters": [
+            75,
+            144,
+            9
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0138",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 67,
+          "probed_clusters": [
+            67,
+            1,
+            32
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0139",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 68,
+          "probed_clusters": [
+            68,
+            107,
+            39
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0140",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 117,
+          "probed_clusters": [
+            117,
+            144,
+            15
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0141",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 82,
+          "probed_clusters": [
+            82,
+            122,
+            132
+          ],
+          "probes_used": 2,
+          "identity": 2296
+        },
+        {
+          "query_id": "T0142",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 44,
+          "probed_clusters": [
+            44,
+            12,
+            134
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0143",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 61,
+          "probed_clusters": [
+            61,
+            83,
+            139
+          ],
+          "probes_used": 1,
+          "identity": 3662
+        },
+        {
+          "query_id": "T0144",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 142,
+          "probed_clusters": [
+            142,
+            104,
+            43
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0145",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 35,
+          "probed_clusters": [
+            35,
+            23,
+            112
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0146",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 144,
+          "probed_clusters": [
+            144,
+            85,
+            15
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0147",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 52,
+          "probed_clusters": [
+            52,
+            18,
+            71
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0148",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 23,
+          "probed_clusters": [
+            23,
+            112,
+            35
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0149",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 124,
+          "probed_clusters": [
+            124,
+            48,
+            8
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0150",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 115,
+          "probed_clusters": [
+            115,
+            103,
+            122
+          ],
+          "probes_used": 1,
+          "identity": 3990
+        },
+        {
+          "query_id": "T0151",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 66,
+          "probed_clusters": [
+            66,
+            94,
+            4
+          ],
+          "probes_used": 1,
+          "identity": 719
+        },
+        {
+          "query_id": "T0152",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 28,
+          "probed_clusters": [
+            28,
+            46,
+            142
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0153",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 116,
+          "probed_clusters": [
+            116,
+            82,
+            78
+          ],
+          "probes_used": 1,
+          "identity": 8967
+        },
+        {
+          "query_id": "T0154",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 25,
+          "probed_clusters": [
+            25,
+            89,
+            147
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0155",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 145,
+          "probed_clusters": [
+            145,
+            148,
+            61
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0156",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 51,
+          "probed_clusters": [
+            51,
+            149,
+            137
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0157",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 99,
+          "probed_clusters": [
+            99,
+            109,
+            35
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0158",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 70,
+          "probed_clusters": [
+            70,
+            51,
+            5
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0159",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 15,
+          "probed_clusters": [
+            15,
+            77,
+            120
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0160",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 0,
+          "probed_clusters": [
+            0,
+            26,
+            139
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0161",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 15,
+          "probed_clusters": [
+            15,
+            28,
+            31
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0162",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 9,
+          "probed_clusters": [
+            9,
+            119,
+            86
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0163",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 59,
+          "probed_clusters": [
+            59,
+            85,
+            19
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0164",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 3,
+          "probed_clusters": [
+            3,
+            17,
+            123
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0165",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 6,
+          "probed_clusters": [
+            6,
+            2,
+            52
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0166",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 63,
+          "probed_clusters": [
+            63,
+            1,
+            30
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0167",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 102,
+          "probed_clusters": [
+            102,
+            17,
+            123
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0168",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 124,
+          "probed_clusters": [
+            124,
+            72,
+            140
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0169",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 104,
+          "probed_clusters": [
+            104,
+            71,
+            43
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0170",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 55,
+          "probed_clusters": [
+            55,
+            27,
+            110
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0171",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 18,
+          "probed_clusters": [
+            18,
+            24,
+            71
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0172",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 67,
+          "probed_clusters": [
+            67,
+            1,
+            6
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0173",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 20,
+          "probed_clusters": [
+            20,
+            112,
+            14
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0174",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 124,
+          "probed_clusters": [
+            124,
+            118,
+            72
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0175",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 76,
+          "probed_clusters": [
+            76,
+            47,
+            10
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0176",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 12,
+          "probed_clusters": [
+            12,
+            61,
+            53
+          ],
+          "probes_used": 1,
+          "identity": 8047
+        },
+        {
+          "query_id": "T0177",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 81,
+          "probed_clusters": [
+            81,
+            66,
+            4
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0178",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 76,
+          "probed_clusters": [
+            76,
+            24,
+            137
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0179",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 65,
+          "probed_clusters": [
+            65,
+            139,
+            75
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0180",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 135,
+          "probed_clusters": [
+            135,
+            22,
+            95
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0181",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 118,
+          "probed_clusters": [
+            118,
+            140,
+            113
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0182",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 144,
+          "probed_clusters": [
+            144,
+            0,
+            134
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0183",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 91,
+          "probed_clusters": [
+            91,
+            63,
+            30
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0184",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 53,
+          "probed_clusters": [
+            53,
+            108,
+            149
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0185",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 18,
+          "probed_clusters": [
+            18,
+            71,
+            50
+          ],
+          "probes_used": 1,
+          "identity": 4508
+        },
+        {
+          "query_id": "T0186",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 2,
+          "probed_clusters": [
+            2,
+            63,
+            38
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0187",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 126,
+          "probed_clusters": [
+            126,
+            22,
+            32
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0188",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 2,
+          "probed_clusters": [
+            2,
+            113,
+            77
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0189",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 106,
+          "probed_clusters": [
+            106,
+            1,
+            105
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0190",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 35,
+          "probed_clusters": [
+            35,
+            141,
+            6
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0191",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 117,
+          "probed_clusters": [
+            117,
+            33,
+            107
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0192",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 29,
+          "probed_clusters": [
+            29,
+            32,
+            140
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0193",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 108,
+          "probed_clusters": [
+            108,
+            53,
+            131
+          ],
+          "probes_used": 1,
+          "identity": 6994
+        },
+        {
+          "query_id": "T0194",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 69,
+          "probed_clusters": [
+            69,
+            84,
+            28
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0195",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 87,
+          "probed_clusters": [
+            87,
+            65,
+            120
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0196",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 138,
+          "probed_clusters": [
+            138,
+            125,
+            121
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0197",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 47,
+          "probed_clusters": [
+            47,
+            38,
+            10
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0198",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 42,
+          "probed_clusters": [
+            42,
+            88,
+            31
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0199",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 21,
+          "probed_clusters": [
+            21,
+            77,
+            52
+          ],
+          "probes_used": 3,
+          "identity": -1
+        },
+        {
+          "query_id": "T0200",
+          "label": false,
+          "expected_identity": -1,
+          "selected_cluster": 57,
+          "probed_clusters": [
+            57,
+            70,
+            128
+          ],
+          "probes_used": 3,
+          "identity": -1
+        }
+      ]
+    }
+  ],
+  "offline": {
+    "offline_sec": 1.3902242999993177,
+    "offline_memory_peak_mb": 88.73246765136719
+  },
+  "config": {
+    "k": 150,
+    "tau": 0.926,
+    "shingle_size": 2,
+    "top_k": 3,
+    "batch_size": 200,
+    "eps": 0.0001,
+    "poly_modulus_degree": 8192,
+    "coeff_mod_bit_sizes": [
+      60,
+      40,
+      40,
+      60
+    ],
+    "scale": 1099511627776,
+    "mask_scope": "per_query",
+    "round2_policy": "probes=3_early_stop"
+  }
+}

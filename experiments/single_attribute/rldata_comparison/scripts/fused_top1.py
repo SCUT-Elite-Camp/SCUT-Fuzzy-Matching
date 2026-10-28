@@ -135,9 +135,15 @@ def load_database(path: Path = DEFAULT_DATA) -> pd.DataFrame:
     return frame
 
 
-def load_queries(path: Path = DEFAULT_DATA, split: str = "test") -> pd.DataFrame:
-    filename = "queries.csv" if split == "test" else "calibration_queries.csv"
-    frame = pd.read_csv(path / filename)
+def load_queries(
+    path: Path = DEFAULT_DATA,
+    split: str = "test",
+    queries_file: Path | None = None,
+) -> pd.DataFrame:
+    if queries_file is None:
+        filename = "queries.csv" if split == "test" else "calibration_queries.csv"
+        queries_file = path / filename
+    frame = pd.read_csv(queries_file)
     frame["canonical"] = frame["normalized_name"].fillna("").map(normalize_name)
     frame["label_bool"] = frame["label"].astype(str).str.lower() == "true"
     frame["expected_identity"] = frame["expected_identity"].fillna(-1).astype(int)

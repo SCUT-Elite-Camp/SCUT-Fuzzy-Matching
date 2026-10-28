@@ -170,6 +170,12 @@ void write_client_output(
         const auto& row = predictions[i];
         out << "    {\"query_index\": " << row.query_index
             << ", \"identity\": " << row.identity
+            << ", \"identities\": [";
+        for (std::size_t k = 0; k < row.identities.size(); ++k)
+        {
+            out << (k == 0 ? "" : ", ") << row.identities[k];
+        }
+        out << "]"
             << ", \"candidates\": " << row.candidates << "}";
         out << (i + 1 == predictions.size() ? "\n" : ",\n");
     }

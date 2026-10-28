@@ -52,6 +52,7 @@ from secure_export import (  # noqa: E402
     DEFAULT_ROUNDS,
     DEFAULT_SEED,
     DEFAULT_SLOTS,
+    DEFAULT_TOP_K,
     export_client,
     export_server,
     reference_predictions,
@@ -88,6 +89,8 @@ def _export_seed(seed: int, args) -> tuple[Path, Path, Path, dict]:
         rounds=args.rounds,
         slots=args.slots,
         distance=args.distance,
+        top_k=args.top_k,
+        queries_file=args.queries_file,
         limit_records=args.limit_records,
         limit_queries=args.limit_queries,
     )
@@ -118,6 +121,7 @@ def _wsl_command(binary: str, party: str, emp_port: int, psi_port: int,
         "--party", party,
         "--emp-port", str(emp_port),
         "--psi-port", str(psi_port),
+        "--top-k", str(args.top_k),
         "--input", _to_wsl_path(input_path),
         "--output", _to_wsl_path(output_path),
     ]
@@ -188,14 +192,34 @@ def _run_pair(seed: int, server_input: Path, client_input: Path, args) -> dict:
     }
 
 
+def _identities(row: dict) -> list[int]:
+    """Ranked identities, tolerating Top-1-only artifacts."""
+    values = row.get("identities")
+    if values is None:
+        value = int(row.get("identity", -1))
+        return [] if value < 0 else [value]
+    return [int(value) for value in values if int(value) >= 0]
+
+
 def _metrics(predictions: list[dict], labels: np.ndarray, expected: np.ndarray) -> dict:
-    predicted = np.full(labels.shape[0], -1, dtype=np.int64)
+    """Query-level metrics over the returned identity set.
+
+    A positive query is correct when the expected identity is among the Top-k
+    identities; a negative query is an FP when any identity is returned.  For
+    k = 1 this is exactly the original Top-1 confusion matrix.
+    """
+    returned_sets = [set() for _ in range(labels.shape[0])]
     for row in predictions:
-        predicted[int(row["query_index"])] = int(row["identity"])
-    tp = int(np.sum(labels & (predicted == expected)))
-    fp = int(np.sum(~labels & (predicted != -1)))
-    fn = int(np.sum(labels & (predicted != expected)))
-    tn = int(np.sum(~labels & (predicted == -1)))
+        returned_sets[int(row["query_index"])] = set(_identities(row))
+    correct = np.array(
+        [expected[i] in returned_sets[i] for i in range(labels.shape[0])],
+        dtype=bool,
+    )
+    returned = np.array([bool(items) for items in returned_sets], dtype=bool)
+    tp = int(np.sum(labels & correct))
+    fp = int(np.sum(~labels & returned))
+    fn = int(np.sum(labels & ~correct))
+    tn = int(np.sum(~labels & ~returned))
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / (tp + fn) if tp + fn else 0.0
     return {
@@ -222,15 +246,19 @@ def _run_seed(seed: int, args) -> dict:
     mismatches = [
         {
             "query_index": query,
-            "reference": reference_by_query[query]["identity"],
-            "secure": secure_by_query.get(query, {}).get("identity"),
+            "reference": reference_by_query[query]["identities"],
+            "secure": _identities(secure_by_query[query])
+            if query in secure_by_query else None,
         }
         for query in sorted(reference_by_query)
-        if secure_by_query.get(query) is None
-        or secure_by_query[query]["identity"] != reference_by_query[query]["identity"]
+        if query not in secure_by_query
+        or _identities(secure_by_query[query])
+        != reference_by_query[query]["identities"]
     ]
 
-    queries = load_queries(args.data, split="test")
+    queries = load_queries(
+        args.data, split="test", queries_file=args.queries_file
+    )
     if args.limit_queries:
         queries = queries.iloc[: args.limit_queries].reset_index(drop=True)
     metrics = _metrics(
@@ -252,6 +280,8 @@ def _run_seed(seed: int, args) -> dict:
             "rounds": args.rounds,
             "slots": args.slots,
             "distance_threshold": args.distance,
+            "top_k": args.top_k,
+            "queries_file": str(args.queries_file) if args.queries_file else None,
             "max_rounds": args.max_rounds,
             "max_groups": args.max_groups,
             "limit_records": args.limit_records,
@@ -333,6 +363,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--rounds", type=int, default=DEFAULT_ROUNDS)
     parser.add_argument("--slots", type=int, default=DEFAULT_SLOTS)
     parser.add_argument("--distance", type=int, default=DEFAULT_DISTANCE)
+    parser.add_argument("--top-k", type=int, default=DEFAULT_TOP_K)
+    parser.add_argument("--queries-file", type=Path, default=None,
+                        help="alternative query CSV (default: data/queries.csv)")
+    parser.add_argument("--artifact-dir", type=Path, default=None,
+                        help="write per-run artifacts here instead of results/secure")
     parser.add_argument("--limit-records", type=int, default=0)
     parser.add_argument("--limit-queries", type=int, default=0)
     parser.add_argument("--max-rounds", type=int, default=0)
@@ -350,6 +385,13 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = _parse_args()
+    if args.artifact_dir is not None:
+        # Keep every Top-k run isolated: its .bin inputs, logs and outputs live
+        # together, so earlier runs (e.g. the Top-1 baseline) are not overwritten.
+        global ARTIFACTS, SECURE_DIR, LOG_DIR
+        ARTIFACTS = args.artifact_dir
+        SECURE_DIR = args.artifact_dir
+        LOG_DIR = args.artifact_dir / "logs"
     seeds = [int(part) for part in args.seeds.split(",") if part.strip()]
 
     runs, failures = [], []

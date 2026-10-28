@@ -1,0 +1,13 @@
+scheme,query_set,top_k,accuracy,precision,recall,f1,latency_sec,resource_mb,runs
+方案1 baseline_Integration,fuzzy,1,0.795000,0.839080,0.730000,0.780749,169.762,172.249,1
+方案2 fused-secure-filter,fuzzy,1,0.821667,0.820582,0.823333,0.821937,7.701,299.489,3
+方案1 baseline_Integration,fuzzy,2,0.790000,0.822222,0.740000,0.778947,590.703,173.440,1
+方案2 fused-secure-filter,fuzzy,2,0.821667,0.820582,0.823333,0.821937,7.714,309.460,3
+方案1 baseline_Integration,fuzzy,3,0.790000,0.815217,0.750000,0.781250,712.940,175.011,1
+方案2 fused-secure-filter,fuzzy,3,0.821667,0.820582,0.823333,0.821937,7.264,317.677,3
+方案1 baseline_Integration,exact,1,0.865000,0.787402,1.000000,0.881057,212.321,172.253,1
+方案2 fused-secure-filter,exact,1,0.876667,0.802185,1.000000,0.890223,7.783,323.766,3
+方案1 baseline_Integration,exact,2,0.855000,0.775194,1.000000,0.873362,326.999,173.437,1
+方案2 fused-secure-filter,exact,2,0.876667,0.802185,1.000000,0.890223,7.660,335.330,3
+方案1 baseline_Integration,exact,3,0.855000,0.775194,1.000000,0.873362,544.740,175.008,1
+方案2 fused-secure-filter,exact,3,0.876667,0.802185,1.000000,0.890223,7.266,344.855,3

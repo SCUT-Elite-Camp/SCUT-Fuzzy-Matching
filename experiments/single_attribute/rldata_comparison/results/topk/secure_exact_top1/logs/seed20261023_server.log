@@ -1,0 +1,8 @@
+connected
+Network statistics:
+  sent:   178920749 B (170.63 MiB)
+  recv:   1112005 B (1.06 MiB)
+  total:  180032754 B (171.69 MiB)
+  rounds: 389
+  flushes:275
+party=server phase1_sec=6.98592 phase2_sec=0.000598031 phase3_sec=0.262364 total_sec=8.2813 groups=193 candidates=1714 hit_bins=0 and_gates=5504156

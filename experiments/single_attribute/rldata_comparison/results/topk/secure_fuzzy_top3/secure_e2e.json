@@ -1,0 +1,433 @@
+{
+  "config": {
+    "data": "D:\\Fuzzy_matching\\SCUT-Fuzzy-Matching\\experiments\\single_attribute\\rldata_comparison\\data",
+    "probability": 0.11,
+    "rounds": 80,
+    "slots": 8,
+    "distance_threshold": 32,
+    "top_k": 3,
+    "queries_file": null,
+    "max_rounds": 0,
+    "max_groups": 0,
+    "limit_records": 0,
+    "limit_queries": 0
+  },
+  "seeds": [
+    20261023,
+    20261040,
+    20261057
+  ],
+  "runs": [
+    {
+      "seed": 20261023,
+      "config": {
+        "data": "D:\\Fuzzy_matching\\SCUT-Fuzzy-Matching\\experiments\\single_attribute\\rldata_comparison\\data",
+        "probability": 0.11,
+        "rounds": 80,
+        "slots": 8,
+        "distance_threshold": 32,
+        "top_k": 3,
+        "queries_file": null,
+        "max_rounds": 0,
+        "max_groups": 0,
+        "limit_records": 0,
+        "limit_queries": 0
+      },
+      "metrics": {
+        "tp": 83,
+        "fp": 18,
+        "fn": 17,
+        "tn": 82,
+        "precision": 0.8217821782178217,
+        "recall": 0.83,
+        "f1": 0.8258706467661692,
+        "accuracy": 0.825
+      },
+      "reference_metrics": {
+        "tp": 83,
+        "fp": 18,
+        "fn": 17,
+        "tn": 82,
+        "precision": 0.8217821782178217,
+        "recall": 0.83,
+        "f1": 0.8258706467661692,
+        "accuracy": 0.825
+      },
+      "predictions_identical": true,
+      "prediction_mismatches": [],
+      "candidate_pairs": {
+        "secure": 1642,
+        "reference": 1642
+      },
+      "client_stats": {
+        "phase1_sec": 7.003405,
+        "phase2_sec": 6.1e-05,
+        "phase3_sec": 0.267831,
+        "total_sec": 7.289497,
+        "psi_bytes_sent": 56460120,
+        "psi_bytes_received": 91480104,
+        "emp_bytes_sent": 584252,
+        "emp_bytes_received": 192169570,
+        "psi_rounds": 80,
+        "psi_input_items": 127776,
+        "psi_bins": 163234,
+        "hit_bins": 7120,
+        "candidates": 1642,
+        "groups": 190,
+        "and_gates": 5918288
+      },
+      "server_stats": {
+        "phase1_sec": 7.003619,
+        "phase2_sec": 0.000504,
+        "phase3_sec": 0.266805,
+        "total_sec": 8.308656,
+        "psi_bytes_sent": 91480104,
+        "psi_bytes_received": 56460120,
+        "emp_bytes_sent": 192169570,
+        "emp_bytes_received": 584252,
+        "psi_rounds": 80,
+        "psi_input_items": 786931,
+        "psi_bins": 163234,
+        "hit_bins": 0,
+        "candidates": 1642,
+        "groups": 190,
+        "and_gates": 5918288
+      },
+      "wall_sec": 8.462696900000083,
+      "logs": {
+        "server": "experiments\\single_attribute\\rldata_comparison\\results\\topk\\secure_fuzzy_top3\\logs\\seed20261023_server.log",
+        "client": "experiments\\single_attribute\\rldata_comparison\\results\\topk\\secure_fuzzy_top3\\logs\\seed20261023_client.log"
+      },
+      "export_bytes": {
+        "server": 489632,
+        "client": 16832
+      },
+      "export_sec": {
+        "server": 0.4629256999996869,
+        "client": 0.012302099999942584,
+        "reference_sec": 0.6324340000010125
+      }
+    },
+    {
+      "seed": 20261040,
+      "config": {
+        "data": "D:\\Fuzzy_matching\\SCUT-Fuzzy-Matching\\experiments\\single_attribute\\rldata_comparison\\data",
+        "probability": 0.11,
+        "rounds": 80,
+        "slots": 8,
+        "distance_threshold": 32,
+        "top_k": 3,
+        "queries_file": null,
+        "max_rounds": 0,
+        "max_groups": 0,
+        "limit_records": 0,
+        "limit_queries": 0
+      },
+      "metrics": {
+        "tp": 83,
+        "fp": 18,
+        "fn": 17,
+        "tn": 82,
+        "precision": 0.8217821782178217,
+        "recall": 0.83,
+        "f1": 0.8258706467661692,
+        "accuracy": 0.825
+      },
+      "reference_metrics": {
+        "tp": 83,
+        "fp": 18,
+        "fn": 17,
+        "tn": 82,
+        "precision": 0.8217821782178217,
+        "recall": 0.83,
+        "f1": 0.8258706467661692,
+        "accuracy": 0.825
+      },
+      "predictions_identical": true,
+      "prediction_mismatches": [],
+      "candidate_pairs": {
+        "secure": 1512,
+        "reference": 1512
+      },
+      "client_stats": {
+        "phase1_sec": 6.994233,
+        "phase2_sec": 5.3e-05,
+        "phase3_sec": 0.249363,
+        "total_sec": 7.26192,
+        "psi_bytes_sent": 56463176,
+        "psi_bytes_received": 91481704,
+        "emp_bytes_sent": 582140,
+        "emp_bytes_received": 177226457,
+        "psi_rounds": 80,
+        "psi_input_items": 127832,
+        "psi_bins": 163305,
+        "hit_bins": 7246,
+        "candidates": 1512,
+        "groups": 186,
+        "and_gates": 5451284
+      },
+      "server_stats": {
+        "phase1_sec": 6.994422,
+        "phase2_sec": 0.000542,
+        "phase3_sec": 0.248377,
+        "total_sec": 8.290822,
+        "psi_bytes_sent": 91481704,
+        "psi_bytes_received": 56463176,
+        "emp_bytes_sent": 177226457,
+        "emp_bytes_received": 582140,
+        "psi_rounds": 80,
+        "psi_input_items": 787743,
+        "psi_bins": 163305,
+        "hit_bins": 0,
+        "candidates": 1512,
+        "groups": 186,
+        "and_gates": 5451284
+      },
+      "wall_sec": 8.40896210000028,
+      "logs": {
+        "server": "experiments\\single_attribute\\rldata_comparison\\results\\topk\\secure_fuzzy_top3\\logs\\seed20261040_server.log",
+        "client": "experiments\\single_attribute\\rldata_comparison\\results\\topk\\secure_fuzzy_top3\\logs\\seed20261040_client.log"
+      },
+      "export_bytes": {
+        "server": 489364,
+        "client": 16564
+      },
+      "export_sec": {
+        "server": 0.45872379999855184,
+        "client": 0.012373999999908847,
+        "reference_sec": 0.62560890000168
+      }
+    },
+    {
+      "seed": 20261057,
+      "config": {
+        "data": "D:\\Fuzzy_matching\\SCUT-Fuzzy-Matching\\experiments\\single_attribute\\rldata_comparison\\data",
+        "probability": 0.11,
+        "rounds": 80,
+        "slots": 8,
+        "distance_threshold": 32,
+        "top_k": 3,
+        "queries_file": null,
+        "max_rounds": 0,
+        "max_groups": 0,
+        "limit_records": 0,
+        "limit_queries": 0
+      },
+      "metrics": {
+        "tp": 81,
+        "fp": 18,
+        "fn": 19,
+        "tn": 82,
+        "precision": 0.8181818181818182,
+        "recall": 0.81,
+        "f1": 0.8140703517587939,
+        "accuracy": 0.815
+      },
+      "reference_metrics": {
+        "tp": 81,
+        "fp": 18,
+        "fn": 19,
+        "tn": 82,
+        "precision": 0.8181818181818182,
+        "recall": 0.81,
+        "f1": 0.8140703517587939,
+        "accuracy": 0.815
+      },
+      "predictions_identical": true,
+      "prediction_mismatches": [],
+      "candidate_pairs": {
+        "secure": 1171,
+        "reference": 1171
+      },
+      "client_stats": {
+        "phase1_sec": 7.023336,
+        "phase2_sec": 4.9e-05,
+        "phase3_sec": 0.199656,
+        "total_sec": 7.241408,
+        "psi_bytes_sent": 56466152,
+        "psi_bytes_received": 91481704,
+        "emp_bytes_sent": 578340,
+        "emp_bytes_received": 138058409,
+        "psi_rounds": 80,
+        "psi_input_items": 127944,
+        "psi_bins": 163449,
+        "hit_bins": 7047,
+        "candidates": 1171,
+        "groups": 182,
+        "and_gates": 4227212
+      },
+      "server_stats": {
+        "phase1_sec": 7.023596,
+        "phase2_sec": 0.000498,
+        "phase3_sec": 0.19876,
+        "total_sec": 8.293243,
+        "psi_bytes_sent": 91481704,
+        "psi_bytes_received": 56466152,
+        "emp_bytes_sent": 138058409,
+        "emp_bytes_received": 578340,
+        "psi_rounds": 80,
+        "psi_input_items": 788156,
+        "psi_bins": 163449,
+        "hit_bins": 0,
+        "candidates": 1171,
+        "groups": 182,
+        "and_gates": 4227212
+      },
+      "wall_sec": 8.405753899998672,
+      "logs": {
+        "server": "experiments\\single_attribute\\rldata_comparison\\results\\topk\\secure_fuzzy_top3\\logs\\seed20261057_server.log",
+        "client": "experiments\\single_attribute\\rldata_comparison\\results\\topk\\secure_fuzzy_top3\\logs\\seed20261057_client.log"
+      },
+      "export_bytes": {
+        "server": 489248,
+        "client": 16448
+      },
+      "export_sec": {
+        "server": 0.4796119999991788,
+        "client": 0.01277240000126767,
+        "reference_sec": 0.6499115999995411
+      }
+    }
+  ],
+  "summary": {
+    "precision": {
+      "mean": 0.8205820582058205,
+      "std": 0.002078668835966193,
+      "min": 0.8181818181818182,
+      "max": 0.8217821782178217
+    },
+    "recall": {
+      "mean": 0.8233333333333333,
+      "std": 0.011547005383792462,
+      "min": 0.81,
+      "max": 0.83
+    },
+    "f1": {
+      "mean": 0.821937215097044,
+      "std": 0.006812903499025085,
+      "min": 0.8140703517587939,
+      "max": 0.8258706467661692
+    },
+    "accuracy": {
+      "mean": 0.8216666666666667,
+      "std": 0.005773502691896262,
+      "min": 0.815,
+      "max": 0.825
+    },
+    "tp": {
+      "mean": 82.33333333333333,
+      "std": 1.1547005383792517,
+      "min": 81.0,
+      "max": 83.0
+    },
+    "fp": {
+      "mean": 18.0,
+      "std": 0.0,
+      "min": 18.0,
+      "max": 18.0
+    },
+    "fn": {
+      "mean": 17.666666666666668,
+      "std": 1.1547005383792515,
+      "min": 17.0,
+      "max": 19.0
+    },
+    "tn": {
+      "mean": 82.0,
+      "std": 0.0,
+      "min": 82.0,
+      "max": 82.0
+    },
+    "phase1_sec": {
+      "mean": 7.006991333333333,
+      "std": 0.014879263837076155,
+      "min": 6.994233,
+      "max": 7.023336
+    },
+    "phase2_sec": {
+      "mean": 5.433333333333334e-05,
+      "std": 6.110100926607786e-06,
+      "min": 4.9e-05,
+      "max": 6.1e-05
+    },
+    "phase3_sec": {
+      "mean": 0.23895,
+      "std": 0.03526018410331971,
+      "min": 0.199656,
+      "max": 0.267831
+    },
+    "total_sec": {
+      "mean": 7.2642750000000005,
+      "std": 0.024130841241034283,
+      "min": 7.241408,
+      "max": 7.289497
+    },
+    "psi_bytes_sent": {
+      "mean": 56463149.333333336,
+      "std": 3016.088416033809,
+      "min": 56460120.0,
+      "max": 56466152.0
+    },
+    "psi_bytes_received": {
+      "mean": 91481170.66666667,
+      "std": 923.7604307034012,
+      "min": 91480104.0,
+      "max": 91481704.0
+    },
+    "emp_bytes_sent": {
+      "mean": 581577.3333333334,
+      "std": 2995.894079124516,
+      "min": 578340.0,
+      "max": 584252.0
+    },
+    "emp_bytes_received": {
+      "mean": 169151478.66666666,
+      "std": 27944738.189949684,
+      "min": 138058409.0,
+      "max": 192169570.0
+    },
+    "psi_bins": {
+      "mean": 163329.33333333334,
+      "std": 109.54603294201635,
+      "min": 163234.0,
+      "max": 163449.0
+    },
+    "hit_bins": {
+      "mean": 7137.666666666667,
+      "std": 100.66942601074734,
+      "min": 7047.0,
+      "max": 7246.0
+    },
+    "candidates": {
+      "mean": 1441.6666666666667,
+      "std": 243.24952894781384,
+      "min": 1171.0,
+      "max": 1642.0
+    },
+    "groups": {
+      "mean": 186.0,
+      "std": 4.0,
+      "min": 182.0,
+      "max": 190.0
+    },
+    "and_gates": {
+      "mean": 5198928.0,
+      "std": 873325.3531737184,
+      "min": 4227212.0,
+      "max": 5918288.0
+    },
+    "wall_sec": {
+      "mean": 8.425804299999678,
+      "std": 0.03199017173922252,
+      "min": 8.405753899998672,
+      "max": 8.462696900000083
+    },
+    "export_sec": {
+      "mean": 0.46708716666580585,
+      "std": 0.01104841972530291,
+      "min": 0.45872379999855184,
+      "max": 0.4796119999991788
+    }
+  },
+  "failures": []
+}

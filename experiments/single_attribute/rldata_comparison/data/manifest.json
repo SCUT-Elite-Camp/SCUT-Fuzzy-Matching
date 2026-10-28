@@ -52,5 +52,16 @@
   },
   "name_variant_counts": {
     "1": 10000
+  },
+  "exact": {
+    "total": 200,
+    "positive": 100,
+    "negative": 100,
+    "perturbations": {
+      "exact": 100,
+      "recombination": 100
+    },
+    "seed": 20261100,
+    "file": "queries_exact.csv"
   }
 }

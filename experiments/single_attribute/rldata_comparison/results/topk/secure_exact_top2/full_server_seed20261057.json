@@ -1,0 +1,25 @@
+{
+  "party": "server",
+  "seed": 20261057,
+  "rounds": 80,
+  "slots": 8,
+  "distance_threshold": 32,
+  "records": 10000,
+  "stats": {
+    "phase1_sec": 7.036240,
+    "phase2_sec": 0.000460,
+    "phase3_sec": 0.215394,
+    "total_sec": 8.271957,
+    "psi_bytes_sent": 91481704,
+    "psi_bytes_received": 56464264,
+    "emp_bytes_sent": 157928254,
+    "emp_bytes_received": 582964,
+    "psi_rounds": 80,
+    "psi_input_items": 788156,
+    "psi_bins": 163358,
+    "hit_bins": 0,
+    "candidates": 1414,
+    "groups": 192,
+    "and_gates": 4848272
+  }
+}

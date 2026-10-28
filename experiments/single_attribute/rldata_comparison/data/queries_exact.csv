@@ -1,0 +1,201 @@
+query_id,name,normalized_name,dob,label,expected_record_id,expected_identity,perturbation,variant_form,source_record_id
+E0001,MARIA FRANKE,maria franke,1948-07-06,true,RL07749,8695,exact,ascii,RL07749
+E0002,SEBASTIAN HEINRICH,sebastian heinrich,2004-06-25,true,RL01901,762,exact,ascii,RL01901
+E0003,DIRK SCHREIBER,dirk schreiber,1997-03-15,true,RL02785,3042,exact,ascii,RL02785
+E0004,NADINE BERGER,nadine berger,1949-08-26,true,RL09871,8640,exact,ascii,RL09871
+E0005,CHRISTA ANDREA MUELLER,christa andrea mueller,1989-11-21,true,RL06897,5270,exact,ascii,RL06897
+E0006,HEIKE PETRA HAAS,heike petra haas,1956-01-31,true,RL09177,4524,exact,ascii,RL09177
+E0007,MICHAEL ERNST,michael ernst,1942-06-05,true,RL04834,2567,exact,ascii,RL04834
+E0008,ULRICH KLAUZ VOGT,ulrich klauz vogt,2006-11-09,true,RL03797,2236,exact,ascii,RL03797
+E0009,DIETER BOEHM,dieter boehm,1966-09-16,true,RL01116,40,exact,ascii,RL01116
+E0010,GERDA ROTH,gerda roth,1997-06-12,true,RL09254,5068,exact,ascii,RL09254
+E0011,WERNER ZIMMERMANN,werner zimmermann,1955-11-23,true,RL02594,3349,exact,ascii,RL02594
+E0012,WALTER HERRMANN,walter herrmann,1993-12-17,true,RL02643,4046,exact,ascii,RL02643
+E0013,MARCO LORENZ,marco lorenz,1968-12-17,true,RL01012,658,exact,ascii,RL01012
+E0014,HEIKET BERGER,heiket berger,1963-07-13,true,RL07622,6600,exact,ascii,RL07622
+E0015,HEINZ PFEIFFER,heinz pfeiffer,1953-06-23,true,RL03870,3409,exact,ascii,RL03870
+E0016,PELTER WAGNER,pelter wagner,1998-06-17,true,RL03126,1984,exact,ascii,RL03126
+E0017,DIRK SCHULZ,dirk schulz,1997-02-02,true,RL03762,3447,exact,ascii,RL03762
+E0018,KATJA KOCH,katja koch,2008-03-06,true,RL05228,7953,exact,ascii,RL05228
+E0019,DAGMAR KOCH,dagmar koch,1963-09-18,true,RL09209,7400,exact,ascii,RL09209
+E0020,SUSANNE ENGEL,susanne engel,1944-06-09,true,RL07681,6144,exact,ascii,RL07681
+E0021,JUERGEN SVEN BUSCH,juergen sven busch,1942-05-11,true,RL03897,1293,exact,ascii,RL03897
+E0022,GERTRUD BOEHM,gertrud boehm,1973-12-29,true,RL07571,4538,exact,ascii,RL07571
+E0023,ANNA SUSANNE SCHMITT,anna susanne schmitt,1958-04-16,true,RL07364,5186,exact,ascii,RL07364
+E0024,CHRISTEL MOELLER,christel moeller,1969-07-02,true,RL08223,6420,exact,ascii,RL08223
+E0025,ANGELA MUELLER,angela mueller,1942-05-26,true,RL09880,6465,exact,ascii,RL09880
+E0026,HILDEGARD HUBER,hildegard huber,1982-10-27,true,RL09055,8183,exact,ascii,RL09055
+E0027,MARGARETE RICHTER,margarete richter,1958-08-21,true,RL06814,8968,exact,ascii,RL06814
+E0028,WALTER SOMMER,walter sommer,1961-04-05,true,RL03000,2656,exact,ascii,RL03000
+E0029,SUSANNE ANDREA SCHMIDT,susanne andrea schmidt,1978-12-23,true,RL09200,4678,exact,ascii,RL09200
+E0030,REINHARD HOFFMANN,reinhard hoffmann,1987-08-10,true,RL03447,1089,exact,ascii,RL03447
+E0031,ELISABETH KRAEMER,elisabeth kraemer,1968-06-26,true,RL05306,6833,exact,ascii,RL05306
+E0032,KARIN KUHN,karin kuhn,1940-10-04,true,RL05077,6312,exact,ascii,RL05077
+E0033,MAREN SCHMITT,maren schmitt,1971-04-05,true,RL06754,4692,exact,ascii,RL06754
+E0034,HELMUT BRANDT,helmut brandt,1936-04-06,true,RL04649,4066,exact,ascii,RL04649
+E0035,TANJAB ZIEGLER,tanjab ziegler,1936-03-26,true,RL06152,8522,exact,ascii,RL06152
+E0036,AGNNA BECJER,agnna becjer,1970-02-06,true,RL08768,5881,exact,ascii,RL08768
+E0037,JUTTA CHRISTA SCHUMACHER,jutta christa schumacher,2006-11-09,true,RL08402,7217,exact,ascii,RL08402
+E0038,GUENTTHER HOFFMANN,guentther hoffmann,1942-11-11,true,RL00624,189,exact,ascii,RL00624
+E0039,INGRQID MUELLER,ingrqid mueller,1958-12-08,true,RL09815,6603,exact,ascii,RL09815
+E0040,DANIEL MAYER FISCHER,daniel mayer fischer,2003-12-15,true,RL04948,2086,exact,ascii,RL04948
+E0041,MELANIE SCHULZE,melanie schulze,1995-03-13,true,RL05249,7828,exact,ascii,RL05249
+E0042,OTTO MAYER,otto mayer,1958-02-15,true,RL00076,4238,exact,ascii,RL00076
+E0043,WOLFGANG HERRMANN,wolfgang herrmann,2001-09-04,true,RL00852,2720,exact,ascii,RL00852
+E0044,JAN MEYER,jan meyer,1994-06-01,true,RL01827,1230,exact,ascii,RL01827
+E0045,MARMION SOMMER,marmion sommer,1928-04-04,true,RL06602,7641,exact,ascii,RL06602
+E0046,MARTIN SOMMER,martin sommer,2007-10-25,true,RL01747,3481,exact,ascii,RL01747
+E0047,BERND WALTER,bernd walter,1942-09-09,true,RL04060,3340,exact,ascii,RL04060
+E0048,BAERBEL BERGMANN,baerbel bergmann,1948-08-12,true,RL08421,6983,exact,ascii,RL08421
+E0049,MANFRED MAIER,manfred maier,1946-08-11,true,RL03330,2055,exact,ascii,RL03330
+E0050,OTTO KOERTIG,otto koertig,2007-09-22,true,RL03626,4365,exact,ascii,RL03626
+E0051,RUDOLF WINTER,rudolf winter,1984-02-16,true,RL04710,4479,exact,ascii,RL04710
+E0052,MARTINA BECKER,martina becker,2006-08-20,true,RL05021,6949,exact,ascii,RL05021
+E0053,GABRIELE PFEIFFER,gabriele pfeiffer,1989-03-18,true,RL08217,7994,exact,ascii,RL08217
+E0054,CORNELIA MUELLER FRANK,cornelia mueller frank,1939-07-26,true,RL06514,4954,exact,ascii,RL06514
+E0055,THOMAMS BERGER,thomams berger,1984-03-23,true,RL01848,783,exact,ascii,RL01848
+E0056,SABIINE FISCHER,sabiine fischer,1965-01-12,true,RL08222,6822,exact,ascii,RL08222
+E0057,THORSTEN OLIVER SCHULZ,thorsten oliver schulz,1983-09-20,true,RL00557,3082,exact,ascii,RL00557
+E0058,WOLFGANG JAEGER,wolfgang jaeger,1952-06-05,true,RL00143,3765,exact,ascii,RL00143
+E0059,URSULA VOGT,ursula vogt,1994-10-06,true,RL08827,4533,exact,ascii,RL08827
+E0060,ILSE SCHUBERT,ilse schubert,1935-08-14,true,RL07717,5414,exact,ascii,RL07717
+E0061,ILSE SCHWARZ,ilse schwarz,1954-04-19,true,RL07300,8113,exact,ascii,RL07300
+E0062,STEFAN STEIN,stefan stein,1938-11-21,true,RL01499,1289,exact,ascii,RL01499
+E0063,BARBARA LEHMANN,barbara lehmann,1962-12-27,true,RL07257,5251,exact,ascii,RL07257
+E0064,ASTRID SCHWARZ,astrid schwarz,1978-06-18,true,RL06587,6629,exact,ascii,RL06587
+E0065,JOHANNES BOEHM,johannes boehm,1929-07-03,true,RL04733,1215,exact,ascii,RL04733
+E0066,SUSANNE STEIN,susanne stein,1937-04-18,true,RL06145,7577,exact,ascii,RL06145
+E0067,ROBERT BAUER,robert bauer,1982-11-30,true,RL01750,2303,exact,ascii,RL01750
+E0068,ANGELIKA SUSANNE GUENTHER,angelika susanne guenther,1972-08-27,true,RL05465,4828,exact,ascii,RL05465
+E0069,UTE SOMMER,ute sommer,1990-11-30,true,RL07783,8121,exact,ascii,RL07783
+E0070,FRANK STEIN,frank stein,1929-04-13,true,RL00784,246,exact,ascii,RL00784
+E0071,CHRISTIAN SCHMITZ,christian schmitz,1946-01-21,true,RL01974,1587,exact,ascii,RL01974
+E0072,CARSTEN SCHOLZ,carsten scholz,1927-03-07,true,RL04305,4186,exact,ascii,RL04305
+E0073,JUERGEN NORBERT MEYER,juergen norbert meyer,1981-05-10,true,RL01910,2096,exact,ascii,RL01910
+E0074,ANDREAS SOMMER,andreas sommer,1957-04-07,true,RL04756,2012,exact,ascii,RL04756
+E0075,HANS ALBRECHT,hans albrecht,1979-03-13,true,RL03515,1431,exact,ascii,RL03515
+E0076,SABINE ZIEGLER,sabine ziegler,1989-11-03,true,RL07993,8800,exact,ascii,RL07993
+E0077,MARKUS SIMON,markus simon,1951-07-04,true,RL02596,1527,exact,ascii,RL02596
+E0078,KERSTIN SIMON,kerstin simon,1982-02-21,true,RL08549,7058,exact,ascii,RL08549
+E0079,MARTIN SCHMITT,martin schmitt,1989-02-13,true,RL00828,51,exact,ascii,RL00828
+E0080,ELFRIEDE BAUER,elfriede bauer,1988-12-16,true,RL07023,7020,exact,ascii,RL07023
+E0081,UWE JOACHIM SCHULZ,uwe joachim schulz,2005-10-20,true,RL01658,3437,exact,ascii,RL01658
+E0082,SILKE DIETRICH,silke dietrich,1965-05-09,true,RL05806,5106,exact,ascii,RL05806
+E0083,ELKE HARTMANN,elke hartmann,1944-11-05,true,RL09802,6422,exact,ascii,RL09802
+E0084,OTTO FISCHER,otto fischer,1963-11-07,true,RL01397,3403,exact,ascii,RL01397
+E0085,DIETER WINTER,dieter winter,2008-11-01,true,RL03723,1493,exact,ascii,RL03723
+E0086,TOBIAS BECKER,tobias becker,1991-04-02,true,RL01463,2708,exact,ascii,RL01463
+E0087,BERND PETER ZIMMERMANN,bernd peter zimmermann,1978-12-25,true,RL01497,4208,exact,ascii,RL01497
+E0088,KATHRIN SCHNEIDER,kathrin schneider,1939-01-07,true,RL07569,7237,exact,ascii,RL07569
+E0089,WILLI KAISER,willi kaiser,1943-09-16,true,RL01313,1596,exact,ascii,RL01313
+E0090,JOACHDIM KLEIN,joachdim klein,1982-06-24,true,RL00604,416,exact,ascii,RL00604
+E0091,HELGA MARION SCHWARZ MOELLER,helga marion schwarz moeller,1940-02-03,true,RL09306,5412,exact,ascii,RL09306
+E0092,WILHELM PETER MUELLER,wilhelm peter mueller,1996-10-17,true,RL01388,3526,exact,ascii,RL01388
+E0093,KLAUS SCHMITT,klaus schmitt,1960-06-19,true,RL00733,3033,exact,ascii,RL00733
+E0094,MARGARETE KRAEMER,margarete kraemer,1969-01-23,true,RL06580,5707,exact,ascii,RL06580
+E0095,KARL FRIEDRICH,karl friedrich,1951-12-08,true,RL00998,3366,exact,ascii,RL00998
+E0096,BIRGIT HOFMANN,birgit hofmann,1971-04-04,true,RL05527,8944,exact,ascii,RL05527
+E0097,MARGARETE BRIGITTE MUELLER,margarete brigitte mueller,1978-08-22,true,RL08684,6796,exact,ascii,RL08684
+E0098,SABINE BAUBR BRAUN,sabine baubr braun,1958-05-29,true,RL09747,8279,exact,ascii,RL09747
+E0099,THOMAS KELLER,thomas keller,2002-01-24,true,RL01717,1124,exact,ascii,RL01717
+E0100,BAERBEL WAGNER,baerbel wagner,1952-08-14,true,RL06648,6221,exact,ascii,RL06648
+E0101,HILDEGARD KOCH,hildegard koch,1944-01-25,false,,-1,recombination,ascii,
+E0102,WILHELM LANGE,wilhelm lange,1989-08-19,false,,-1,recombination,ascii,
+E0103,RENATE LANG,renate lang,1984-06-12,false,,-1,recombination,ascii,
+E0104,MARIANRNE BRANDT,marianrne brandt,1941-03-13,false,,-1,recombination,ascii,
+E0105,ANNELIESE HORN,anneliese horn,1996-07-22,false,,-1,recombination,ascii,
+E0106,MARIA SCHWARZ,maria schwarz,1965-09-04,false,,-1,recombination,ascii,
+E0107,MARGARETE SCHOLZ,margarete scholz,1964-11-14,false,,-1,recombination,ascii,
+E0108,CHRISTINA MEYER,christina meyer,1984-12-06,false,,-1,recombination,ascii,
+E0109,DIETER ENGEL,dieter engel,1953-09-14,false,,-1,recombination,ascii,
+E0110,FRANKV FUCHS,frankv fuchs,1996-04-16,false,,-1,recombination,ascii,
+E0111,KARIN KODHLER,karin kodhler,1974-02-09,false,,-1,recombination,ascii,
+E0112,SABINE PETERS,sabine peters,2002-07-13,false,,-1,recombination,ascii,
+E0113,ERNST LEHMANN,ernst lehmann,2003-07-24,false,,-1,recombination,ascii,
+E0114,BERNXD SCHULZE,bernxd schulze,2006-11-12,false,,-1,recombination,ascii,
+E0115,LARS BAUMANN,lars baumann,1988-08-16,false,,-1,recombination,ascii,
+E0116,SONJA HARTMANN,sonja hartmann,2008-09-15,false,,-1,recombination,ascii,
+E0117,KARIN MAYER,karin mayer,1963-12-25,false,,-1,recombination,ascii,
+E0118,SANDRA ALBRECHT,sandra albrecht,1989-11-22,false,,-1,recombination,ascii,
+E0119,MARTINA LEHMANN,martina lehmann,1981-10-15,false,,-1,recombination,ascii,
+E0120,ERIKA SCHULZE,erika schulze,1953-12-08,false,,-1,recombination,ascii,
+E0121,ANDREA BECKER,andrea becker,1924-11-02,false,,-1,recombination,ascii,
+E0122,JENS LANG,jens lang,1969-02-18,false,,-1,recombination,ascii,
+E0123,BAERBEL MAIER,baerbel maier,1964-06-07,false,,-1,recombination,ascii,
+E0124,NORBERT SCHMITT,norbert schmitt,1990-05-23,false,,-1,recombination,ascii,
+E0125,BERND SCHNEIDER,bernd schneider,1945-02-06,false,,-1,recombination,ascii,
+E0126,WERNER LEHMANN,werner lehmann,1960-07-07,false,,-1,recombination,ascii,
+E0127,ROBERT FUCHS,robert fuchs,1957-06-07,false,,-1,recombination,ascii,
+E0128,BIRGIT KOCH,birgit koch,1967-12-23,false,,-1,recombination,ascii,
+E0129,MARTHA WALTER,martha walter,1947-05-13,false,,-1,recombination,ascii,
+E0130,KATHARINA KOERTIG,katharina koertig,1982-12-29,false,,-1,recombination,ascii,
+E0131,ANJA SAUER,anja sauer,1969-08-08,false,,-1,recombination,ascii,
+E0132,SUSANNE MEYER,susanne meyer,1955-02-19,false,,-1,recombination,ascii,
+E0133,TANJA SCHNEIDER,tanja schneider,1976-12-29,false,,-1,recombination,ascii,
+E0134,PAUL BERGER,paul berger,1949-08-13,false,,-1,recombination,ascii,
+E0135,RUTH WEBER,ruth weber,1979-04-29,false,,-1,recombination,ascii,
+E0136,ELISABHETH KOCH,elisabheth koch,1932-02-09,false,,-1,recombination,ascii,
+E0137,FRANK SCHWARZ,frank schwarz,1986-10-15,false,,-1,recombination,ascii,
+E0138,RENATE KAOCH,renate kaoch,nan,false,,-1,recombination,ascii,
+E0139,CHRISTA SCHUHERT,christa schuhert,1968-08-09,false,,-1,recombination,ascii,
+E0140,INGE BAUER,inge bauer,1940-12-19,false,,-1,recombination,ascii,
+E0141,SUSANNE SCHUSTER,susanne schuster,1978-12-23,false,,-1,recombination,ascii,
+E0142,FRIEDA FISCHER,frieda fischer,1960-04-22,false,,-1,recombination,ascii,
+E0143,ILSE KRAUS,ilse kraus,1956-02-07,false,,-1,recombination,ascii,
+E0144,HILDEGARD SIMON,hildegard simon,1958-11-15,false,,-1,recombination,ascii,
+E0145,KATHRIN POHL,kathrin pohl,1994-02-12,false,,-1,recombination,ascii,
+E0146,CLAUDIAH LORENZ,claudiah lorenz,1940-03-22,false,,-1,recombination,ascii,
+E0147,UTE ZIMMERMWANN,ute zimmermwann,1979-05-13,false,,-1,recombination,ascii,
+E0148,CHRISTINA KLEIN,christina klein,1993-09-17,false,,-1,recombination,ascii,
+E0149,HILDEGARD JUNG,hildegard jung,2000-08-26,false,,-1,recombination,ascii,
+E0150,BETTINA JAEGER,bettina jaeger,1999-03-27,false,,-1,recombination,ascii,
+E0151,ANDREA MOELLER,andrea moeller,1968-06-12,false,,-1,recombination,ascii,
+E0152,HELMUT FUCHS,helmut fuchs,1965-07-23,false,,-1,recombination,ascii,
+E0153,KARL SCHULZE,karl schulze,1965-09-29,false,,-1,recombination,ascii,
+E0154,SEBASTIAN WAGNER,sebastian wagner,2004-06-25,false,,-1,recombination,ascii,
+E0155,PETER WERNER,peter werner,1935-02-09,false,,-1,recombination,ascii,
+E0156,JENS SCHWARZ,jens schwarz,1933-10-05,false,,-1,recombination,ascii,
+E0157,URSULA VOGEL,ursula vogel,1940-03-03,false,,-1,recombination,ascii,
+E0158,WALTRAKUD ALBRECHT,waltrakud albrecht,1991-02-02,false,,-1,recombination,ascii,
+E0159,MICHAEL SCHULZ,michael schulz,1983-10-20,false,,-1,recombination,ascii,
+E0160,JOERG LEHMANN,joerg lehmann,2008-06-14,false,,-1,recombination,ascii,
+E0161,ANTJE RICHTER,antje richter,1963-10-06,false,,-1,recombination,ascii,
+E0162,JUERGEN FRANKE,juergen franke,1982-02-26,false,,-1,recombination,ascii,
+E0163,WALTRAUD MAIER,waltraud maier,1991-10-16,false,,-1,recombination,ascii,
+E0164,ANNELIESE SCHUSTER,anneliese schuster,1947-08-27,false,,-1,recombination,ascii,
+E0165,EDITH LUDWIG,edith ludwig,1940-09-05,false,,-1,recombination,ascii,
+E0166,JAN LUDWIG,jan ludwig,2008-09-17,false,,-1,recombination,ascii,
+E0167,JUTTA SIMON,jutta simon,1957-03-02,false,,-1,recombination,ascii,
+E0168,WALTRAUD FISCHER,waltraud fischer,1955-12-11,false,,-1,recombination,ascii,
+E0169,ILSE OTTO,ilse otto,1985-09-09,false,,-1,recombination,ascii,
+E0170,GERHARD OTTO,gerhard otto,1950-01-02,false,,-1,recombination,ascii,
+E0171,JUERGEN SCHAEFER,juergen schaefer,1986-03-11,false,,-1,recombination,ascii,
+E0172,ULRICH ENGEAL,ulrich engeal,1987-12-09,false,,-1,recombination,ascii,
+E0173,BIRGIT ZIEGLER,birgit ziegler,1925-03-11,false,,-1,recombination,ascii,
+E0174,ROBERT FRIEDRICH,robert friedrich,2000-03-24,false,,-1,recombination,ascii,
+E0175,MELANIE GUENTHER,melanie guenther,1927-01-23,false,,-1,recombination,ascii,
+E0176,DIETER PFEIFFER,dieter pfeiffer,1944-09-19,false,,-1,recombination,ascii,
+E0177,MARION VOGEL,marion vogel,1979-03-09,false,,-1,recombination,ascii,
+E0178,KARIN POHL,karin pohl,1938-04-05,false,,-1,recombination,ascii,
+E0179,HANS LEHMANN,hans lehmann,1944-07-31,false,,-1,recombination,ascii,
+E0180,HERBERT WINKLER,herbert winkler,1967-03-28,false,,-1,recombination,ascii,
+E0181,ANGELIKA SCHREIBER,angelika schreiber,1944-07-18,false,,-1,recombination,ascii,
+E0182,INGEBORG JUNG,ingeborg jung,1971-01-12,false,,-1,recombination,ascii,
+E0183,REINHARD VOGT,reinhard vogt,1977-08-26,false,,-1,recombination,ascii,
+E0184,ROLF SCHULZE,rolf schulze,1964-03-07,false,,-1,recombination,ascii,
+E0185,GERD BECK,gerd beck,2007-10-10,false,,-1,recombination,ascii,
+E0186,SVEN HOFFMANN,sven hoffmann,1942-02-28,false,,-1,recombination,ascii,
+E0187,IRMGARD SCHOLZ,irmgard scholz,1958-08-30,false,,-1,recombination,ascii,
+E0188,ALEXANDER KLEIN,alexander klein,1974-02-10,false,,-1,recombination,ascii,
+E0189,RUTH KAISER,ruth kaiser,1986-07-24,false,,-1,recombination,ascii,
+E0190,MARKUS LANG,markus lang,1977-04-22,false,,-1,recombination,ascii,
+E0191,MARGARETE SEIDEL,margarete seidel,1956-03-08,false,,-1,recombination,ascii,
+E0192,HANS VOGT,hans vogt,1933-04-10,false,,-1,recombination,ascii,
+E0193,HEINZ ZIEGLER,heinz ziegler,1964-09-03,false,,-1,recombination,ascii,
+E0194,ELISABETH SCHULZ,elisabeth schulz,1972-10-21,false,,-1,recombination,ascii,
+E0195,ROBERT WINKLER,robert winkler,1945-06-20,false,,-1,recombination,ascii,
+E0196,UTE SCHROEDER,ute schroeder,1936-01-15,false,,-1,recombination,ascii,
+E0197,ANDREA HOFMANN,andrea hofmann,1983-08-17,false,,-1,recombination,ascii,
+E0198,ANKE KRUEGER,anke krueger,1930-08-09,false,,-1,recombination,ascii,
+E0199,CHRISTINE GRAF,christine graf,1962-10-15,false,,-1,recombination,ascii,
+E0200,RENASTE KOCH,renaste koch,1943-08-29,false,,-1,recombination,ascii,

@@ -314,8 +314,10 @@ NamePipelineResult run_name_pipeline(
 
     // ------------------------------------------------------------------
     // Phase 3: one garbled circuit per group.  The client is the only party
-    // that learns the winning identity.
+    // that learns the winning identity (or the k smallest identities).
+    // Both parties must agree on ``top_k``.
     // ------------------------------------------------------------------
+    const std::size_t top_k = options.top_k == 0 ? 1 : options.top_k;
     const auto phase3_start = Clock::now();
     if (am_server)
     {
@@ -337,8 +339,18 @@ NamePipelineResult run_name_pipeline(
                 candidate.rid = static_cast<std::uint16_t>(record.index);
                 candidates.push_back(candidate);
             }
-            (void)top1_group(
-                *session, true, no_query, candidates.size(), &candidates, input.distance);
+            if (top_k > 1)
+            {
+                (void)topk_group(
+                    *session, true, no_query, candidates.size(), &candidates,
+                    input.distance, top_k);
+            }
+            else
+            {
+                (void)top1_group(
+                    *session, true, no_query, candidates.size(), &candidates,
+                    input.distance);
+            }
             context.flush();
         }
     }
@@ -350,25 +362,47 @@ NamePipelineResult run_name_pipeline(
         for (std::size_t index = 0; index < limit; ++index)
         {
             const ClientGroup& group = client_groups[index];
-            const auto identity = top1_group(
-                *session,
-                false,
-                input.queries[group.query_index].bits,
-                group.tokens.size(),
-                nullptr,
-                input.distance);
-            if (!identity.has_value())
+            std::vector<std::uint16_t> ranked;
+            if (top_k > 1)
             {
-                throw std::runtime_error("name_pipeline: client received no Top-1 output");
+                ranked = topk_group(
+                    *session,
+                    false,
+                    input.queries[group.query_index].bits,
+                    group.tokens.size(),
+                    nullptr,
+                    input.distance,
+                    top_k);
+            }
+            else
+            {
+                const auto identity = top1_group(
+                    *session,
+                    false,
+                    input.queries[group.query_index].bits,
+                    group.tokens.size(),
+                    nullptr,
+                    input.distance);
+                if (!identity.has_value())
+                {
+                    throw std::runtime_error(
+                        "name_pipeline: client received no Top-1 output");
+                }
+                ranked.push_back(*identity);
             }
 
             Prediction prediction;
             prediction.query_index = group.query_index;
             prediction.candidates = static_cast<std::uint32_t>(group.tokens.size());
-            prediction.identity = (*identity == kNoIdentity)
+            for (const std::uint16_t identity : ranked)
+            {
+                if (identity == kNoIdentity) continue;
+                prediction.identities.push_back(static_cast<std::int32_t>(identity));
+            }
+            prediction.identity = prediction.identities.empty()
                 ? -1
-                : static_cast<std::int32_t>(*identity);
-            result.predictions.push_back(prediction);
+                : prediction.identities.front();
+            result.predictions.push_back(std::move(prediction));
             context.flush();
         }
 

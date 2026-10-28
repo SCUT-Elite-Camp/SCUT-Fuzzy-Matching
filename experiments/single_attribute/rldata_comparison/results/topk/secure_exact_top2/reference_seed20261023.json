@@ -1,0 +1,1711 @@
+{
+  "seed": 20261023,
+  "rounds": 80,
+  "slots": 8,
+  "distance_threshold": 32,
+  "top_k": 2,
+  "metrics": {
+    "tp": 100,
+    "fp": 24,
+    "fn": 0,
+    "tn": 76,
+    "precision": 0.8064516129032258,
+    "recall": 1.0,
+    "f1": 0.8928571428571428,
+    "accuracy": 0.88
+  },
+  "candidate_pairs": 1716,
+  "predictions": [
+    {
+      "query_index": 0,
+      "identity": 8695,
+      "identities": [
+        8695,
+        7395
+      ],
+      "distance": 0,
+      "candidates": 9
+    },
+    {
+      "query_index": 1,
+      "identity": 762,
+      "identities": [
+        762
+      ],
+      "distance": 0,
+      "candidates": 2
+    },
+    {
+      "query_index": 2,
+      "identity": 3042,
+      "identities": [
+        3042
+      ],
+      "distance": 0,
+      "candidates": 7
+    },
+    {
+      "query_index": 3,
+      "identity": 8640,
+      "identities": [
+        8640
+      ],
+      "distance": 0,
+      "candidates": 10
+    },
+    {
+      "query_index": 4,
+      "identity": 5270,
+      "identities": [
+        5270
+      ],
+      "distance": 0,
+      "candidates": 12
+    },
+    {
+      "query_index": 5,
+      "identity": 4524,
+      "identities": [
+        4524
+      ],
+      "distance": 0,
+      "candidates": 1
+    },
+    {
+      "query_index": 6,
+      "identity": 2567,
+      "identities": [
+        2567
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 7,
+      "identity": 2236,
+      "identities": [
+        2236
+      ],
+      "distance": 0,
+      "candidates": 3
+    },
+    {
+      "query_index": 8,
+      "identity": 40,
+      "identities": [
+        40
+      ],
+      "distance": 0,
+      "candidates": 8
+    },
+    {
+      "query_index": 9,
+      "identity": 5068,
+      "identities": [
+        5068
+      ],
+      "distance": 0,
+      "candidates": 7
+    },
+    {
+      "query_index": 10,
+      "identity": 3349,
+      "identities": [
+        3349,
+        8108
+      ],
+      "distance": 0,
+      "candidates": 12
+    },
+    {
+      "query_index": 11,
+      "identity": 4046,
+      "identities": [
+        4046
+      ],
+      "distance": 0,
+      "candidates": 12
+    },
+    {
+      "query_index": 12,
+      "identity": 658,
+      "identities": [
+        658,
+        1254
+      ],
+      "distance": 0,
+      "candidates": 9
+    },
+    {
+      "query_index": 13,
+      "identity": 6600,
+      "identities": [
+        6600,
+        6397
+      ],
+      "distance": 0,
+      "candidates": 11
+    },
+    {
+      "query_index": 14,
+      "identity": 3409,
+      "identities": [
+        3409
+      ],
+      "distance": 0,
+      "candidates": 7
+    },
+    {
+      "query_index": 15,
+      "identity": 1984,
+      "identities": [
+        1984
+      ],
+      "distance": 0,
+      "candidates": 7
+    },
+    {
+      "query_index": 16,
+      "identity": 3447,
+      "identities": [
+        3447
+      ],
+      "distance": 0,
+      "candidates": 4
+    },
+    {
+      "query_index": 17,
+      "identity": 7953,
+      "identities": [
+        7953
+      ],
+      "distance": 0,
+      "candidates": 2
+    },
+    {
+      "query_index": 18,
+      "identity": 7400,
+      "identities": [
+        7400
+      ],
+      "distance": 0,
+      "candidates": 1
+    },
+    {
+      "query_index": 19,
+      "identity": 6144,
+      "identities": [
+        6144
+      ],
+      "distance": 0,
+      "candidates": 2
+    },
+    {
+      "query_index": 20,
+      "identity": 1293,
+      "identities": [
+        1293,
+        2802
+      ],
+      "distance": 0,
+      "candidates": 14
+    },
+    {
+      "query_index": 21,
+      "identity": 4538,
+      "identities": [
+        4538
+      ],
+      "distance": 0,
+      "candidates": 1
+    },
+    {
+      "query_index": 22,
+      "identity": 5186,
+      "identities": [
+        5186,
+        7450
+      ],
+      "distance": 0,
+      "candidates": 12
+    },
+    {
+      "query_index": 23,
+      "identity": 6420,
+      "identities": [
+        6420
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 24,
+      "identity": 6465,
+      "identities": [
+        6465,
+        6506
+      ],
+      "distance": 0,
+      "candidates": 47
+    },
+    {
+      "query_index": 25,
+      "identity": 8183,
+      "identities": [
+        8183
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 26,
+      "identity": 8968,
+      "identities": [
+        8968
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 27,
+      "identity": 2656,
+      "identities": [
+        2656
+      ],
+      "distance": 0,
+      "candidates": 2
+    },
+    {
+      "query_index": 28,
+      "identity": 4678,
+      "identities": [
+        4678
+      ],
+      "distance": 0,
+      "candidates": 18
+    },
+    {
+      "query_index": 29,
+      "identity": 1089,
+      "identities": [
+        1089
+      ],
+      "distance": 0,
+      "candidates": 13
+    },
+    {
+      "query_index": 30,
+      "identity": 6833,
+      "identities": [
+        6833
+      ],
+      "distance": 0,
+      "candidates": 3
+    },
+    {
+      "query_index": 31,
+      "identity": 6312,
+      "identities": [
+        6312,
+        6054
+      ],
+      "distance": 0,
+      "candidates": 16
+    },
+    {
+      "query_index": 32,
+      "identity": 4692,
+      "identities": [
+        4692
+      ],
+      "distance": 0,
+      "candidates": 3
+    },
+    {
+      "query_index": 33,
+      "identity": 4066,
+      "identities": [
+        4066
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 34,
+      "identity": 8522,
+      "identities": [
+        8522,
+        8522
+      ],
+      "distance": 0,
+      "candidates": 10
+    },
+    {
+      "query_index": 35,
+      "identity": 5881,
+      "identities": [
+        5881
+      ],
+      "distance": 0,
+      "candidates": 1
+    },
+    {
+      "query_index": 36,
+      "identity": 7217,
+      "identities": [
+        7217,
+        7071
+      ],
+      "distance": 0,
+      "candidates": 10
+    },
+    {
+      "query_index": 37,
+      "identity": 189,
+      "identities": [
+        189,
+        189
+      ],
+      "distance": 0,
+      "candidates": 23
+    },
+    {
+      "query_index": 38,
+      "identity": 6603,
+      "identities": [
+        6603
+      ],
+      "distance": 0,
+      "candidates": 10
+    },
+    {
+      "query_index": 39,
+      "identity": 2086,
+      "identities": [
+        2086,
+        1582
+      ],
+      "distance": 0,
+      "candidates": 15
+    },
+    {
+      "query_index": 40,
+      "identity": 7828,
+      "identities": [
+        7828,
+        6802
+      ],
+      "distance": 0,
+      "candidates": 11
+    },
+    {
+      "query_index": 41,
+      "identity": 4238,
+      "identities": [
+        4238,
+        2102
+      ],
+      "distance": 0,
+      "candidates": 12
+    },
+    {
+      "query_index": 42,
+      "identity": 2720,
+      "identities": [
+        2720
+      ],
+      "distance": 0,
+      "candidates": 13
+    },
+    {
+      "query_index": 43,
+      "identity": 1230,
+      "identities": [
+        1230
+      ],
+      "distance": 0,
+      "candidates": 13
+    },
+    {
+      "query_index": 44,
+      "identity": 7641,
+      "identities": [
+        7641
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 45,
+      "identity": 3481,
+      "identities": [
+        3481
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 46,
+      "identity": 3340,
+      "identities": [
+        3340
+      ],
+      "distance": 0,
+      "candidates": 3
+    },
+    {
+      "query_index": 47,
+      "identity": 6983,
+      "identities": [
+        6983
+      ],
+      "distance": 0,
+      "candidates": 9
+    },
+    {
+      "query_index": 48,
+      "identity": 2055,
+      "identities": [
+        2055
+      ],
+      "distance": 0,
+      "candidates": 10
+    },
+    {
+      "query_index": 49,
+      "identity": 4365,
+      "identities": [
+        4365
+      ],
+      "distance": 0,
+      "candidates": 8
+    },
+    {
+      "query_index": 50,
+      "identity": 4479,
+      "identities": [
+        4479
+      ],
+      "distance": 0,
+      "candidates": 5
+    },
+    {
+      "query_index": 51,
+      "identity": 6949,
+      "identities": [
+        6949,
+        2057
+      ],
+      "distance": 0,
+      "candidates": 15
+    },
+    {
+      "query_index": 52,
+      "identity": 7994,
+      "identities": [
+        7994
+      ],
+      "distance": 0,
+      "candidates": 9
+    },
+    {
+      "query_index": 53,
+      "identity": 4954,
+      "identities": [
+        4954
+      ],
+      "distance": 0,
+      "candidates": 11
+    },
+    {
+      "query_index": 54,
+      "identity": 783,
+      "identities": [
+        783,
+        795
+      ],
+      "distance": 0,
+      "candidates": 16
+    },
+    {
+      "query_index": 55,
+      "identity": 6822,
+      "identities": [
+        6822,
+        6822
+      ],
+      "distance": 0,
+      "candidates": 13
+    },
+    {
+      "query_index": 56,
+      "identity": 3082,
+      "identities": [
+        3082,
+        3082
+      ],
+      "distance": 0,
+      "candidates": 4
+    },
+    {
+      "query_index": 57,
+      "identity": 3765,
+      "identities": [
+        3765
+      ],
+      "distance": 0,
+      "candidates": 8
+    },
+    {
+      "query_index": 58,
+      "identity": 4533,
+      "identities": [
+        4533
+      ],
+      "distance": 0,
+      "candidates": 3
+    },
+    {
+      "query_index": 59,
+      "identity": 5414,
+      "identities": [
+        5414,
+        5414
+      ],
+      "distance": 0,
+      "candidates": 11
+    },
+    {
+      "query_index": 60,
+      "identity": 8113,
+      "identities": [
+        8113
+      ],
+      "distance": 0,
+      "candidates": 10
+    },
+    {
+      "query_index": 61,
+      "identity": 1289,
+      "identities": [
+        1289
+      ],
+      "distance": 0,
+      "candidates": 11
+    },
+    {
+      "query_index": 62,
+      "identity": 5251,
+      "identities": [
+        5251
+      ],
+      "distance": 0,
+      "candidates": 7
+    },
+    {
+      "query_index": 63,
+      "identity": 6629,
+      "identities": [
+        6629
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 64,
+      "identity": 1215,
+      "identities": [
+        1215
+      ],
+      "distance": 0,
+      "candidates": 3
+    },
+    {
+      "query_index": 65,
+      "identity": 7577,
+      "identities": [
+        7577
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 66,
+      "identity": 2303,
+      "identities": [
+        2303
+      ],
+      "distance": 0,
+      "candidates": 1
+    },
+    {
+      "query_index": 67,
+      "identity": 4828,
+      "identities": [
+        4828
+      ],
+      "distance": 0,
+      "candidates": 8
+    },
+    {
+      "query_index": 68,
+      "identity": 8121,
+      "identities": [
+        8121
+      ],
+      "distance": 0,
+      "candidates": 12
+    },
+    {
+      "query_index": 69,
+      "identity": 246,
+      "identities": [
+        246
+      ],
+      "distance": 0,
+      "candidates": 4
+    },
+    {
+      "query_index": 70,
+      "identity": 1587,
+      "identities": [
+        1587
+      ],
+      "distance": 0,
+      "candidates": 14
+    },
+    {
+      "query_index": 71,
+      "identity": 4186,
+      "identities": [
+        4186,
+        2044
+      ],
+      "distance": 0,
+      "candidates": 5
+    },
+    {
+      "query_index": 72,
+      "identity": 2096,
+      "identities": [
+        2096
+      ],
+      "distance": 0,
+      "candidates": 12
+    },
+    {
+      "query_index": 73,
+      "identity": 2012,
+      "identities": [
+        2012
+      ],
+      "distance": 0,
+      "candidates": 16
+    },
+    {
+      "query_index": 74,
+      "identity": 1431,
+      "identities": [
+        1431
+      ],
+      "distance": 0,
+      "candidates": 4
+    },
+    {
+      "query_index": 75,
+      "identity": 8800,
+      "identities": [
+        8800
+      ],
+      "distance": 0,
+      "candidates": 8
+    },
+    {
+      "query_index": 76,
+      "identity": 1527,
+      "identities": [
+        1527
+      ],
+      "distance": 0,
+      "candidates": 1
+    },
+    {
+      "query_index": 77,
+      "identity": 7058,
+      "identities": [
+        7058
+      ],
+      "distance": 0,
+      "candidates": 7
+    },
+    {
+      "query_index": 78,
+      "identity": 51,
+      "identities": [
+        51,
+        3129
+      ],
+      "distance": 0,
+      "candidates": 9
+    },
+    {
+      "query_index": 79,
+      "identity": 7020,
+      "identities": [
+        7020
+      ],
+      "distance": 0,
+      "candidates": 5
+    },
+    {
+      "query_index": 80,
+      "identity": 3437,
+      "identities": [
+        3437,
+        2283
+      ],
+      "distance": 0,
+      "candidates": 8
+    },
+    {
+      "query_index": 81,
+      "identity": 5106,
+      "identities": [
+        5106
+      ],
+      "distance": 0,
+      "candidates": 8
+    },
+    {
+      "query_index": 82,
+      "identity": 6422,
+      "identities": [
+        6422
+      ],
+      "distance": 0,
+      "candidates": 9
+    },
+    {
+      "query_index": 83,
+      "identity": 3403,
+      "identities": [
+        3403
+      ],
+      "distance": 0,
+      "candidates": 15
+    },
+    {
+      "query_index": 84,
+      "identity": 1493,
+      "identities": [
+        1493,
+        1493
+      ],
+      "distance": 0,
+      "candidates": 9
+    },
+    {
+      "query_index": 85,
+      "identity": 2708,
+      "identities": [
+        2708
+      ],
+      "distance": 0,
+      "candidates": 5
+    },
+    {
+      "query_index": 86,
+      "identity": 4208,
+      "identities": [
+        4208
+      ],
+      "distance": 0,
+      "candidates": 9
+    },
+    {
+      "query_index": 87,
+      "identity": 7237,
+      "identities": [
+        7237,
+        7605
+      ],
+      "distance": 0,
+      "candidates": 32
+    },
+    {
+      "query_index": 88,
+      "identity": 1596,
+      "identities": [
+        1596
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 89,
+      "identity": 416,
+      "identities": [
+        416,
+        416
+      ],
+      "distance": 0,
+      "candidates": 8
+    },
+    {
+      "query_index": 90,
+      "identity": 5412,
+      "identities": [
+        5412
+      ],
+      "distance": 0,
+      "candidates": 4
+    },
+    {
+      "query_index": 91,
+      "identity": 3526,
+      "identities": [
+        3526,
+        2067
+      ],
+      "distance": 0,
+      "candidates": 12
+    },
+    {
+      "query_index": 92,
+      "identity": 3033,
+      "identities": [
+        3033
+      ],
+      "distance": 0,
+      "candidates": 6
+    },
+    {
+      "query_index": 93,
+      "identity": 5707,
+      "identities": [
+        5707
+      ],
+      "distance": 0,
+      "candidates": 7
+    },
+    {
+      "query_index": 94,
+      "identity": 3366,
+      "identities": [
+        3366,
+        6478
+      ],
+      "distance": 0,
+      "candidates": 10
+    },
+    {
+      "query_index": 95,
+      "identity": 8944,
+      "identities": [
+        8944,
+        7114
+      ],
+      "distance": 0,
+      "candidates": 10
+    },
+    {
+      "query_index": 96,
+      "identity": 6796,
+      "identities": [
+        6796
+      ],
+      "distance": 0,
+      "candidates": 13
+    },
+    {
+      "query_index": 97,
+      "identity": 8279,
+      "identities": [
+        8279,
+        8279
+      ],
+      "distance": 0,
+      "candidates": 4
+    },
+    {
+      "query_index": 98,
+      "identity": 1124,
+      "identities": [
+        1124
+      ],
+      "distance": 0,
+      "candidates": 9
+    },
+    {
+      "query_index": 99,
+      "identity": 6221,
+      "identities": [
+        6221
+      ],
+      "distance": 0,
+      "candidates": 10
+    },
+    {
+      "query_index": 100,
+      "identity": -1,
+      "identities": [],
+      "distance": 35,
+      "candidates": 2
+    },
+    {
+      "query_index": 101,
+      "identity": -1,
+      "identities": [],
+      "distance": 39,
+      "candidates": 9
+    },
+    {
+      "query_index": 102,
+      "identity": -1,
+      "identities": [],
+      "distance": 61,
+      "candidates": 6
+    },
+    {
+      "query_index": 103,
+      "identity": -1,
+      "identities": [],
+      "distance": 49,
+      "candidates": 3
+    },
+    {
+      "query_index": 104,
+      "identity": -1,
+      "identities": [],
+      "distance": 117,
+      "candidates": 1
+    },
+    {
+      "query_index": 105,
+      "identity": -1,
+      "identities": [],
+      "distance": 39,
+      "candidates": 7
+    },
+    {
+      "query_index": 106,
+      "identity": -1,
+      "identities": [],
+      "distance": 37,
+      "candidates": 3
+    },
+    {
+      "query_index": 107,
+      "identity": 4565,
+      "identities": [
+        4565,
+        6444
+      ],
+      "distance": 21,
+      "candidates": 24
+    },
+    {
+      "query_index": 108,
+      "identity": -1,
+      "identities": [],
+      "distance": 49,
+      "candidates": 12
+    },
+    {
+      "query_index": 109,
+      "identity": -1,
+      "identities": [],
+      "distance": 86,
+      "candidates": 1
+    },
+    {
+      "query_index": 110,
+      "identity": -1,
+      "identities": [],
+      "distance": 33,
+      "candidates": 2
+    },
+    {
+      "query_index": 111,
+      "identity": -1,
+      "identities": [],
+      "distance": 34,
+      "candidates": 1
+    },
+    {
+      "query_index": 112,
+      "identity": -1,
+      "identities": [],
+      "distance": 59,
+      "candidates": 3
+    },
+    {
+      "query_index": 113,
+      "identity": 2081,
+      "identities": [
+        2081
+      ],
+      "distance": 26,
+      "candidates": 11
+    },
+    {
+      "query_index": 114,
+      "identity": -1,
+      "identities": [],
+      "distance": -1,
+      "candidates": 0
+    },
+    {
+      "query_index": 115,
+      "identity": -1,
+      "identities": [],
+      "distance": 114,
+      "candidates": 3
+    },
+    {
+      "query_index": 116,
+      "identity": -1,
+      "identities": [],
+      "distance": 34,
+      "candidates": 22
+    },
+    {
+      "query_index": 117,
+      "identity": 7682,
+      "identities": [
+        7682,
+        8614
+      ],
+      "distance": 28,
+      "candidates": 3
+    },
+    {
+      "query_index": 118,
+      "identity": 2257,
+      "identities": [
+        2257
+      ],
+      "distance": 28,
+      "candidates": 8
+    },
+    {
+      "query_index": 119,
+      "identity": 6065,
+      "identities": [
+        6065,
+        5884
+      ],
+      "distance": 7,
+      "candidates": 15
+    },
+    {
+      "query_index": 120,
+      "identity": 4302,
+      "identities": [
+        4302,
+        5511
+      ],
+      "distance": 20,
+      "candidates": 21
+    },
+    {
+      "query_index": 121,
+      "identity": 1578,
+      "identities": [
+        1578
+      ],
+      "distance": 15,
+      "candidates": 10
+    },
+    {
+      "query_index": 122,
+      "identity": -1,
+      "identities": [],
+      "distance": 66,
+      "candidates": 8
+    },
+    {
+      "query_index": 123,
+      "identity": -1,
+      "identities": [],
+      "distance": 38,
+      "candidates": 11
+    },
+    {
+      "query_index": 124,
+      "identity": -1,
+      "identities": [],
+      "distance": 33,
+      "candidates": 11
+    },
+    {
+      "query_index": 125,
+      "identity": -1,
+      "identities": [],
+      "distance": 66,
+      "candidates": 9
+    },
+    {
+      "query_index": 126,
+      "identity": -1,
+      "identities": [],
+      "distance": 64,
+      "candidates": 11
+    },
+    {
+      "query_index": 127,
+      "identity": -1,
+      "identities": [],
+      "distance": -1,
+      "candidates": 0
+    },
+    {
+      "query_index": 128,
+      "identity": -1,
+      "identities": [],
+      "distance": 35,
+      "candidates": 7
+    },
+    {
+      "query_index": 129,
+      "identity": 7717,
+      "identities": [
+        7717
+      ],
+      "distance": 32,
+      "candidates": 15
+    },
+    {
+      "query_index": 130,
+      "identity": -1,
+      "identities": [],
+      "distance": 33,
+      "candidates": 9
+    },
+    {
+      "query_index": 131,
+      "identity": -1,
+      "identities": [],
+      "distance": 58,
+      "candidates": 16
+    },
+    {
+      "query_index": 132,
+      "identity": 5468,
+      "identities": [
+        5468,
+        5468
+      ],
+      "distance": 11,
+      "candidates": 29
+    },
+    {
+      "query_index": 133,
+      "identity": -1,
+      "identities": [],
+      "distance": 59,
+      "candidates": 11
+    },
+    {
+      "query_index": 134,
+      "identity": -1,
+      "identities": [],
+      "distance": 55,
+      "candidates": 8
+    },
+    {
+      "query_index": 135,
+      "identity": -1,
+      "identities": [],
+      "distance": -1,
+      "candidates": 0
+    },
+    {
+      "query_index": 136,
+      "identity": -1,
+      "identities": [],
+      "distance": 86,
+      "candidates": 5
+    },
+    {
+      "query_index": 137,
+      "identity": -1,
+      "identities": [],
+      "distance": 41,
+      "candidates": 4
+    },
+    {
+      "query_index": 138,
+      "identity": -1,
+      "identities": [],
+      "distance": 33,
+      "candidates": 26
+    },
+    {
+      "query_index": 139,
+      "identity": -1,
+      "identities": [],
+      "distance": 64,
+      "candidates": 11
+    },
+    {
+      "query_index": 140,
+      "identity": -1,
+      "identities": [],
+      "distance": 39,
+      "candidates": 15
+    },
+    {
+      "query_index": 141,
+      "identity": -1,
+      "identities": [],
+      "distance": 45,
+      "candidates": 14
+    },
+    {
+      "query_index": 142,
+      "identity": 7000,
+      "identities": [
+        7000
+      ],
+      "distance": 0,
+      "candidates": 5
+    },
+    {
+      "query_index": 143,
+      "identity": -1,
+      "identities": [],
+      "distance": 62,
+      "candidates": 2
+    },
+    {
+      "query_index": 144,
+      "identity": -1,
+      "identities": [],
+      "distance": 62,
+      "candidates": 2
+    },
+    {
+      "query_index": 145,
+      "identity": 8074,
+      "identities": [
+        8074,
+        6470
+      ],
+      "distance": 30,
+      "candidates": 2
+    },
+    {
+      "query_index": 146,
+      "identity": 5127,
+      "identities": [
+        5127
+      ],
+      "distance": 21,
+      "candidates": 12
+    },
+    {
+      "query_index": 147,
+      "identity": 4625,
+      "identities": [
+        4625,
+        5822
+      ],
+      "distance": 23,
+      "candidates": 14
+    },
+    {
+      "query_index": 148,
+      "identity": -1,
+      "identities": [],
+      "distance": 50,
+      "candidates": 4
+    },
+    {
+      "query_index": 149,
+      "identity": -1,
+      "identities": [],
+      "distance": 75,
+      "candidates": 1
+    },
+    {
+      "query_index": 150,
+      "identity": 3669,
+      "identities": [
+        3669,
+        7945
+      ],
+      "distance": 13,
+      "candidates": 26
+    },
+    {
+      "query_index": 151,
+      "identity": -1,
+      "identities": [],
+      "distance": 79,
+      "candidates": 2
+    },
+    {
+      "query_index": 152,
+      "identity": -1,
+      "identities": [],
+      "distance": 33,
+      "candidates": 19
+    },
+    {
+      "query_index": 153,
+      "identity": -1,
+      "identities": [],
+      "distance": 75,
+      "candidates": 5
+    },
+    {
+      "query_index": 154,
+      "identity": 4253,
+      "identities": [
+        4253,
+        3174
+      ],
+      "distance": 27,
+      "candidates": 13
+    },
+    {
+      "query_index": 155,
+      "identity": -1,
+      "identities": [],
+      "distance": 53,
+      "candidates": 8
+    },
+    {
+      "query_index": 156,
+      "identity": -1,
+      "identities": [],
+      "distance": 71,
+      "candidates": 2
+    },
+    {
+      "query_index": 157,
+      "identity": -1,
+      "identities": [],
+      "distance": 52,
+      "candidates": 5
+    },
+    {
+      "query_index": 158,
+      "identity": 1949,
+      "identities": [
+        1949,
+        3404
+      ],
+      "distance": 23,
+      "candidates": 14
+    },
+    {
+      "query_index": 159,
+      "identity": -1,
+      "identities": [],
+      "distance": 65,
+      "candidates": 8
+    },
+    {
+      "query_index": 160,
+      "identity": -1,
+      "identities": [],
+      "distance": 69,
+      "candidates": 8
+    },
+    {
+      "query_index": 161,
+      "identity": -1,
+      "identities": [],
+      "distance": 95,
+      "candidates": 6
+    },
+    {
+      "query_index": 162,
+      "identity": -1,
+      "identities": [],
+      "distance": 53,
+      "candidates": 2
+    },
+    {
+      "query_index": 163,
+      "identity": -1,
+      "identities": [],
+      "distance": 45,
+      "candidates": 11
+    },
+    {
+      "query_index": 164,
+      "identity": -1,
+      "identities": [],
+      "distance": 101,
+      "candidates": 8
+    },
+    {
+      "query_index": 165,
+      "identity": -1,
+      "identities": [],
+      "distance": 46,
+      "candidates": 14
+    },
+    {
+      "query_index": 166,
+      "identity": -1,
+      "identities": [],
+      "distance": -1,
+      "candidates": 0
+    },
+    {
+      "query_index": 167,
+      "identity": -1,
+      "identities": [],
+      "distance": 39,
+      "candidates": 9
+    },
+    {
+      "query_index": 168,
+      "identity": -1,
+      "identities": [],
+      "distance": 69,
+      "candidates": 2
+    },
+    {
+      "query_index": 169,
+      "identity": -1,
+      "identities": [],
+      "distance": 33,
+      "candidates": 13
+    },
+    {
+      "query_index": 170,
+      "identity": 1941,
+      "identities": [
+        1941
+      ],
+      "distance": 32,
+      "candidates": 22
+    },
+    {
+      "query_index": 171,
+      "identity": -1,
+      "identities": [],
+      "distance": 101,
+      "candidates": 8
+    },
+    {
+      "query_index": 172,
+      "identity": -1,
+      "identities": [],
+      "distance": 112,
+      "candidates": 5
+    },
+    {
+      "query_index": 173,
+      "identity": 3281,
+      "identities": [
+        3281
+      ],
+      "distance": 27,
+      "candidates": 14
+    },
+    {
+      "query_index": 174,
+      "identity": -1,
+      "identities": [],
+      "distance": 40,
+      "candidates": 9
+    },
+    {
+      "query_index": 175,
+      "identity": -1,
+      "identities": [],
+      "distance": 37,
+      "candidates": 5
+    },
+    {
+      "query_index": 176,
+      "identity": -1,
+      "identities": [],
+      "distance": 44,
+      "candidates": 6
+    },
+    {
+      "query_index": 177,
+      "identity": -1,
+      "identities": [],
+      "distance": -1,
+      "candidates": 0
+    },
+    {
+      "query_index": 178,
+      "identity": 3756,
+      "identities": [
+        3756
+      ],
+      "distance": 23,
+      "candidates": 6
+    },
+    {
+      "query_index": 179,
+      "identity": -1,
+      "identities": [],
+      "distance": 82,
+      "candidates": 8
+    },
+    {
+      "query_index": 180,
+      "identity": -1,
+      "identities": [],
+      "distance": 86,
+      "candidates": 8
+    },
+    {
+      "query_index": 181,
+      "identity": -1,
+      "identities": [],
+      "distance": -1,
+      "candidates": 0
+    },
+    {
+      "query_index": 182,
+      "identity": -1,
+      "identities": [],
+      "distance": 77,
+      "candidates": 4
+    },
+    {
+      "query_index": 183,
+      "identity": 2609,
+      "identities": [
+        2609,
+        4271
+      ],
+      "distance": 14,
+      "candidates": 13
+    },
+    {
+      "query_index": 184,
+      "identity": 250,
+      "identities": [
+        250,
+        992
+      ],
+      "distance": 32,
+      "candidates": 14
+    },
+    {
+      "query_index": 185,
+      "identity": -1,
+      "identities": [],
+      "distance": 51,
+      "candidates": 19
+    },
+    {
+      "query_index": 186,
+      "identity": -1,
+      "identities": [],
+      "distance": -1,
+      "candidates": 0
+    },
+    {
+      "query_index": 187,
+      "identity": -1,
+      "identities": [],
+      "distance": 41,
+      "candidates": 13
+    },
+    {
+      "query_index": 188,
+      "identity": -1,
+      "identities": [],
+      "distance": 60,
+      "candidates": 5
+    },
+    {
+      "query_index": 189,
+      "identity": 270,
+      "identities": [
+        270
+      ],
+      "distance": 17,
+      "candidates": 3
+    },
+    {
+      "query_index": 190,
+      "identity": -1,
+      "identities": [],
+      "distance": 46,
+      "candidates": 3
+    },
+    {
+      "query_index": 191,
+      "identity": -1,
+      "identities": [],
+      "distance": 34,
+      "candidates": 4
+    },
+    {
+      "query_index": 192,
+      "identity": -1,
+      "identities": [],
+      "distance": 33,
+      "candidates": 6
+    },
+    {
+      "query_index": 193,
+      "identity": 4870,
+      "identities": [
+        4870,
+        5248
+      ],
+      "distance": 23,
+      "candidates": 7
+    },
+    {
+      "query_index": 194,
+      "identity": -1,
+      "identities": [],
+      "distance": 129,
+      "candidates": 1
+    },
+    {
+      "query_index": 195,
+      "identity": -1,
+      "identities": [],
+      "distance": 33,
+      "candidates": 5
+    },
+    {
+      "query_index": 196,
+      "identity": 5118,
+      "identities": [
+        5118,
+        5415
+      ],
+      "distance": 9,
+      "candidates": 16
+    },
+    {
+      "query_index": 197,
+      "identity": -1,
+      "identities": [],
+      "distance": 48,
+      "candidates": 12
+    },
+    {
+      "query_index": 198,
+      "identity": -1,
+      "identities": [],
+      "distance": 42,
+      "candidates": 5
+    },
+    {
+      "query_index": 199,
+      "identity": -1,
+      "identities": [],
+      "distance": 34,
+      "candidates": 8
+    }
+  ]
+}

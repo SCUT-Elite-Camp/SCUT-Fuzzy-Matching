@@ -70,6 +70,7 @@ DEFAULT_ROUNDS = 80
 DEFAULT_SLOTS = 8
 DEFAULT_DISTANCE = 32
 DEFAULT_SEED = 20261023
+DEFAULT_TOP_K = 1
 
 
 # ---------------------------------------------------------------------------
@@ -155,7 +156,13 @@ def export_server(args) -> dict:
 
 
 def export_client(args) -> dict:
-    queries = _subset(load_queries(args.data, split="test"), args.limit_queries)
+    queries = _subset(
+        load_queries(
+            args.data, split="test",
+            queries_file=getattr(args, "queries_file", None),
+        ),
+        args.limit_queries,
+    )
     bits = encode_names(queries["canonical"].tolist(), ENCODING)
     packed = pack_bits(bits).astype(np.uint8)
     projections = sample_projections(
@@ -218,7 +225,13 @@ def reference_candidates(
 
 def reference_predictions(args) -> dict:
     database = _subset(load_database(args.data), args.limit_records)
-    queries = _subset(load_queries(args.data, split="test"), args.limit_queries)
+    queries = _subset(
+        load_queries(
+            args.data, split="test",
+            queries_file=getattr(args, "queries_file", None),
+        ),
+        args.limit_queries,
+    )
     db_bits = encode_names(database["canonical"].tolist(), ENCODING)
     query_bits = encode_names(queries["canonical"].tolist(), ENCODING)
     projections = sample_projections(
@@ -232,9 +245,10 @@ def reference_predictions(args) -> dict:
     labels = queries["label_bool"].to_numpy()
     expected = queries["expected_identity"].to_numpy()
 
+    top_k = int(getattr(args, "top_k", DEFAULT_TOP_K) or DEFAULT_TOP_K)
     predictions = []
     for query_index, members in enumerate(candidates):
-        predicted = -1
+        ranked: list[int] = []
         best_distance = -1
         if members:
             rows = np.array(sorted(members), dtype=np.int64)
@@ -242,24 +256,32 @@ def reference_predictions(args) -> dict:
                 packed_query[query_index : query_index + 1], packed_db[rows]
             )[0]
             # Tie-break on (distance, row index), matching the circuit.
-            local = int(np.lexsort((rows, distances))[0])
-            best_distance = int(distances[local])
-            if best_distance <= args.distance:
-                predicted = int(identities[rows[local]])
+            order = np.lexsort((rows, distances))
+            best_distance = int(distances[order[0]])
+            for local in order[:top_k]:
+                if int(distances[local]) > args.distance:
+                    break
+                ranked.append(int(identities[rows[local]]))
         predictions.append(
             {
                 "query_index": query_index,
-                "identity": predicted,
+                "identity": ranked[0] if ranked else -1,
+                "identities": ranked,
                 "distance": best_distance,
                 "candidates": len(members),
             }
         )
 
-    predicted_array = np.array([row["identity"] for row in predictions], dtype=np.int64)
-    tp = int(np.sum(labels & (predicted_array == expected)))
-    fp = int(np.sum(~labels & (predicted_array != -1)))
-    fn = int(np.sum(labels & (predicted_array != expected)))
-    tn = int(np.sum(~labels & (predicted_array == -1)))
+    predicted_sets = [set(row["identities"]) for row in predictions]
+    correct = np.array(
+        [expected[i] in predicted_sets[i] for i in range(len(predictions))],
+        dtype=bool,
+    )
+    returned = np.array([bool(row["identities"]) for row in predictions], dtype=bool)
+    tp = int(np.sum(labels & correct))
+    fp = int(np.sum(~labels & returned))
+    fn = int(np.sum(labels & ~correct))
+    tn = int(np.sum(~labels & ~returned))
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / (tp + fn) if tp + fn else 0.0
     payload = {
@@ -267,6 +289,7 @@ def reference_predictions(args) -> dict:
         "rounds": int(args.rounds),
         "slots": int(args.slots),
         "distance_threshold": int(args.distance),
+        "top_k": top_k,
         "metrics": {
             "tp": tp,
             "fp": fp,
@@ -295,6 +318,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--rounds", type=int, default=DEFAULT_ROUNDS)
     parser.add_argument("--slots", type=int, default=DEFAULT_SLOTS)
     parser.add_argument("--distance", type=int, default=DEFAULT_DISTANCE)
+    parser.add_argument("--top-k", type=int, default=DEFAULT_TOP_K)
+    parser.add_argument("--queries-file", type=Path, default=None,
+                        help="alternative query CSV (default: data/queries.csv)")
     # Smoke-test subsets: the same limits must be used for the reference.
     parser.add_argument("--limit-records", type=int, default=0)
     parser.add_argument("--limit-queries", type=int, default=0)

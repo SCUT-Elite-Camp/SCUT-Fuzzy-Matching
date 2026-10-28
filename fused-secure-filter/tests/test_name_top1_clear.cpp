@@ -66,6 +66,17 @@ std::optional<std::uint16_t> run_top1(
         session, /*am_alice=*/true, query, candidates.size(), &candidates, threshold);
 }
 
+std::vector<std::uint16_t> run_topk(
+    const Bits& query,
+    const std::vector<Top1Candidate>& candidates,
+    std::uint32_t threshold,
+    std::size_t k)
+{
+    emp::ClearSession session;
+    return topk_group(
+        session, /*am_alice=*/true, query, candidates.size(), &candidates, threshold, k);
+}
+
 Top1Candidate candidate(const Bits& bits, std::uint16_t identity, std::uint16_t rid)
 {
     return Top1Candidate{bits, identity, rid};
@@ -140,6 +151,51 @@ void test_threshold_zero()
     CHECK(none.has_value() && *none == kNoIdentity, "threshold 0 rejects a 1-bit difference");
 }
 
+void test_topk_order_and_ties()
+{
+    const Bits query = make_bits(7);
+    const std::vector<Top1Candidate> candidates = {
+        candidate(flipped(query, 7), 11, 4),
+        candidate(flipped(query, 3), 22, 8),
+        candidate(flipped(query, 3), 33, 2),
+        candidate(flipped(query, 1), 44, 9),
+    };
+    const auto top3 = run_topk(query, candidates, 32, 3);
+    CHECK(top3.size() == 3, "top-3 must return three identities");
+    CHECK(top3[0] == 44, "nearest candidate must rank first");
+    CHECK(top3[1] == 33, "distance-3 tie must break on the lower row id");
+    CHECK(top3[2] == 22, "distance-3 tie must place the higher row id second");
+
+    const auto top2 = run_topk(query, candidates, 32, 2);
+    CHECK(top2.size() == 2, "top-2 must return two identities");
+    CHECK(top2[0] == 44 && top2[1] == 33, "top-2 must be a prefix of top-3");
+
+    const auto top1 = run_topk(query, candidates, 32, 1);
+    CHECK(top1.size() == 1 && top1[0] == 44, "top-1 must match argmin");
+}
+
+void test_topk_threshold_masks_tail()
+{
+    const Bits query = make_bits(8);
+    const std::vector<Top1Candidate> candidates = {
+        candidate(flipped(query, 2), 1, 0),
+        candidate(flipped(query, 34), 2, 1),  // above threshold
+        candidate(flipped(query, 40), 3, 2),  // above threshold
+    };
+    const auto top3 = run_topk(query, candidates, 32, 3);
+    CHECK(top3.size() == 3, "top-k must return k slots even when some are rejected");
+    CHECK(top3[0] == 1, "accepted candidate keeps its identity");
+    CHECK(top3[1] == kNoIdentity && top3[2] == kNoIdentity,
+          "slots above the threshold must be masked to the sentinel");
+
+    const auto empty = run_topk(query, {}, 32, 3);
+    CHECK(empty.size() == 3, "empty group still returns k sentinel slots");
+    for (const auto value : empty)
+    {
+        CHECK(value == kNoIdentity, "empty group slots must all be sentinels");
+    }
+}
+
 void test_bit_helpers()
 {
     const Bits query = make_bits(6);
@@ -179,6 +235,8 @@ int main()
     test_saturating_counter();
     test_empty_group();
     test_threshold_zero();
+    test_topk_order_and_ties();
+    test_topk_threshold_masks_tail();
     test_bit_helpers();
     if (failures != 0)
     {

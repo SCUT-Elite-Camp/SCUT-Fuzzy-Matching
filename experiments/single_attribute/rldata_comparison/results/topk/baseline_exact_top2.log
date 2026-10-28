@@ -1,0 +1,21 @@
+{
+  "repetition": 0,
+  "round1_sec": 5.785402900000918,
+  "round2_sec": 321.2134084999998,
+  "online_total_sec": 326.9988131000009,
+  "sent_bytes": 169192550,
+  "recv_bytes": 4244752,
+  "total_bytes": 173437302,
+  "public_context_bytes": 35475872,
+  "process_rss_peak_mb": 688.26953125,
+  "probe_count": 2,
+  "mean_probes_used": 1.365,
+  "tp": 100,
+  "fp": 29,
+  "fn": 0,
+  "tn": 71,
+  "precision": 0.7751937984496124,
+  "recall": 1.0,
+  "f1": 0.8733624454148472,
+  "accuracy": 0.855
+}
