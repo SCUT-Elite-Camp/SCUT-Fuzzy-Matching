@@ -1,0 +1,226 @@
+{
+  "config": "baseline_Integration/config/examples/fused_multilingual_10k_multi_attribute.json",
+  "database_size": 10000,
+  "queries": 20,
+  "top_k": 1,
+  "fixed_threshold": 0.6135671549269659,
+  "k_mode": "sqrt",
+  "clusters": 100,
+  "cluster_dim": 3272,
+  "match_dim": 3122,
+  "offline_seconds": 5.72,
+  "online_seconds": 327.95,
+  "mean_query_seconds": 16.4,
+  "confusion": {
+    "TP": 13,
+    "FP": 0,
+    "FN": 4,
+    "TN": 3
+  },
+  "positives_above_tau": 16,
+  "precision": 1.0,
+  "recall": 0.7647058823529411,
+  "f1": 0.8666666666666666,
+  "rows": [
+    {
+      "query_id": "eval-0001",
+      "label": true,
+      "plaintext_score": 0.773554,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 43,
+      "elapsed_ms": 8963.5
+    },
+    {
+      "query_id": "eval-0002",
+      "label": true,
+      "plaintext_score": 0.789012,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 52,
+      "elapsed_ms": 9765.7
+    },
+    {
+      "query_id": "eval-0003",
+      "label": false,
+      "plaintext_score": null,
+      "should_catch": null,
+      "catch": false,
+      "outcome": "TN",
+      "columns_checked": 59,
+      "elapsed_ms": 10389.3
+    },
+    {
+      "query_id": "eval-0004",
+      "label": true,
+      "plaintext_score": 0.660013,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 107,
+      "elapsed_ms": 15317.6
+    },
+    {
+      "query_id": "eval-0005",
+      "label": true,
+      "plaintext_score": 0.637027,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 22,
+      "elapsed_ms": 6862.1
+    },
+    {
+      "query_id": "eval-0006",
+      "label": true,
+      "plaintext_score": 0.668043,
+      "should_catch": true,
+      "catch": false,
+      "outcome": "FN",
+      "columns_checked": 55,
+      "elapsed_ms": 10270.3
+    },
+    {
+      "query_id": "eval-0007",
+      "label": true,
+      "plaintext_score": 1.0,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 52,
+      "elapsed_ms": 9993.5
+    },
+    {
+      "query_id": "eval-0008",
+      "label": true,
+      "plaintext_score": 0.631352,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 192,
+      "elapsed_ms": 25479.2
+    },
+    {
+      "query_id": "eval-0009",
+      "label": true,
+      "plaintext_score": 0.885596,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 48,
+      "elapsed_ms": 9633.4
+    },
+    {
+      "query_id": "eval-0010",
+      "label": true,
+      "plaintext_score": 0.75,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 88,
+      "elapsed_ms": 13727.4
+    },
+    {
+      "query_id": "eval-0011",
+      "label": true,
+      "plaintext_score": 0.69848,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 5,
+      "elapsed_ms": 5570.8
+    },
+    {
+      "query_id": "eval-0012",
+      "label": true,
+      "plaintext_score": 0.676979,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 50,
+      "elapsed_ms": 9453.5
+    },
+    {
+      "query_id": "eval-0013",
+      "label": false,
+      "plaintext_score": null,
+      "should_catch": null,
+      "catch": false,
+      "outcome": "TN",
+      "columns_checked": 216,
+      "elapsed_ms": 27200.5
+    },
+    {
+      "query_id": "eval-0014",
+      "label": true,
+      "plaintext_score": 0.636476,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 174,
+      "elapsed_ms": 22476.9
+    },
+    {
+      "query_id": "eval-0015",
+      "label": true,
+      "plaintext_score": 0.642241,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 201,
+      "elapsed_ms": 25544.3
+    },
+    {
+      "query_id": "eval-0016",
+      "label": false,
+      "plaintext_score": null,
+      "should_catch": null,
+      "catch": false,
+      "outcome": "TN",
+      "columns_checked": 147,
+      "elapsed_ms": 19930.4
+    },
+    {
+      "query_id": "eval-0017",
+      "label": true,
+      "plaintext_score": 0.614939,
+      "should_catch": true,
+      "catch": false,
+      "outcome": "FN",
+      "columns_checked": 251,
+      "elapsed_ms": 30849.5
+    },
+    {
+      "query_id": "eval-0018",
+      "label": true,
+      "plaintext_score": 0.643512,
+      "should_catch": true,
+      "catch": true,
+      "outcome": "TP",
+      "columns_checked": 244,
+      "elapsed_ms": 30123.0
+    },
+    {
+      "query_id": "eval-0019",
+      "label": true,
+      "plaintext_score": 0.489804,
+      "should_catch": false,
+      "catch": false,
+      "outcome": "FN",
+      "columns_checked": 211,
+      "elapsed_ms": 26805.3
+    },
+    {
+      "query_id": "eval-0020",
+      "label": true,
+      "plaintext_score": 0.628749,
+      "should_catch": true,
+      "catch": false,
+      "outcome": "FN",
+      "columns_checked": 50,
+      "elapsed_ms": 9590.2
+    }
+  ]
+}

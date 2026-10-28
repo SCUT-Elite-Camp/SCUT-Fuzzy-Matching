@@ -22,9 +22,10 @@ multi_attribute_comparison/
 │   ├── encode_multi_attr_to_binary.py
 │   ├── evaluate_multi_attribute.py
 │   └── measure_multi_attribute_comm.py
-└── logs/                  ← 两次正式运行的原始终端日志
-    ├── ckks_febrl.log
-    └── ckks_multiling.log
+├── logs/                  ← 两次正式运行的原始终端日志
+│   ├── ckks_febrl.log
+│   └── ckks_multiling.log
+└── experiments_topk_10k/  ← 10K 数据集上的 Top-k / 投影网格实验（report.md + 逐查询结果 + 日志）
 ```
 
 ## 快速开始（在仓库根目录执行）

@@ -1,0 +1,39 @@
+database=10000 queries=20 k_mode=sqrt top_k=3 tau=0.613567
+offline build: 6.62s  k=100 max_cluster=331
+  [1/20] eval-0001 label=True pt=0.773554 TP cols=43 9.2s
+  [2/20] eval-0002 label=True pt=0.789012 TP cols=52 10.1s
+  [3/20] eval-0003 label=False pt=None TN cols=162 22.4s
+  [4/20] eval-0004 label=True pt=0.660013 TP cols=107 16.9s
+  [5/20] eval-0005 label=True pt=0.637027 TP cols=22 7.1s
+  [6/20] eval-0006 label=True pt=0.668043 TP cols=140 19.8s
+  [7/20] eval-0007 label=True pt=1.0 TP cols=52 10.0s
+  [8/20] eval-0008 label=True pt=0.631352 TP cols=192 25.2s
+  [9/20] eval-0009 label=True pt=0.885596 TP cols=48 9.5s
+  [10/20] eval-0010 label=True pt=0.75 TP cols=88 13.6s
+  [11/20] eval-0011 label=True pt=0.69848 TP cols=5 5.3s
+  [12/20] eval-0012 label=True pt=0.676979 TP cols=50 9.5s
+  [13/20] eval-0013 label=False pt=None TN cols=602 67.3s
+  [14/20] eval-0014 label=True pt=0.636476 TP cols=174 22.6s
+  [15/20] eval-0015 label=True pt=0.642241 TP cols=201 25.1s
+  [16/20] eval-0016 label=False pt=None TN cols=281 33.7s
+  [17/20] eval-0017 label=True pt=0.614939 FN cols=355 42.2s
+  [18/20] eval-0018 label=True pt=0.643512 TP cols=244 30.4s
+  [19/20] eval-0019 label=True pt=0.489804 FN cols=457 52.8s
+  [20/20] eval-0020 label=True pt=0.628749 TP cols=128 18.3s
+{
+  "top_k": 3,
+  "queries": 20,
+  "confusion": {
+    "TP": 15,
+    "FP": 0,
+    "FN": 2,
+    "TN": 3
+  },
+  "positives_above_tau": 16,
+  "precision": 1.0,
+  "recall": 0.8823529411764706,
+  "f1": 0.9375,
+  "online_seconds": 450.96,
+  "mean_query_seconds": 22.55
+}
+wrote multi_attribute_comparison/experiments_topk_10k/results/k3_tau0614.json

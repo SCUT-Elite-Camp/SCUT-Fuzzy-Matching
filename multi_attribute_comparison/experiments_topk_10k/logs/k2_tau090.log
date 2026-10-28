@@ -1,0 +1,27 @@
+database=10000 queries=8 k_mode=sqrt top_k=2 tau=0.900000
+offline build: 6.71s  k=100 max_cluster=331
+  [1/8] eval-0001 label=True pt=0.773554 FN cols=259 33.1s
+  [2/8] eval-0002 label=True pt=0.789012 FN cols=384 46.0s
+  [3/8] eval-0003 label=False pt=None TN cols=118 17.1s
+  [4/8] eval-0004 label=True pt=0.660013 FN cols=242 30.4s
+  [5/8] eval-0005 label=True pt=0.637027 FN cols=314 38.0s
+  [6/8] eval-0006 label=True pt=0.668043 FN cols=285 35.5s
+  [7/8] eval-0007 label=True pt=1.0 TP cols=52 10.3s
+  [8/8] eval-0008 label=True pt=0.631352 FN cols=241 30.3s
+{
+  "top_k": 2,
+  "queries": 8,
+  "confusion": {
+    "TP": 1,
+    "FP": 0,
+    "FN": 6,
+    "TN": 1
+  },
+  "positives_above_tau": 1,
+  "precision": 1.0,
+  "recall": 0.14285714285714285,
+  "f1": 0.25,
+  "online_seconds": 240.59,
+  "mean_query_seconds": 30.07
+}
+wrote multi_attribute_comparison/experiments_topk_10k/results/k2_tau090.json

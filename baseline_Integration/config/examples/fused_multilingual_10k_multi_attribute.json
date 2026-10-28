@@ -1,0 +1,30 @@
+{
+  "_comment": [
+    "fused_multilingual_10k / 200 查询的多属性 job 文件。仓库 README 引用了这个路径但文件本身没有随数据一起提交，这里按 300 条版本的 schema 原样补齐，只改数据路径。",
+    "阈值取数据作者预先标定的 tau=0.6135671549269659（规则：“校准集所有查询的最高非目标分 + 0.001”），见 data/fused_multilingual_10k/README.md 第 80-83 行。",
+    "不要用评测查询重新调 tau —— 数据 README 明确禁止，否则 recall 会被阈值自动抬高。",
+    "四属性权重 0.40/0.25/0.15/0.20，cluster_dim=3272 / match_dim=3122，均在 CKKS 4096 槽位内。"
+  ],
+  "schema": {
+    "similarity_threshold": 0.6135671549269659,
+    "name_attribute": "name",
+    "standardize_cluster": true,
+    "attributes": [
+      {"name": "name", "kind": "fuzzy_text", "weight": 0.4, "cluster_dim": 200, "match_dim": 50},
+      {"name": "dob", "kind": "date", "weight": 0.25, "blocks": 2, "buckets_per_block": 512, "seed": 20261014, "on_invalid": "missing"},
+      {"name": "city", "kind": "exact", "weight": 0.15, "blocks": 2, "buckets_per_block": 512, "seed": 20261016, "normalize": "casefold"},
+      {"name": "phone", "kind": "exact", "weight": 0.2, "blocks": 2, "buckets_per_block": 512, "seed": 20261015, "normalize": "digits"}
+    ]
+  },
+  "attribute_columns": {
+    "name": ["name_local", "name_romanized"],
+    "dob": "dob",
+    "city": "city",
+    "phone": "phone"
+  },
+  "id_column": "record_id",
+  "query_id_column": "query_id",
+  "labels": "data/fused_multilingual_10k/labels.csv",
+  "database": "data/fused_multilingual_10k/database.csv",
+  "queries": "data/fused_multilingual_10k/queries.csv"
+}
