@@ -35,6 +35,7 @@ rldata_comparison/
 │   ├── queries.csv                # 200 条评测查询（100 正 / 100 负，含模糊姓名）
 │   ├── queries_exact.csv          # 200 条精确姓名查询（100 正 / 100 负）
 │   ├── calibration_queries.csv    # 200 条不重叠的标定查询
+│   ├── preprocess_comparison.png  # 两方案预处理对比图（共同环节 / 分叉环节）
 │   └── manifest.json              # 组成与生成参数
 ├── scripts/
 │   ├── names.py                   # 多语言姓名归一化（两条路线共用）
@@ -47,6 +48,7 @@ rldata_comparison/
 │   ├── secure_export.py           # 导出两方输入与明文参考（安全路径）
 │   ├── secure_runner.py           # 通过 WSL 跑 EMP/volePSI 端到端管线
 │   ├── aggregate_topk.py          # 汇总 Top-k 12 行结果表
+│   ├── preprocess_comparison.py   # 渲染两方案预处理对比图
 │   └── make_figure.py             # 由两份 JSON 结果渲染对比图
 └── results/
     ├── baseline_he_test.json
@@ -175,7 +177,7 @@ results/topk/
 ├── baseline_exact_top{1,2,3}.json
 ├── secure_fuzzy_top{2,3}/              # 方案 2：每目录 3 个投影种子的两方产物
 ├── secure_exact_top{1,2,3}/
-├── topk_summary.csv / .md / .png       # 12 行汇总表
+├── topk_summary.csv / .md / .png       # 汇总表（csv/md 12 行；png 8 行，方案 2 每集合并）
 └── *.log                               # 各 runner 的逐种子/逐次日志
 ```
 
@@ -197,6 +199,8 @@ results/topk/
 ### 汇总结果
 
 方案 1 每行一次完整 CKKS 运行；方案 2 每行 3 个投影种子取均值（有离散度时附样本标准差）。
+下图（`topk_summary.png`）为排版版：因为方案 2 的四项指标与 k 无关，每个查询集只保留一行，
+Top-k 记为「\」、时延与通信给出 k=1/2/3 的范围，故共 8 行；完整 12 行见 CSV/Markdown。
 
 | 方案 | 查询集 | Top-k | Accuracy | Precision | Recall | F1 | 总时延 (s) | 资源开销 (MB) |
 |---|---|---|---|---|---|---|---|---|

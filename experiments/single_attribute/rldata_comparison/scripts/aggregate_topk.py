@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import textwrap
 from pathlib import Path
 
 import matplotlib
@@ -152,6 +153,67 @@ def numeric_summary(rows: list[dict]) -> list[dict]:
     ]
 
 
+def _fmt_metric(values: list[float]) -> str:
+    spread = _std(values)
+    if spread > 0:
+        return f"{_mean(values):.4f} ± {spread:.4f}"
+    return f"{_mean(values):.4f}"
+
+
+def _fmt_span(values: list[float], digits: int) -> str:
+    low, high = min(values), max(values)
+    if round(high - low, digits) == 0:
+        return f"{_mean(values):.{digits}f}"
+    return f"{low:.{digits}f}–{high:.{digits}f}"
+
+
+def display_rows(rows: list[dict]) -> list[dict]:
+    """Collapse the table for the figure.
+
+    Scheme 2's metrics are k-invariant, so each query set contributes one row
+    for it (Top-k blank, latency/traffic as the k=1/2/3 span) after the three
+    scheme-1 rows.  The CSV/Markdown keep all 12 rows.
+    """
+    cells: list[dict] = []
+    block = 0
+    for scenario in ("fuzzy", "exact"):
+        mine = [row for row in rows if row["scenario"] == scenario]
+        scheme1 = [row for row in mine if row["scheme"].startswith("方案1")]
+        scheme2 = [row for row in mine if row["scheme"].startswith("方案2")]
+        for row in scheme1:
+            cells.append(
+                {
+                    "scheme": row["scheme"],
+                    "colour": row["colour"],
+                    "scenario_label": row["scenario_label"],
+                    "top_k_text": f"Top-{row['top_k']}",
+                    "metrics": [_fmt_metric(row["metrics"][key]) for key in METRIC_KEYS],
+                    "latency_text": f"{_mean(row['latency']):.2f}",
+                    "resource_text": f"{_mean(row['resource']):.1f}",
+                    "block": block,
+                }
+            )
+        merged = scheme2[0]
+        cells.append(
+            {
+                "scheme": merged["scheme"],
+                "colour": merged["colour"],
+                "scenario_label": merged["scenario_label"],
+                "top_k_text": "\\",
+                "metrics": [_fmt_metric(merged["metrics"][key]) for key in METRIC_KEYS],
+                "latency_text": _fmt_span(
+                    [_mean(r["latency"]) for r in scheme2], 2
+                ),
+                "resource_text": _fmt_span(
+                    [_mean(r["resource"]) for r in scheme2], 1
+                ),
+                "block": block,
+            }
+        )
+        block += 1
+    return cells
+
+
 def write_csv(rows: list[dict], path: Path) -> None:
     summary = numeric_summary(rows)
     fields = [
@@ -219,24 +281,21 @@ COLUMNS = [
 TEXT_X = [0.037, 0.232, 0.322, 0.382, 0.487, 0.592, 0.697, 0.792, 0.892]
 
 FOOTNOTES = [
-    "注 1  两方案每一行均走完完整密文流程：方案 1 为 TenSEAL CKKS 两轮密文匹配；",
-    "        方案 2 为 volePSI ApproxPSI + EMP 混淆电路两方端到端管线。",
-    "注 2  Top-k 口径：方案 1 = 按簇心相似度依次探测前 k 个簇、命中即早停，返回单个身份；",
-    "        方案 2 = 在 PSI 候选组内返回距离最小的 k 个身份（候选集已含 80 轮投影全部桶，",
-    "        没有可逐级加深的簇结构）。两方案共享“Top-k”名字，但含义不同。",
-    "注 3  指标按查询级评估：正查询当且仅当返回身份与期望身份一致记为命中；",
-    "        负查询只要返回任意身份即计为 FP。方案 2 的指标不随 k 变化，因为失效点",
-    "        在候选生成与距离阈值，而不在组内排名。",
-    "注 4  Accuracy/Precision/Recall/F1 为均值；有多个样本时附样本标准差：方案 1 每行",
-    "        为一次完整运行，方案 2 每行为 3 个投影种子的均值。方案 1 六行同一 runner、",
-    "        依次执行，但未做重复采样，时延只应读 k 带来的趋势（约每探针 ×1.8–2），",
-    "        不可读精确比值。",
-    "注 5  总时延 = 在线协议耗时（方案 1 两轮合计，二轮批量为 查询数 × k 个探针；",
-    "        方案 2 含 PSI 与全部候选组电路）；资源开销 = 双向通信量（发送 + 接收），",
-    "        方案 1 含公开评估上下文。",
-    "注 6  模糊姓名集 = data/queries.csv（100 正 / 100 负，含编辑与变音变体）；",
-    "        精确姓名集 = data/queries_exact.csv（100 条逐字正查询 / 100 条重组负查询）。",
+    "注 1  每一行均走完完整密文流程：方案 1 为 TenSEAL CKKS 两轮密文匹配（第一轮加密簇心探测、第二轮 tiled 候选评分），"
+    "方案 2 为 volePSI ApproxPSI + EMP 混淆电路两方端到端管线；明文只用于最后的指标统计。",
+    "注 2  Top-k 口径不同：方案 1 = 按簇心相似度依次探测前 k 个簇、簇内命中即早停并返回单个身份，"
+    "探针按「查询数 × k」批量加密；方案 2 = 在 PSI 候选组（80 轮投影桶并成一组）内返回距离最小的 k 个身份。",
+    "注 3  方案 2 的四项指标不随 k 变化（失效点在候选生成与汉明距离阈值 32，而非组内排名），故每个查询集只占一行、"
+    "Top-k 记为「\\」，时延与资源开销给出 k=1/2/3 的范围；完整 12 行见 CSV/MD。",
+    "注 4  指标按查询级评估：正查询当且仅当返回身份等于期望身份记为命中（方案 2 为 k 个身份中任一），负查询只要返回任意身份即记为 FP。"
+    "表中为均值，方案 1 每行一次完整运行、方案 2 每行为 3 个投影种子的均值，有多个样本时附样本标准差。",
+    "注 5  总时延 = 在线协议耗时；资源开销 = 双向通信量。方案 1 六行同一 runner 依次执行、未重复采样，"
+    "时延只读 k 的趋势（约每多一个探针 ×1.8–2）；方案 2 通信量随 k 增长，时延由 PSI 阶段主导。",
+    "注 6  模糊姓名集 = data/queries.csv（100 正 / 100 负，含编辑与变音变体）；精确姓名集 = data/queries_exact.csv"
+    "（100 条逐字正查询 / 100 条重组负查询）。",
 ]
+NOTE_WIDTH = 132
+NOTE_INDENT = "      "
 
 
 def _setup_fonts() -> None:
@@ -251,10 +310,15 @@ def _setup_fonts() -> None:
 
 
 def render(rows: list[dict], output: Path) -> None:
+    notes: list[str] = []
+    for note in FOOTNOTES:
+        notes.extend(
+            textwrap.wrap(note, width=NOTE_WIDTH, subsequent_indent=NOTE_INDENT)
+        )
     row_height = 0.40
     header_height = 0.85
     title_height = 1.35
-    note_height = 0.20 * len(FOOTNOTES) + 0.5
+    note_height = 0.21 * len(notes) + 0.5
     height = title_height + header_height + row_height * len(rows) + note_height
     width = 15.0
 
@@ -297,28 +361,20 @@ def render(rows: list[dict], output: Path) -> None:
     hline(y, INK, 0.9)
 
     top = y
-    for index, row in enumerate(rows):
-        if (index // 2) % 2 == 0:
+    for row in rows:
+        if row["block"] % 2 == 0:
             band(0.030, 0.985, y, y + row_height, BAND)
 
         cells = [
-            (row["scheme"], row["colour"], "normal"),
-            (row["scenario_label"], INK, "normal"),
-            (f"Top-{row['top_k']}", INK, "normal"),
+            (row["scheme"], row["colour"]),
+            (row["scenario_label"], INK),
+            (row["top_k_text"], INK),
+            *((value, INK) for value in row["metrics"]),
+            (row["latency_text"], INK),
+            (row["resource_text"], INK),
         ]
-        formatted = []
-        for key in METRIC_KEYS:
-            values = row["metrics"][key]
-            spread = _std(values)
-            if spread > 0:
-                formatted.append(f"{_mean(values):.4f} ± {spread:.4f}")
-            else:
-                formatted.append(f"{_mean(values):.4f}")
-        formatted.append(f"{_mean(row['latency']):.2f}")
-        formatted.append(f"{_mean(row['resource']):.1f}")
-        cells.extend((value, INK, "normal") for value in formatted)
 
-        for (value, colour, _style), tx in zip(cells, TEXT_X):
+        for (value, colour), tx in zip(cells, TEXT_X):
             text(tx, y + 0.10, value, fontsize=8.6, color=colour)
         y += row_height
         hline(y, "#E7EBF0", 0.5)
@@ -332,9 +388,9 @@ def render(rows: list[dict], output: Path) -> None:
     y += 0.18
     hline(y, INK, 0.9)
     y += 0.12
-    for note in FOOTNOTES:
-        text(0.030, y, note, fontsize=7.8, color=MUTED)
-        y += 0.20
+    for note in notes:
+        text(0.030, y, note, fontsize=8.0, color=MUTED)
+        y += 0.21
 
     output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output.with_suffix(".png"), dpi=200, facecolor="white",
@@ -352,7 +408,7 @@ def main() -> int:
     output = args.output_dir / "topk_summary"
     write_csv(rows, output.with_suffix(".csv"))
     write_markdown(rows, output.with_suffix(".md"))
-    render(rows, output)
+    render(display_rows(rows), output)
     print(f"wrote {output.with_suffix('.csv')}")
     print(f"wrote {output.with_suffix('.md')}")
     print(f"wrote {output.with_suffix('.png')}")
