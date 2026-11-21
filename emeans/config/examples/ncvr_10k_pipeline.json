@@ -1,0 +1,17 @@
+{
+  "adapter": {
+    "type": "ncvr_10k",
+    "name": "ncvr_10k",
+    "path": "../../data"
+  },
+  "build": {
+    "normalizer": "english_v1",
+    "database_deduplication": "record_id",
+    "query_deduplication": "query_id",
+    "database_limit": 10000,
+    "query_limit": 200,
+    "fuzzy_ratio": 0.3,
+    "fuzzy_seed": 42,
+    "perturbation": "single_substitution"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "_comment": [
+    "融合多语言数据集的 job 文件（data/fused_multilingual/，由 scripts/build_fused_multilingual_dataset.py 生成）。",
+    "姓名来源 SAGE 真实数据（拉丁重音/阿拉伯/缅甸/汉字/汉字+拉丁/纯拉丁 6 种文字系统情况），",
+    "dob/city/phone 为合成属性。数据库记录同时携带 name_local 与 name_romanized 两列，",
+    "查询只带其中一种形式 —— 空列被 _project_row 跳过、按缺失零向量编码，无需改管线即可模拟跨文字系统查询。",
+    "schema 维度：cluster_dim=3272 / match_dim=3122，在 CKKS 4096 槽位内。",
+    "name 属性映射到 [name_local, name_romanized] 两列拼接；dob 用 on_invalid=missing 兜底；",
+    "phone normalize=digits 使 E.164 与本地格式同桶；city/dob/phone 用 512 桶（仿 FEBRL 的 ssn 惯例）压低哈希块碰撞分。",
+    "similarity_threshold=0.485：50 条查询明文标定，负例冒充者最高 0.452、全局冒充者上限 0.481，",
+    "最低真匹配 0.389（q18/q43/q23/q12 被双重扰动压到阈值下，任何 tau 都救不回，属数据信息量上限）。",
+    "0.485 盖住冒充者上限且只删这 4 条；tau 再低则负例 q30(0.452) 产生假正例。换数据必须重新标定。"
+  ],
+  "schema": {
+    "similarity_threshold": 0.485,
+    "name_attribute": "name",
+    "standardize_cluster": true,
+    "attributes": [
+      {"name": "name", "kind": "fuzzy_text", "weight": 0.4, "cluster_dim": 200, "match_dim": 50},
+      {"name": "dob", "kind": "date", "weight": 0.25, "blocks": 2, "buckets_per_block": 512, "seed": 20261014, "on_invalid": "missing"},
+      {"name": "city", "kind": "exact", "weight": 0.15, "blocks": 2, "buckets_per_block": 512, "seed": 20261016, "normalize": "casefold"},
+      {"name": "phone", "kind": "exact", "weight": 0.2, "blocks": 2, "buckets_per_block": 512, "seed": 20261015, "normalize": "digits"}
+    ]
+  },
+  "attribute_columns": {
+    "name": ["name_local", "name_romanized"],
+    "dob": "dob",
+    "city": "city",
+    "phone": "phone"
+  },
+  "id_column": "record_id",
+  "database": "data/fused_multilingual/database.csv",
+  "queries": "data/fused_multilingual/queries.csv",
+  "query_id_column": "query_id",
+  "labels": "data/fused_multilingual/labels.csv"
+}

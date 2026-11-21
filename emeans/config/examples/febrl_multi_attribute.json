@@ -1,0 +1,36 @@
+{
+  "_comment": [
+      "FEBRL 4a/4b 的 6 属性 job 文件。cluster_dim=2156 / match_dim=1936，均在 CKKS 4096 槽位内。",
+      "真值来自 rec_id（rec-<N>-org 与 rec-<N>-dup-<M> 同实体）。先用 scripts/fetch_dataset.py --dataset febrl 下载。",
+      "similarity_threshold=0.6：40 条查询实测冒充者最高 0.579，取略高于它以免假正例。",
+      "注意 FEBRL 4b 里被扰动得最狠的那批副本（dob/postcode/state 全错）真匹配分只有 0.542，**低于**冒充者最高分 —— ",
+      "这批副本在任何 tau 下都无法与冒充者分开，这是数据本身的信息量问题，不是阈值没调好。换数据集必须重新标定。",
+      "dob 上 on_invalid=\"missing\" 是必须的：FEBRL 故意在副本里注入脏值，dataset4b 有 64/5000 条非法日期（如 19450493），",
+      "默认的 fail-closed 会让整轮跑不完。"
+  ],
+  "schema": {
+    "similarity_threshold": 0.6,
+    "name_attribute": "name",
+    "standardize_cluster": true,
+    "attributes": [
+      {"name": "name", "kind": "fuzzy_text", "weight": 0.3, "cluster_dim": 200, "match_dim": 50},
+      {"name": "address", "kind": "fuzzy_text", "weight": 0.2, "cluster_dim": 100, "match_dim": 30},
+      {"name": "dob", "kind": "date", "weight": 0.2, "blocks": 2, "buckets_per_block": 128, "seed": 20260904, "on_invalid": "missing"},
+      {"name": "ssn", "kind": "exact", "weight": 0.15, "blocks": 2, "buckets_per_block": 512, "normalize": "digits"},
+      {"name": "postcode", "kind": "exact", "weight": 0.1, "blocks": 1, "buckets_per_block": 512, "normalize": "digits"},
+      {"name": "state", "kind": "exact", "weight": 0.05, "blocks": 1, "buckets_per_block": 64, "normalize": "casefold"}
+    ]
+  },
+  "attribute_columns": {
+    "name": ["given_name", "surname"],
+    "address": ["street_number", "address_1", "address_2"],
+    "dob": "date_of_birth",
+    "ssn": "soc_sec_id",
+    "postcode": "postcode",
+    "state": "state"
+  },
+  "id_column": "rec_id",
+  "database": "dataset/febrl/dataset4a.csv",
+  "queries": "dataset/febrl/dataset4b.csv",
+  "link_mode": "febrl"
+}

@@ -1,0 +1,16 @@
+{
+  "dataset_pipeline": "ncvr_10k_pipeline.json",
+  "matching": {
+    "el_cluster": 200,
+    "el_match": 50,
+    "k": 50,
+    "k_mode": 50,
+    "tau": 0.9,
+    "he_batch_size": 0,
+    "use_mock": false,
+    "early_stop": true,
+    "reuse_context": true
+  },
+  "output_dir": "../../artifacts/evaluation/ncvr_10k_unified",
+  "output_prefix": "ncvr_10k"
+}

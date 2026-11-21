@@ -1,0 +1,119 @@
+{
+  "version": "fused-multilingual-benchmark-v1",
+  "seed": 20261025,
+  "database": 10000,
+  "source_unique_entries": 43209,
+  "source_script_counts": {
+    "latin_accented": 15097,
+    "arabic": 3225,
+    "myanmar": 1469,
+    "han": 2051,
+    "han_mixed": 22,
+    "latin_plain": 21345
+  },
+  "database_scripts": {
+    "latin_accented": 3296,
+    "arabic": 1545,
+    "myanmar": 1334,
+    "han": 1517,
+    "han_mixed": 22,
+    "latin_plain": 2286
+  },
+  "countries": {
+    "Italy": 1887,
+    "Hungary": 826,
+    "India": 874,
+    "Ghana": 353,
+    "Pakistan": 308,
+    "Lesotho": 407,
+    "Malaysia": 236,
+    "Afghanistan": 272,
+    "Ivory Coast": 130,
+    "Myanmar": 1438,
+    "Samoa": 36,
+    "Barbados": 13,
+    "Belize": 59,
+    "Saint Lucia": 1,
+    "Liberia": 9,
+    "Botswana": 55,
+    "Gambia": 1,
+    "Iraq": 1545,
+    "Taiwan": 1539,
+    "Dominica": 8,
+    "Grenada": 3
+  },
+  "splits": {
+    "calibration": {
+      "queries": 200,
+      "positives": 160,
+      "negatives": 40,
+      "positive_scripts": {
+        "latin_accented": 30,
+        "arabic": 30,
+        "myanmar": 30,
+        "han": 30,
+        "han_mixed": 11,
+        "latin_plain": 29
+      },
+      "negative_scripts": {
+        "latin_accented": 8,
+        "arabic": 8,
+        "myanmar": 8,
+        "han": 8,
+        "latin_plain": 8
+      }
+    },
+    "evaluation": {
+      "queries": 200,
+      "positives": 160,
+      "negatives": 40,
+      "positive_scripts": {
+        "latin_accented": 30,
+        "arabic": 30,
+        "myanmar": 30,
+        "han": 29,
+        "han_mixed": 11,
+        "latin_plain": 30
+      },
+      "negative_scripts": {
+        "latin_accented": 8,
+        "arabic": 8,
+        "myanmar": 8,
+        "han": 8,
+        "latin_plain": 8
+      }
+    }
+  },
+  "source_sha256": "f24b743607acd6cbeda49838c8ef05ab01d50e664b1b17a1cbec1d694c14b245",
+  "builder_sha256": "468a48793d7aabaf3bf7830a0f942ffcb869be9c63657dd065cd09e36a927cf6",
+  "legacy_builder_sha256": "00d9cdc2db0314d857b2ae07d1ae5ecfa6cc81b886bff033c03e60919f2c2c83",
+  "schema_template_sha256": "007022d83fa868ed29baa372de5445655242bf89c5186f4790504fdb4860b702",
+  "provenance": "real source names; synthetic DOB/city/phone; not real person identifiers",
+  "negative_policy": "held-out source entries, alias-disjoint, script-balanced, same perturbation policy",
+  "files": {
+    "calibration_labels.csv": {
+      "rows": 200,
+      "sha256": "0ad83ba95e05398ef8ce5c9184f5ec9d666c3ac29c28b2a9d6c1a0c1da2bae72"
+    },
+    "calibration_queries.csv": {
+      "rows": 200,
+      "sha256": "7f541f9d32abc66b88ce12f49f050523bf617986a3e92df75e800d387e6d5018"
+    },
+    "database.csv": {
+      "rows": 10000,
+      "sha256": "f1a7e0204c60d9057172b7fd761db879f2ff438379fd6af1b89d60019f3a4723"
+    },
+    "labels.csv": {
+      "rows": 200,
+      "sha256": "4489f1466ac933bbc0b7337dd6495b0368aa208b1f4a047d330a822b3a100d15"
+    },
+    "provenance.csv": {
+      "rows": 10400,
+      "sha256": "1c4192a32ebb09f1ce31962d502ddd0762322dd36a49dbea3c4b90e65ee33f4c"
+    },
+    "queries.csv": {
+      "rows": 200,
+      "sha256": "46b209c715c6cb2d02848803f7fc850e9a1be33352da1a0c47fa760617327999"
+    }
+  }
+}

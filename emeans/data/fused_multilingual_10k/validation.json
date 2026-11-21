@@ -1,0 +1,216 @@
+{
+  "checks": {
+    "sha256:calibration_labels.csv": true,
+    "sha256:calibration_queries.csv": true,
+    "sha256:database.csv": true,
+    "sha256:labels.csv": true,
+    "sha256:provenance.csv": true,
+    "sha256:queries.csv": true,
+    "unique_provenance_keys": true,
+    "database_count": true,
+    "unique_database_ids": true,
+    "unique_source_name_country": true,
+    "128_bit_record_ids": true,
+    "calibration_evaluation_entity_disjoint": true,
+    "calibration_evaluation_query_disjoint": true,
+    "negative_sources_outside_database": true,
+    "single_name_form_all_queries": true,
+    "nonempty_database_names": true,
+    "valid_plausible_dates": true,
+    "at_most_two_perturbed_attributes": true,
+    "identical_calibration_schema": true,
+    "ckks_slot_capacity": true,
+    "same_calibration_database": true,
+    "evaluation:unique_query_ids": true,
+    "evaluation:one_label_per_query": true,
+    "evaluation:counts": true,
+    "evaluation:valid_target_labels": true,
+    "evaluation:negative_query_aliases_outside_db": true,
+    "calibration:unique_query_ids": true,
+    "calibration:one_label_per_query": true,
+    "calibration:counts": true,
+    "calibration:valid_target_labels": true,
+    "calibration:negative_query_aliases_outside_db": true,
+    "finite_database_vectors": true,
+    "unit_database_match_norm": true,
+    "HE-agrees-with-plaintext:eval-0001": true,
+    "HE-agrees-with-plaintext:eval-0002": true,
+    "HE-agrees-with-plaintext:eval-0003": true,
+    "HE_smoke_has_positive_and_negative": true
+  },
+  "checks_passed": 37,
+  "database": 10000,
+  "scripts": {
+    "latin_accented": 3296,
+    "arabic": 1545,
+    "myanmar": 1334,
+    "han": 1517,
+    "han_mixed": 22,
+    "latin_plain": 2286
+  },
+  "countries": 21,
+  "splits": {
+    "evaluation": {
+      "queries": 200,
+      "positives": 160,
+      "negatives": 40,
+      "missing": {
+        "dob": 52,
+        "city": 0,
+        "phone": 65
+      },
+      "name_forms": {
+        "romanized": 86,
+        "local": 114
+      }
+    },
+    "calibration": {
+      "queries": 200,
+      "positives": 160,
+      "negatives": 40,
+      "missing": {
+        "dob": 52,
+        "city": 0,
+        "phone": 76
+      },
+      "name_forms": {
+        "local": 119,
+        "romanized": 81
+      }
+    }
+  },
+  "schema": {
+    "cluster_dim": 3272,
+    "match_dim": 3122,
+    "weights": [
+      0.4,
+      0.25,
+      0.15,
+      0.2
+    ],
+    "tau": 0.6135671549269659
+  },
+  "calibration_rule": "calibration max impostor + 0.001; evaluation not used for selection",
+  "plaintext": {
+    "calibration": {
+      "tp": 129,
+      "fp": 0,
+      "fn": 31,
+      "tn": 40,
+      "precision": 1.0,
+      "recall": 0.80625,
+      "f1": 0.8927335640138409,
+      "target_above_threshold": 129,
+      "target_top1": 151,
+      "min_target_score": 0.40474655014487104,
+      "max_impostor_score": 0.6125671549269659
+    },
+    "evaluation": {
+      "tp": 135,
+      "fp": 0,
+      "fn": 25,
+      "tn": 40,
+      "precision": 1.0,
+      "recall": 0.84375,
+      "f1": 0.9152542372881356,
+      "target_above_threshold": 135,
+      "target_top1": 155,
+      "min_target_score": 0.4014121948745548,
+      "max_impostor_score": 0.6700924749531285
+    }
+  },
+  "clustering": {
+    "k": 100,
+    "max_size": 331,
+    "min_size": 26,
+    "matrix_bytes": 826705600,
+    "offline_seconds": 11.35215629999584,
+    "evaluation_target_cluster_hits_top3": 155,
+    "evaluation_plaintext_top3_detection": {
+      "tp": 133,
+      "fp": 0,
+      "fn": 27,
+      "tn": 40,
+      "precision": 1.0,
+      "recall": 0.83125,
+      "f1": 0.9078498293515358,
+      "target_above_threshold": 135,
+      "target_top1": 155
+    }
+  },
+  "he_smoke": [
+    {
+      "query_id": "eval-0001",
+      "label": true,
+      "catch": true,
+      "plaintext_top3_catch": true,
+      "checked_columns": 43,
+      "seconds": 17.615677400004643,
+      "communication": {
+        "context_bytes": 0,
+        "up1_bytes": 334516,
+        "down1_bytes": 23535932,
+        "up2_bytes": 1337228,
+        "down2_bytes": 5642288,
+        "total_bytes": 30849964
+      }
+    },
+    {
+      "query_id": "eval-0002",
+      "label": true,
+      "catch": true,
+      "plaintext_top3_catch": true,
+      "checked_columns": 52,
+      "seconds": 19.494585799999186,
+      "communication": {
+        "context_bytes": 0,
+        "up1_bytes": 334492,
+        "down1_bytes": 23535885,
+        "up2_bytes": 1337463,
+        "down2_bytes": 6823232,
+        "total_bytes": 32031072
+      }
+    },
+    {
+      "query_id": "eval-0003",
+      "label": false,
+      "catch": false,
+      "plaintext_top3_catch": false,
+      "checked_columns": 993,
+      "seconds": 225.78260640000371,
+      "communication": {
+        "context_bytes": 0,
+        "up1_bytes": 334470,
+        "down1_bytes": 23536133,
+        "up2_bytes": 1337147,
+        "down2_bytes": 130297488,
+        "total_bytes": 155505238
+      }
+    }
+  ],
+  "file_hashes": {
+    "calibration_labels.csv": "0ad83ba95e05398ef8ce5c9184f5ec9d666c3ac29c28b2a9d6c1a0c1da2bae72",
+    "calibration_queries.csv": "7f541f9d32abc66b88ce12f49f050523bf617986a3e92df75e800d387e6d5018",
+    "database.csv": "f1a7e0204c60d9057172b7fd761db879f2ff438379fd6af1b89d60019f3a4723",
+    "labels.csv": "4489f1466ac933bbc0b7337dd6495b0368aa208b1f4a047d330a822b3a100d15",
+    "provenance.csv": "1c4192a32ebb09f1ce31962d502ddd0762322dd36a49dbea3c4b90e65ee33f4c",
+    "queries.csv": "46b209c715c6cb2d02848803f7fc850e9a1be33352da1a0c47fa760617327999"
+  },
+  "limitations": [
+    "hybrid synthetic attributes, not real linked personal records",
+    "han_mixed has only 22 source entries and no eligible held-out negatives",
+    "ordinary unrelated negatives, not an adversarial hard-negative benchmark",
+    "plaintext quality is not full HE performance; only 3 HE smoke queries",
+    "calibration and evaluation share the database but not query source entities"
+  ],
+  "reproducibility": {
+    "full_10k_rebuild_byte_identical": true,
+    "csv_files": 6
+  },
+  "verification": {
+    "focused_tests_passed": 106,
+    "focused_tests_skipped": 2,
+    "full_200_query_he_run": false
+  },
+  "he_communication_scope": "per-query online cryptographic payload only; handshake size was not recorded in this smoke run"
+}

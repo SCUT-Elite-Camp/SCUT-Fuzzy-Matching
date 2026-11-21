@@ -1,0 +1,46 @@
+{
+  "_comment": [
+    "融合多语言数据集（demo10 演示子集）的 job 文件：10 条查询（7 正 3 负），",
+    "面向现场演示 —— 每条查询一次完整双轮 HE 运算约几秒，全量 10 条约一分钟以内。",
+    "数据库直接复用父集 300 条（data/fused_multilingual/database.csv；相对路径按",
+    "仓库根目录 baseline_Integration/ 解析）。查询/标签取 demo10/ 子集，由",
+    "scripts/build_fused_multilingual_demo10.py 生成与校验（固定清单 + expect 断言，",
+    "父集重建导致不再满足选样原则时该脚本会报错）。",
+    "",
+    "选样原则：",
+    "1) 文字系统多样性：拉丁重音（q02 去重音罗马化形式）、汉字（q27/q06）、",
+    "   汉罗混合（q34）、阿拉伯（q47 本地文字 + neg-arabic-01 负例）、",
+    "   缅甸（q16 + neg-myanmar-01 负例）、拉丁负例 q15 —— 负例 3 条分属",
+    "   拉丁/阿拉伯/缅甸三个文字系统。父集 50 条里的 10 条负例恰好全是拉丁文，",
+    "   阿拉伯/缅甸负例是脚本按构建管线同款逻辑从 SAGE 姓名池新造的（固定种子）。",
+    "2) 扰动多样性：dob 格式变换（q13/q16）、dob 留空（q02/q27）、dob 年份对调",
+    "   （q47）、phone 留空（q06）、姓名 typo（q34/q16/q06）、城市大小写（q13/q47）。",
+    "3) true 分与 tau=0.485 的关系有讲头：q13 满分基线；q27（0.573）/q47（0.636）是",
+    "   0.5-0.7 区间\"姓名单科不到线、靠 dob/city/phone 互补拉回\"的案例；",
+    "   q16（0.899）/q34（0.837）展示 typo + 跨文字下的稳定命中。",
+    "4) 全部 7 条正例的 true 分都高于 tau（0.414-1.000），没有低于 tau 的排除案例；",
+    "   3 条负例冒充者分 0.330-0.404，低于父集校准的冒充者上限 0.481，留有余量。"
+  ],
+  "schema": {
+    "similarity_threshold": 0.485,
+    "name_attribute": "name",
+    "standardize_cluster": true,
+    "attributes": [
+      {"name": "name", "kind": "fuzzy_text", "weight": 0.4, "cluster_dim": 200, "match_dim": 50},
+      {"name": "dob", "kind": "date", "weight": 0.25, "blocks": 2, "buckets_per_block": 512, "seed": 20261014, "on_invalid": "missing"},
+      {"name": "city", "kind": "exact", "weight": 0.15, "blocks": 2, "buckets_per_block": 512, "seed": 20261016, "normalize": "casefold"},
+      {"name": "phone", "kind": "exact", "weight": 0.2, "blocks": 2, "buckets_per_block": 512, "seed": 20261015, "normalize": "digits"}
+    ]
+  },
+  "attribute_columns": {
+    "name": ["name_local", "name_romanized"],
+    "dob": "dob",
+    "city": "city",
+    "phone": "phone"
+  },
+  "id_column": "record_id",
+  "database": "data/fused_multilingual/database.csv",
+  "queries": "data/fused_multilingual/demo10/queries.csv",
+  "query_id_column": "query_id",
+  "labels": "data/fused_multilingual/demo10/labels.csv"
+}

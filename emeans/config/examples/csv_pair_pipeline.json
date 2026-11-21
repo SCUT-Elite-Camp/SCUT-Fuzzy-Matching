@@ -1,0 +1,29 @@
+{
+  "adapter": {
+    "type": "csv_pair",
+    "name": "my_dataset",
+    "database": {
+      "path": "database.csv",
+      "id_column": "person_id",
+      "name_column": "full_name",
+      "country_column": "country",
+      "language_column": "language",
+      "metadata_columns": ["source"]
+    },
+    "queries": {
+      "path": "queries.csv",
+      "id_column": "query_id",
+      "name_column": "query_name",
+      "label_column": "is_match",
+      "match_id_column": "expected_person_id",
+      "country_column": "country",
+      "language_column": "language"
+    }
+  },
+  "build": {
+    "normalizer": "english_v1",
+    "database_deduplication": "record_id",
+    "query_deduplication": "query_id",
+    "fuzzy_ratio": 0.0
+  }
+}

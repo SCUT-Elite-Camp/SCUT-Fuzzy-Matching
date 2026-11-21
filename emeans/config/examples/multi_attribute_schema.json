@@ -1,0 +1,35 @@
+{
+  "_comment": [
+    "合成数据集（scripts/generate_synthetic_attributes.py）的 6 属性 job 文件。",
+    "cluster_dim=1076 / match_dim=856。这里刻意带上 phone —— 电话号码属性在公开数据集里拿不到，",
+    "只能合成；normalize=\"digits\" 让 +1 (555) 010-0199 与 15550100199 落进同一个桶。",
+    "similarity_threshold=0.6 落在本生成器 5000 条实测的标定区间 (0.501, 0.841) 内 —— ",
+    "上限是最低真匹配分、下限是最高冒充者分。真实数据必须自己标定，不要直接抄这个数。day_first=true 因为生成器会产出 DD/MM/YYYY。"
+  ],
+  "schema": {
+    "similarity_threshold": 0.6,
+    "name_attribute": "name",
+    "standardize_cluster": true,
+    "attributes": [
+      {"name": "name", "kind": "fuzzy_text", "weight": 0.3, "cluster_dim": 200, "match_dim": 50},
+      {"name": "dob", "kind": "date", "weight": 0.2, "blocks": 2, "buckets_per_block": 128, "seed": 20260904, "day_first": true},
+      {"name": "phone", "kind": "exact", "weight": 0.2, "blocks": 2, "buckets_per_block": 128, "normalize": "digits"},
+      {"name": "email", "kind": "exact", "weight": 0.1, "blocks": 2, "buckets_per_block": 128, "normalize": "casefold"},
+      {"name": "address", "kind": "fuzzy_text", "weight": 0.15, "cluster_dim": 100, "match_dim": 30},
+      {"name": "gender", "kind": "exact", "weight": 0.05, "blocks": 1, "buckets_per_block": 8, "normalize": "casefold"}
+    ]
+  },
+  "attribute_columns": {
+    "name": "full_name",
+    "dob": "date_of_birth",
+    "phone": "phone",
+    "email": "email",
+    "address": "address",
+    "gender": "gender"
+  },
+  "id_column": "entity_id",
+  "database": "dataset/synthetic/entities.csv",
+  "queries": "dataset/synthetic/queries.csv",
+  "query_id_column": "query_id",
+  "labels": "dataset/synthetic/labels.csv"
+}
