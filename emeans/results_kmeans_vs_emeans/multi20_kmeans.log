@@ -1,0 +1,101 @@
+
+================================================================================================
+  MULTI-ATTRIBUTE FUZZY MATCHING — REAL DATASET
+================================================================================================
+  i Each attribute is encoded into its own MinHash blocks and concatenated into one vector; Party B builds the encrypted index once, and every query runs the same two-round CKKS protocol on top of it.
+  job config: config/examples/fused_multilingual_10k_multi_attribute.json
+  schema fingerprint: 0d0245905905c4a5
+  threshold: 0.6135671549269659
+    attribute kind       weight cluster match params
+    ---------------------------------------------------------------------------------------------------------
+    name      fuzzy_text 0.40   200     50    cluster_dim=200 match_dim=50
+    dob       date       0.25   1024    1024  blocks=2 buckets_per_block=512 seed=20261014 on_invalid=missing
+    city      exact      0.15   1024    1024  blocks=2 buckets_per_block=512 seed=20261016 normalize=casefold
+    phone     exact      0.20   1024    1024  blocks=2 buckets_per_block=512 seed=20261015 normalize=digits
+    TOTAL                1.00   3272    3122
+
+  CKKS slots: 4096; headroom cluster 824 / match 974
+  i database 10000 -> k~100, <= 100 rows/cluster -> cluster_matrix ~238.2 MB
+
+data quality: dob: 0/10020 unparseable -> zeroed, 6 blank
+
+
+------------------------------------------------------------------------------------------------
+  [Party B] Step 1: Build Database Vectors & Party-B Offline Index
+------------------------------------------------------------------------------------------------
+  ⏱ Database vector encode: 1.137s
+  database rows: 10000
+  ⏱ Party-B offline (k-means + encrypted cluster matrix): 5.519s
+  k-means policy: sqrt
+  clusters: 100
+  max cluster size: 331
+  ✓ offline artifacts ready — all queries share this one index
+
+------------------------------------------------------------------------------------------------
+  [Party A] Step 2: Encrypt Each Query & Run the Two-Round Protocol
+------------------------------------------------------------------------------------------------
+    query                  label  true   imp    top-1          attr breakdown                             encrypted cluster    checked     rank
+    -----------------------------------------------------------------------------------------------------------------------------------------------
+    kustermann alessandra… True   0.774  0.516  fused10k-deba… name=0.93 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=0  checked=43  rank=0
+    pesce valter           True   0.789  0.670  fused10k-eb14… name=0.97 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=69 checked=52  rank=0
+    dr ziuaddin kamal      False  0.474  0.474  fused10k-d210… name=0.56 dob=1.00 city=0.00 phone=0.00    no-catch  cluster=65 checked=162
+    vingoli orazio         True   0.660  0.503  fused10k-0589… name=0.78 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=26 checked=107 rank=0
+    thir bdlwhd mtlk lwy   True   0.637  0.467  fused10k-1ea6… name=0.72 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=98 checked=22  rank=0
+    ဦးလလောဒ်အောင်              True   0.668  0.508  fused10k-3f0a… name=0.80 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=2  checked=140 rank=1
+    Srihari P V            True   1.000  0.444  fused10k-8cbc… name=1.00 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=61 checked=52  rank=0
+    乃施元                 True   0.631  0.469  fused10k-faea… name=0.70 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=77 checked=192 rank=0
+    Szbaó László József    True   0.886  0.493  fused10k-0115… name=0.71 dob=1.00 city=1.00 phone=1.00    CATCH     cluster=68 checked=48  rank=0
+    Masoetsa 'Mamokoatsi … True   0.750  0.472  fused10k-2d7a… name=1.00 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=10 checked=88  rank=0
+    Makibinyane 'Neka      True   0.698  0.457  fused10k-8fe2… name=0.87 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=91 checked=5   rank=0
+    ဦးအောင်ကျော်စိုး              True   0.677  0.514  fused10k-a92b… name=0.82 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=70 checked=50  rank=0
+    provenzano giuseppe    False  0.498  0.498  fused10k-519a… name=0.56 dob=0.50 city=1.00 phone=0.00    no-catch  cluster=60 checked=602
+    uciuneanlh             True   0.636  0.444  fused10k-7d2f… name=0.72 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=32 checked=174 rank=0
+    東簡明                 True   0.642  0.463  fused10k-012e… name=0.61 dob=1.00 city=1.00 phone=0.00    CATCH     cluster=77 checked=201 rank=0
+    Di Bello, Eugenoi      False  0.515  0.515  fused10k-209c… name=0.60 dob=0.50 city=1.00 phone=0.00    no-catch  cluster=64 checked=281
+    zhegnbangzhen          True   0.615  0.523  fused10k-fa9c… name=0.66 dob=0.00 city=1.00 phone=1.00    no-catch  cluster=62 checked=355
+    章正輝                 True   0.644  0.536  fused10k-b098… name=0.73 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=62 checked=244 rank=0
+    urvhelhkhurvhelhvn     True   0.497  0.497  fused10k-43da… name=0.62 dob=1.00 city=0.00 phone=0.00    no-catch  cluster=12 checked=457
+    ဒေါ်ချိုျခိုပြုံး                True   0.629  0.521  fused10k-471d… name=0.70 dob=0.00 city=1.00 phone=1.00    CATCH     cluster=7  checked=128 rank=1
+    -----------------------------------------------------------------------------------------------------------------------------------------------
+  ⏱ Encrypted two-round protocol, all queries: 450.451s
+
+================================================================================================
+  FINAL RESULTS SUMMARY
+================================================================================================
+queries: 20 (17 positive / 3 negative)   tau=0.614   round-2 probes/query=3
+plaintext top-1 recall, positives only (debug reference): 16/17 = 94.1%
+plaintext false positives at tau=0.613567 (debug reference): 0/3 = 0.0%
+
+recall denominator: should_catch = plaintext true-match score > tau
+  identical queries (expected score = 1.000): 1
+  should-catch positives: 16/17 (below tau, excluded: eval-0019)
+
+encrypted recall, should-catch only : 15/16 = 93.8%
+  misses among those: 1   [round-1 cluster miss 1 / boundary 0 / unexplained 0]
+  ^ tau-DEPENDENT: the denominator is the should-catch set, so raising tau moves
+    round-1 misses out of it and this count drops. tau-free: 2 of 17
+    positives were never checked at all -- that is the line below.
+cluster recall (true match landed in the 3 probed cluster(s), tau-free): 15/17 = 88.2%
+  ^ with more than one probe this saturates by construction; the tau-free anchor
+    is the top-1-only line below, which the probe count cannot move.
+  top-1-only cluster recall (what a single probe would have caught): 13/17 = 76.5%   true-cluster rank mean 0.13 / p95 1 / max 1
+encrypted recall, all positives (whole population, for contrast): 15/17 = 88.2%
+over-reports (negatives caught above tau): 0/3 = 0.0%
+identical-query invariant: 1/1 caught [OK]
+
+plaintext calibration (tau anchoring only, not an evaluation metric): lowest expected-match 0.490 / highest impostor 0.670
+  -> true matches and impostors OVERLAP here; no tau separates them. Add attributes, raise weights, or accept errors.
+
+tau guard: tau=0.614 is BELOW the highest impostor score 0.670.
+  An impostor can score above tau, so the protocol can report CATCH for a
+  query whose record is not in the database at all. Raise tau into (0.670, 0.490].
+
+NOTE: the protocol returns only the sign of the threshold test, the selected
+cluster index, and the column index -- never the id of the matched record. So a
+CATCH means "some record in the selected cluster scored above tau", not "the
+right record was found": the recall above is a DETECTION rate, not identification
+precision/recall. It also has tau in its own denominator, so raising tau moves the
+hardest queries out of the denominator and pushes the number toward 100% without
+fixing anything. It reports agreement with the threshold; it is not a target.
+Saved JSON: artifacts/ab/multi20_multi20_kmeans/demo_multi_attribute_dataset.json
+Saved CSV:  artifacts/ab/multi20_multi20_kmeans/demo_multi_attribute_dataset.csv

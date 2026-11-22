@@ -1,0 +1,20 @@
+Running offline preprocessing (real)...
+Running online phase for 200 queries (he_batch_size=200, probes=1)...
+{
+  "precision": 0.9764705882352941,
+  "recall": 0.83,
+  "f1": 0.8972972972972972,
+  "accuracy": 0.905
+}
+{
+  "tp": 83,
+  "fp": 2,
+  "fn": 17,
+  "tn": 98
+}
+Saved outputs:
+- json: artifacts/ab/ncvr_ncvr_emeans/ncvr_10k_result.json
+- metrics_csv: artifacts/ab/ncvr_ncvr_emeans/ncvr_10k_metrics.csv
+- confusion_csv: artifacts/ab/ncvr_ncvr_emeans/ncvr_10k_confusion.csv
+- metrics_png: artifacts/ab/ncvr_ncvr_emeans/ncvr_10k_metrics.png
+- confusion_png: artifacts/ab/ncvr_ncvr_emeans/ncvr_10k_confusion.png
