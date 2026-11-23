@@ -1,0 +1,10 @@
+# Keep ASCII only: manimgl reads this with the system locale codec (GBK on
+# Chinese Windows), so non-ASCII bytes here will crash on startup.
+camera:
+  resolution: (1920, 1080)
+  background_color: "#05070A"
+  fps: 60
+
+directories:
+  subdirs:
+    output: "videos"
