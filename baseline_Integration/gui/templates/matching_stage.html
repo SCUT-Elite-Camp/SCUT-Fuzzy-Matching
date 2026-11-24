@@ -1,0 +1,2800 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>名单核验</title>
+  <style>
+    /* Palette C · 松烟青瓷 (Graphite Ink & Celadon Jade + Terracotta Accent)
+       Zero blue/purple neon AI clichés; dignified dark editorial banking palette */
+    :root {
+      --bg: #0f1211;
+      --paper: #161918;
+      --elevated: #1e2321;
+      --hover: #232926;
+      --rule: #2a302d;
+      --rule-soft: #212624;
+      --ink: #e9ede9;
+      --sub-ink: #cfd6d1;
+      --muted: #929a95;
+      --faint: #626b66;
+      --accent: #be5e4b;
+      --accent-hover: #a94f3d;
+      --accent-soft: #291b18;
+      --accent-border: #583129;
+      --jade: #4ca688;
+      --jade-soft: #152621;
+      --jade-border: #274e42;
+      --ochre: #c49550;
+      --ochre-soft: #262015;
+      font:
+        16px/1.5 'PingFang SC',
+        'Hiragino Sans GB',
+        'Microsoft YaHei',
+        system-ui,
+        sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      color-scheme: dark;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+      color: inherit;
+    }
+    button,
+    select {
+      cursor: pointer;
+    }
+    button {
+      background: none;
+      border: 0;
+      padding: 8px 0;
+      transition:
+        color 0.16s ease,
+        background-color 0.16s ease,
+        border-color 0.16s ease,
+        opacity 0.16s ease;
+    }
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+    button:disabled {
+      opacity: 0.34;
+      cursor: default;
+    }
+    button:hover:not(:disabled) {
+      color: var(--accent);
+    }
+    .primary {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      color: #fff;
+    }
+    .link {
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .link:hover:not(:disabled) {
+      color: #d6735f;
+    }
+    [hidden] {
+      display: none !important;
+    }
+    main {
+      width: min(1260px, 95vw);
+      margin: clamp(18px, 4vh, 44px) auto 24px;
+      background: var(--paper);
+      padding: clamp(20px, 3.2vw, 48px);
+      border: 1px solid var(--rule);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+    }
+    .mast,
+    .actions,
+    .nav,
+    .dialoghead {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: space-between;
+    }
+    .mast {
+      padding-bottom: clamp(14px, 2.2vh, 22px);
+      border-bottom: 1px solid #3a423e;
+    }
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+    h1,
+    .serif {
+      font-family: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+    }
+    h1 {
+      font-size: clamp(28px, 2.8vw, 39px);
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--ink);
+    }
+    h2 {
+      font-size: clamp(16.5px, 1.4vw, 20px);
+      font-weight: 600;
+      color: var(--ink);
+    }
+    small,
+    .muted {
+      color: var(--muted);
+      font-size: 13.5px;
+    }
+    .mast button {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .mast button:hover {
+      color: var(--accent);
+    }
+
+    /* Strictly EQUAL 45% Left / 10% Center Corridor / 45% Right Symmetry
+       Synchronized with Canvas geometry() L = 0.45, R = 0.55 */
+    .panelhead,
+    .setup {
+      display: grid;
+      grid-template-columns: 45% 45%;
+      column-gap: 10%;
+    }
+    .panelhead {
+      margin-top: clamp(16px, 2.6vh, 26px);
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--rule);
+    }
+    .panelhead h2 {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .panelhead small {
+      font:
+        normal 13px/1.5 system-ui,
+        sans-serif;
+      color: var(--muted);
+    }
+    .surface {
+      position: relative;
+      height: clamp(375px, 47vh, 470px);
+      margin-top: 8px;
+    }
+    .setup {
+      position: absolute;
+      inset: 0;
+      padding-top: 6px;
+      transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0s;
+    }
+    .setup.depart {
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
+      visibility: hidden;
+      transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0s 0.3s;
+    }
+    .formarea {
+      min-width: 0;
+      min-height: 0;
+      max-height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .selectrow,
+    .tools {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 44px;
+      border-bottom: 1px solid #38403c;
+      flex-shrink: 0;
+    }
+    .selectrow select {
+      min-width: 0;
+      width: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      border: 0;
+      padding: 8px 2px;
+      border-radius: 0;
+      font-weight: 500;
+    }
+    .selectrow select option {
+      background: var(--paper);
+      color: var(--ink);
+    }
+    .selectrow button {
+      white-space: nowrap;
+      font-size: 14px;
+    }
+    .tools {
+      justify-content: flex-start;
+      gap: 16px;
+    }
+    .tools button {
+      font-size: 14px;
+    }
+    .tools .flowsep {
+      color: var(--faint);
+      font-size: 13px;
+      user-select: none;
+    }
+    .preview-head {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr 0.8fr 1.15fr;
+      gap: 8px;
+      padding: 8px 6px 5px;
+      font-size: 12px;
+      color: var(--faint);
+      border-bottom: 1px solid var(--rule);
+      flex-shrink: 0;
+    }
+    .preview-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%);
+    }
+    .preview-row {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr 0.8fr 1.15fr;
+      gap: 8px;
+      align-items: center;
+      min-height: 40px;
+      border-bottom: 1px solid var(--rule-soft);
+      padding: 5px 6px;
+      font-size: 13.5px;
+    }
+    .preview-row span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .preview-row .pname {
+      font-weight: 500;
+      color: var(--ink);
+      font-size: 14.5px;
+    }
+    .preview-row .pattr {
+      color: var(--muted);
+      font-size: 12.5px;
+      font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+    }
+    .preview-row .pcity {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .preview-more {
+      margin-top: 6px;
+      font-size: 12.5px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .qlist {
+      margin-top: 8px;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .qlist::-webkit-scrollbar,
+    .modalbody::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .qlist::-webkit-scrollbar-thumb,
+    .modalbody::-webkit-scrollbar-thumb {
+      background: #313835;
+      border-radius: 3px;
+    }
+    .qitem {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      background: var(--elevated);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 8px 10px;
+    }
+    .qitem:hover {
+      background: var(--hover);
+      border-color: #3a433f;
+      color: var(--ink);
+    }
+    .qitem:before {
+      content: '';
+      flex: none;
+      width: 13px;
+      height: 13px;
+      margin-top: 4px;
+      border: 1.5px solid #6b746f;
+      border-radius: 100%;
+      transition: all 0.15s ease;
+    }
+    .qitem[aria-pressed='true'] {
+      background: var(--accent-soft);
+      border-color: var(--accent-border);
+      color: var(--ink);
+    }
+    .qitem[aria-pressed='true']:before {
+      border-color: var(--accent);
+      background: var(--accent);
+      box-shadow: inset 0 0 0 2.5px var(--paper);
+    }
+    .qbody {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .qtop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .qitem .qname {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .qitem .qtag {
+      font-size: 11.5px;
+      color: #df8370;
+      background: rgba(190, 94, 75, 0.14);
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .qitem .qmeta {
+      font-size: 12px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .stage {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .steps {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 8px 0 10px;
+      border-top: 1px solid var(--rule);
+      overflow-x: auto;
+    }
+    .stepbtn {
+      font-size: 13px;
+      color: var(--faint);
+      padding: 4px 8px;
+      border-radius: 3px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .stepbtn i {
+      font-style: normal;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 11px;
+      opacity: 0.75;
+    }
+    .stepbtn.done {
+      color: var(--muted);
+    }
+    .stepbtn.active {
+      color: #e68a77;
+      font-weight: 600;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+    }
+    .track {
+      height: 2px;
+      background: var(--rule);
+      margin: 0 0 -1px;
+      position: relative;
+      z-index: 1;
+    }
+    .track i {
+      display: block;
+      height: 100%;
+      background: var(--jade);
+      transform-origin: left;
+    }
+    .actions {
+      border-top: 1px solid var(--rule);
+      padding-top: 18px;
+      min-height: 68px;
+    }
+    .status-wrap {
+      flex: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+    .actions strong {
+      font-size: clamp(17px, 1.55vw, 22px);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    .actions strong.success {
+      color: var(--jade);
+    }
+    .actions strong.miss {
+      color: var(--ink);
+    }
+    .status-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .nav {
+      flex-shrink: 0;
+      justify-content: flex-end;
+      flex-wrap: nowrap;
+      gap: 14px;
+    }
+    .nav button {
+      white-space: nowrap;
+    }
+    .nav .soft {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .sr {
+      position: absolute;
+      clip-path: inset(50%);
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+    dialog {
+      width: min(680px, 95vw);
+      max-height: 85dvh;
+      border: 1px solid #353d39;
+      border-radius: 5px;
+      padding: 26px;
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    }
+    dialog::backdrop {
+      background: rgba(8, 10, 9, 0.68);
+    }
+    dialog[open] {
+      animation: appear 0.2s ease-out both;
+    }
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+    }
+    dialog h2 {
+      font-size: 20px;
+    }
+    .dialoghead {
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+    }
+    .dialoghead button {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .modalbody {
+      overflow: auto;
+      max-height: 62dvh;
+    }
+    .modalbody p {
+      margin: 10px 0;
+      line-height: 1.75;
+      color: var(--sub-ink);
+    }
+    .modalbody input:not([type='file']) {
+      padding: 9px 12px;
+      background: var(--elevated);
+      color: var(--ink);
+      border: 1px solid #363e3a;
+      border-radius: 3px;
+      width: 100%;
+      margin: 8px 0;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 8px 0 12px;
+    }
+    .form-grid label {
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .form-grid label.full {
+      grid-column: 1 / -1;
+    }
+    .modalbody table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    .modalbody th,
+    .modalbody td {
+      padding: 8px 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+    .modalbody th {
+      font-size: 12.5px;
+      color: var(--muted);
+      position: sticky;
+      top: 0;
+      background: var(--paper);
+      border-bottom: 1px solid var(--rule);
+    }
+    .file {
+      display: block;
+      margin: 16px 0;
+      color: var(--sub-ink);
+    }
+    .error {
+      color: #e07664;
+      font-size: 14px;
+    }
+    @media (max-width: 720px) {
+      main {
+        width: 100%;
+        margin: 0;
+        min-height: 100svh;
+        border: 0;
+        padding: 16px 14px;
+      }
+      .panelhead,
+      .setup {
+        grid-template-columns: 46% 46%;
+        column-gap: 8%;
+      }
+      .surface {
+        height: clamp(340px, 48vh, 410px);
+      }
+      .preview-head,
+      .preview-row {
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+      .preview-head span:nth-child(3),
+      .preview-head span:nth-child(4),
+      .preview-row span:nth-child(3),
+      .preview-row span:nth-child(4),
+      .qitem .qtag {
+        display: none;
+      }
+      .actions {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .nav {
+        width: 100%;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+    }
+    @media (min-width: 721px) {
+      body {
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        padding: 16px 0;
+      }
+      main {
+        margin: auto;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *:before,
+      *:after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+  <main>
+    <div class="mast">
+      <h1>名单核验</h1>
+      <button id="about">演示说明</button>
+    </div>
+    <div class="panelhead">
+      <h2>被查询数据库 <small id="dbCount"></small></h2>
+      <h2>查询条目 <small id="qCount"></small></h2>
+    </div>
+    <div class="surface">
+      <canvas id="stage" class="stage" hidden aria-hidden="true"></canvas>
+      <div class="setup" id="setup">
+        <section class="formarea">
+          <div class="selectrow">
+            <select id="db" aria-label="选择被查询数据库"></select>
+            <button class="link" id="browse">查看完整数据库</button>
+          </div>
+          <div class="preview-head" aria-hidden="true">
+            <span>姓名</span><span>出生日期</span><span>城市</span><span>联系电话</span>
+          </div>
+          <div class="preview-wrap">
+            <div class="preview" id="dbPreview"></div>
+          </div>
+          <div class="preview-more">
+            <span id="dbHint">包含姓名、出生日期、城市、电话等多属性记录</span>
+            <button class="link" id="browseMore" style="padding: 2px 0; font-size: 13px">展开全部</button>
+          </div>
+        </section>
+        <section class="formarea">
+          <div class="tools" aria-label="导入或添加查询条目">
+            <button id="importQ" class="link">① 导入名单</button>
+            <span class="flowsep">→</span>
+            <button id="addQ">② 选择或添加查询条目</button>
+          </div>
+          <div id="qList" class="qlist" role="listbox" aria-label="选择待核验查询条目"></div>
+        </section>
+      </div>
+    </div>
+    <div class="steps" id="steps" hidden aria-label="核验阶段"></div>
+    <div class="track" id="track" hidden><i></i></div>
+    <div class="actions">
+      <div class="status-wrap">
+        <strong id="status" aria-live="polite"></strong>
+        <span id="statusSub" class="status-sub"></span>
+      </div>
+      <div class="nav">
+        <button id="reset" class="soft" hidden>更换条目</button>
+        <button id="back" hidden>上一步</button>
+        <button id="pause" hidden>暂停</button>
+        <button id="next" hidden>下一步</button>
+        <button id="skipResult" class="soft" hidden>直接看结果</button>
+        <button id="viewProcess" class="primary" hidden>查看核验过程</button>
+        <button id="run" class="primary">开始核验</button>
+      </div>
+    </div>
+    <p id="accessible" class="sr" aria-live="polite"></p>
+  </main>
+  <dialog id="dialog">
+    <div class="dialoghead">
+      <h2 id="modalTitle"></h2>
+      <button id="close">关闭</button>
+    </div>
+    <div class="modalbody" id="modalBody"></div>
+  </dialog>
+  <!-- Real multi-attribute records from data/fused_multilingual/database.csv: [name, dob, city, phone] -->
+  <script id="stage-data" type="application/json">
+    [
+      {
+        "name": "中文多属性演示库（汉字姓名 + 出生日期 / 城市 / 电话）",
+        "rows": [
+          ["伍麗華", "2004-04-04", "Hsinchu", "+886678756319"],
+          ["余少鈞", "1962-12-12", "Taipei", "+886356835554"],
+          ["余新造", "1955-12-22", "Tainan", "+886538346493"],
+          ["傅家賢", "1978-02-15", "Hsinchu", "+886905458108"],
+          ["劉宗明", "1957-02-22", "Hsinchu", "+886911944576"],
+          ["吉立豪", "1991-08-01", "Taipei", "+886785205401"],
+          ["吳國譽", "1953-03-11", "Taipei", "+886207378238"],
+          ["周伯倫", "1966-11-02", "Kaohsiung", "+886948355856"],
+          ["周武榮", "1990-10-06", "Taipei", "+886268574635"],
+          ["孫繼正", "1955-04-12", "Taipei", "04-544-82535"],
+          ["廖國棟", "1952-05-13", "Tainan", "+886674121908"],
+          ["張寶美", "1940-03-27", "Hsinchu", "+886387580808"],
+          ["張志傑", "1970-05-27", "Tainan", "+886697322841"],
+          ["張智雄", "2004-10-26", "Hsinchu", "+886108560288"],
+          ["張曜羣", "2000-05-26", "Kaohsiung", "+886480853144"],
+          ["方醫良", "1967-03-16", "Taipei", "01 809 85367"],
+          ["曾文宏", "1994-10-31", "Taichung", "06-672-20223"],
+          ["曾耀澂", "2001-10-18", "Hsinchu", "04 143 04044"],
+          ["李正舜", "1941-06-30", "Taipei", "04 405 73536"],
+          ["杜震華", "1943-11-19", "Kaohsiung", "+886501856016"],
+          ["林宜瑄", "1994-04-13", "Tainan", "+886907906702"],
+          ["林淑慧", "1946-11-11", "Taichung", "03 577 52465"],
+          ["林琮翰", "1961-05-04", "Taichung", "03 649 88986"],
+          ["柯賜海", "1950-09-23", "Taichung", "02-071-39821"],
+          ["洪佳君", "1989-06-11", "Taichung", "+886345817199"],
+          ["洪志成", "1940-12-08", "Kaohsiung", "+886900675486"],
+          ["游祥耀", "1999-11-14", "Taichung", "01-129-14566"],
+          ["王啓澧", "1979-03-28", "Tainan", "06-577-59497"],
+          ["王文秀", "1970-03-12", "Kaohsiung", "+886958538932"],
+          ["白瑄", "1962-02-06", "Taichung", "06-087-82281"],
+          ["石翊靖", "1998-07-26", "Hsinchu", "+886143031651"],
+          ["簡東明", "1992-08-15", "Kaohsiung", "03 551 01338"],
+          ["簡長卿", "1968-08-08", "Taichung", "+886234589556"],
+          ["翁重鈞", "1994-09-11", "Kaohsiung", "06-942-49066"],
+          ["胡黃廣文", "2005-05-22", "Tainan", "+886827948413"],
+          ["莊貽量", "1999-01-24", "Taichung", "+886835051518"],
+          ["華珮君", "1962-09-11", "Hsinchu", "+886851145299"],
+          ["蔡明堂", "1954-01-20", "Kaohsiung", "06 341 72653"],
+          ["蔣絜安", "1978-12-19", "Taipei", "+886648901768"],
+          ["蕭貫譽", "1942-06-25", "Taichung", "+886134794123"],
+          ["許惠珍", "1953-07-09", "Taichung", "09-474-18493"],
+          ["許金土", "2000-03-19", "Tainan", "05-427-05538"],
+          ["賴品妤", "1952-08-31", "Taipei", "01-456-92123"],
+          ["邱正浩", "1963-12-14", "Tainan", "+886372509551"],
+          ["鄭天財", "1999-05-18", "Hsinchu", "06 890 93584"],
+          ["鄭文龍", "1974-08-02", "Taichung", "+886802289361"],
+          ["韓黎明", "2001-10-29", "Taipei", "+886614379900"],
+          ["章正輝", "1969-03-22", "Taipei", "04 595 72425"],
+          ["高鈺婷", "2004-06-05", "Tainan", "+886202771663"],
+          ["黃健豪", "1952-02-18", "Tainan", "+886758804700"],
+          ["黃智銘", "1993-02-14", "Taipei", "+886533808155"],
+          ["黃興國", "1998-08-18", "Taichung", "03-471-69876"]
+        ]
+      },
+      {
+        "name": "拉丁多属性演示库（欧洲姓名 + 出生日期 / 城市 / 电话）",
+        "rows": [
+          ["Cvejic, Dalibor", "2003-09-08", "Napoli", "+39307183367"],
+          ["Congedo, Saverio", "2005-04-30", "Bologna", "09-961-79224"],
+          ["Ruffini, Alessandra", "1983-10-20", "Bologna", "+39829155451"],
+          ["Borio, Simone", "1982-08-17", "Bologna", "07 032 45504"],
+          ["Franchin, Cinzia", "1988-11-17", "Firenze", "04-977-29397"],
+          ["La Barbera, Loredana", "1940-01-14", "Bologna", "+39878445945"],
+          ["Palladino, Giovanni", "1999-06-19", "Torino", "07 743 63570"],
+          ["Lamonica, Marco", "1970-09-14", "Roma", "+39301538078"],
+          ["Bertolucci, Ilva", "1988-09-05", "Milano", "+39399978818"],
+          ["Montagna, Simone", "1987-02-04", "Bologna", "+39580970993"],
+          ["Serra, Paolo Emilio", "1993-01-06", "Firenze", "+39981989195"],
+          ["Berardino, Mario", "2005-12-08", "Milano", "+39330664171"],
+          ["Bettuzzi, Elia", "1975-06-06", "Firenze", "+39213516953"],
+          ["Citeroni, Lorenza", "1962-05-06", "Roma", "+39109703114"],
+          ["Attanasi, Crocefisso", "1970-06-18", "Milano", "+39301106347"],
+          ["Calcagno, Giovanni", "1991-02-13", "Firenze", "+39886702560"],
+          ["Frazza, Loris", "1995-06-21", "Firenze", "+39174026681"],
+          ["Timperi, Raffaele", "2003-07-23", "Milano", "03 385 60915"],
+          ["Antonini, Mauro", "1956-02-14", "Venezia", "+39468808529"],
+          ["Favilla, Attilio", "1998-08-23", "Roma", "09-910-22595"],
+          ["Perna, Attilio Simeone Giovanni", "1958-10-04", "Napoli", "+39407154524"],
+          ["Bassi, Maria Gabriella", "1949-11-06", "Napoli", "+39385146354"],
+          ["Leone, Anna Maria", "1960-11-23", "Venezia", "07-462-85266"],
+          ["Cullere, Gianni", "2003-08-11", "Venezia", "+39318219326"],
+          ["Migliari, Melissa", "1982-11-02", "Roma", "+39605307806"],
+          ["Peluso, Enzo", "1977-08-09", "Venezia", "+39357205249"],
+          ["Grasso, Gaetano Detto Tano", "1997-06-06", "Torino", "07-183-94552"],
+          ["Zanettin, Pierantonio", "1964-09-27", "Torino", "+39715080763"],
+          ["Grandinetti, Fabrizio", "1960-05-21", "Napoli", "+39350252305"],
+          ["Casillo, Francesco", "1959-12-06", "Napoli", "04-197-42363"],
+          ["Turi, Amedeo", "1962-03-09", "Torino", "07-751-32230"],
+          ["Onorato, Maurizio", "1990-05-06", "Firenze", "+39325686563"],
+          ["Menotti, Massimo", "1944-03-02", "Torino", "+39306649350"],
+          ["Sirchia, Claudia Rosaria", "1960-06-09", "Roma", "+39969866249"],
+          ["Saija, Francesco Detto Citto", "1968-06-28", "Napoli", "05 216 28586"],
+          ["Maurandi, Pietro", "1941-01-16", "Roma", "+39198126797"],
+          ["Roschetti, Antonino", "1964-03-11", "Roma", "+39755259263"],
+          ["Censi, Arianna Maria", "1987-04-09", "Bologna", "+39872006265"],
+          ["Visconti, Giuseppe", "1983-11-26", "Milano", "06 859 25376"],
+          ["Pasquini, Gioia", "1979-12-04", "Venezia", "09-455-66702"],
+          ["Margaglia, Ermanno", "1985-09-13", "Torino", "02 208 39352"],
+          ["Salerno, Alfredo", "1940-01-07", "Torino", "+39996555056"],
+          ["Cerrelli, Giancarlo", "1956-08-16", "Napoli", "02 293 75513"],
+          ["Golinelli, Pier Paolo", "1967-04-28", "Firenze", "+39210812733"],
+          ["Stanca, Francesco", "1974-02-07", "Firenze", "+39398545609"],
+          ["Casinelli, Cesidio", "2001-09-23", "Torino", "+39760492244"],
+          ["Bozzetto, Liliana", "2001-02-16", "Firenze", "+39634761403"],
+          ["Sena, Saverina", "1993-10-21", "Roma", "+39453026410"],
+          ["Merola, Virginio", "1960-05-16", "Milano", "+39753323088"],
+          ["Cortiana, Daniela", "1948-07-29", "Roma", "05 713 67391"],
+          ["Angelino, Carlo Angelo Stefano", "1961-12-29", "Napoli", "+39197267440"],
+          ["Borghi, Stella", "2000-04-05", "Milano", "04-882-22084"],
+          ["Petracco, Girolamo", "1977-05-01", "Bologna", "+39147222250"],
+          ["Sasso, Rossano", "1979-05-20", "Firenze", "+39834388641"],
+          ["Molinara, Giovanni", "1989-07-21", "Venezia", "07 225 93847"],
+          ["Francia, Marco", "1988-01-16", "Milano", "03 321 93854"],
+          ["Battaglia, Roberto", "1970-03-24", "Roma", "+39322873446"]
+        ]
+      }
+    ]
+  </script>
+  <script>
+    'use strict'
+    const $ = (id) => document.getElementById(id),
+      el = (tag, txt) => {
+        const e = document.createElement(tag)
+        if (txt != null) e.textContent = txt
+        return e
+      }
+
+    const libraries = JSON.parse($('stage-data').textContent)
+    const queryCatalog = [
+      {
+        name: '曜張羣',
+        dob: '2000-05-26',
+        city: 'Kaohsiung',
+        phone: '+886480853144',
+        db: 0,
+        tag: '姓名错位 · 3项辅属全合',
+      },
+      {
+        name: '貽莊量',
+        dob: '1999-01-24',
+        city: 'Taichung',
+        phone: '—',
+        db: 0,
+        tag: '姓名错位 · 日期城市吻合',
+      },
+      {
+        name: '天鄭財',
+        dob: '1999/05/18',
+        city: 'Hsinchu',
+        phone: '06 890 93584',
+        db: 0,
+        tag: '姓名错位 · 日期格式差异',
+      },
+      {
+        name: '李舜正',
+        dob: '1941-06-30',
+        city: 'Taipei',
+        phone: '04 405 73536',
+        db: 0,
+        tag: '名字倒置 · 3项辅属全合',
+      },
+      {
+        name: '云岑望',
+        dob: '1988-11-03',
+        city: 'Taipei',
+        phone: '+886912408115',
+        db: 0,
+        tag: '库外未命中样本',
+      },
+      {
+        name: 'rGandinetti, Fabrizio',
+        dob: '1960-05-21',
+        city: 'Napoli',
+        phone: '+39350252305',
+        db: 1,
+        tag: '首字母错位 · 3项辅属全合',
+      },
+      {
+        name: 'Stella Borghi',
+        dob: '2000-04-05',
+        city: 'Milano',
+        phone: '04-882-22084',
+        db: 1,
+        tag: '姓氏名字倒置 · 3项辅属全合',
+      },
+      {
+        name: 'Ilva Bertolucci',
+        dob: '1988/09/05',
+        city: 'Milano',
+        phone: '+39399978818',
+        db: 1,
+        tag: '姓名倒置 · 日期格式差异',
+      },
+      {
+        name: 'Dennis Terchi-Dukp',
+        dob: '1975-12-04',
+        city: 'Cape Coast',
+        phone: '+233376296177',
+        db: 1,
+        tag: '库外未命中样本',
+      },
+    ]
+
+    const queryState = {
+      activeIndex: 0,
+      queue: [0],
+      mode: 'idle',
+    }
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+
+    /* Palette C · 松烟青瓷 (Muted mineral 3D pigments & unified 3-state vector colors, zero blue/purple neon) */
+    const palette = ['#4ca688', '#c26b56', '#c49a58', '#52938e', '#849e60', '#a67478', '#8d8268', '#68937b']
+    const C_INK = '#e9ede9',
+      C_TESTED = '#d5ddd8',
+      C_MUTED = '#929a95',
+      C_FAINT = '#626b66',
+      C_PENDING = '#6f7974',
+      C_RULE = '#2a302d',
+      C_RULE_SOFT = '#212624',
+      C_ELEVATED = '#1e2321',
+      C_ACCENT = '#be5e4b',
+      C_ACCENT_SOFT = '#291b18',
+      C_ACCENT_BORDER = '#583129',
+      C_JADE = '#4ca688',
+      C_JADE_SOFT = '#152621',
+      C_JADE_BORDER = '#274e42',
+      C_OCHRE = '#c49550',
+      C_OCHRE_SOFT = '#262015',
+      mono = 'ui-monospace, "SFMono-Regular", Consolas, monospace',
+      sans = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+      serif = '"Noto Serif SC", "Songti SC", "STSong", SimSun, serif'
+
+    const D = 48,
+      dot = (a, b) => a.reduce((v, x, i) => v + x * b[i], 0),
+      unit = (a) => {
+        const n = Math.sqrt(dot(a, a)) || 1
+        return a.map((x) => x / n)
+      },
+      clean = (s) =>
+        String(s)
+          .normalize('NFKD')
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}]/gu, '')
+
+    function encode(s) {
+      const a = Array(D).fill(0),
+        chars = Array.from(clean(s))
+      function feature(key, weight) {
+        let h = 2166136261
+        for (const c of key) h = Math.imul(h ^ c.codePointAt(0), 16777619)
+        for (let i = 0; i < D; i++) {
+          h ^= h << 13
+          h ^= h >>> 17
+          h ^= h << 5
+          a[i] += (h & 1 ? 1 : -1) * weight
+        }
+      }
+      chars.forEach((c, i) => {
+        feature('u' + c, 1)
+        if (i) feature('b' + chars[i - 1] + c, 0.17)
+      })
+      return unit(a)
+    }
+
+    function toDisplayInts(v) {
+      const dims = [0, 3, 7, 11]
+      return dims.map((d, idx) => {
+        const raw = 126 + v[d] * 310 + (idx - 1) * 14
+        return Math.max(12, Math.min(246, Math.round(raw)))
+      })
+    }
+
+    function vec(v, small) {
+      const ints = toDisplayInts(v)
+      return '[' + ints.slice(0, small ? 2 : 3).join(', ') + ', …]'
+    }
+
+    function build(records) {
+      const rows = records.map(([name, dob, city, phone], id) => ({
+          id,
+          name,
+          dob: dob || '—',
+          city: city || '—',
+          phone: phone || '—',
+          v: encode(name),
+        })),
+        k = Math.min(7, Math.max(2, Math.ceil(rows.length / 8)))
+      let centers = [rows[0].v]
+      while (centers.length < k) {
+        let best = null,
+          s = 2
+        for (const r of rows) {
+          const z = Math.max(...centers.map((c) => dot(c, r.v)))
+          if (z < s) {
+            s = z
+            best = r
+          }
+        }
+        centers.push(best.v)
+      }
+      for (let iter = 0; iter < 24; iter++) {
+        const groups = centers.map(() => [])
+        for (const r of rows) {
+          let n = 0
+          centers.forEach((c, j) => {
+            if (dot(c, r.v) > dot(centers[n], r.v)) n = j
+          })
+          groups[n].push(r)
+        }
+        const next = groups.map((g, i) =>
+          g.length ? unit(g.reduce((a, r) => a.map((x, j) => x + r.v[j]), Array(D).fill(0))) : centers[i],
+        )
+        if (next.every((c, i) => dot(c, centers[i]) > 0.99999999)) {
+          centers = next
+          break
+        }
+        centers = next
+      }
+      const groups = centers.map((v, i) => ({ v, i, items: [] }))
+      for (const r of rows) {
+        const g = groups.reduce((a, b) => (dot(a.v, r.v) >= dot(b.v, r.v) ? a : b))
+        r.group = g.i
+        r.ordinal = g.items.length
+        g.items.push(r)
+      }
+      return { rows, groups: groups.filter((g) => g.items.length) }
+    }
+
+    const models = libraries.map((l) => build(l.rows))
+
+    function compareAttr(kind, dbVal, qVal) {
+      const a = String(dbVal || '').trim(),
+        b = String(qVal || '').trim()
+      if (!b || b === '—' || !a || a === '—') {
+        return { status: 'missing', label: '查询缺省', color: C_MUTED, bg: '#222826' }
+      }
+      if (a === b) {
+        return { status: 'exact', label: '✓ 核验一致', color: C_JADE, bg: '#1a322a' }
+      }
+      if (kind === 'dob' && a.replace(/\D/g, '') === b.replace(/\D/g, '')) {
+        return { status: 'norm', label: '✓ 日期一致(格式差异)', color: C_JADE, bg: '#1a322a' }
+      }
+      if (kind === 'city' && a.toLowerCase() === b.toLowerCase()) {
+        return { status: 'norm', label: '✓ 城市一致(大小写)', color: C_JADE, bg: '#1a322a' }
+      }
+      if (kind === 'phone' && a.replace(/\D/g, '') === b.replace(/\D/g, '')) {
+        return { status: 'norm', label: '✓ 号码一致', color: C_JADE, bg: '#1a322a' }
+      }
+      return { status: 'diff', label: '信息不一致', color: C_OCHRE, bg: C_OCHRE_SOFT }
+    }
+
+    function makeRun(model, queryIndices) {
+      const indices = Array.isArray(queryIndices) && queryIndices.length ? queryIndices : [0]
+      const primaryIdx = indices[0]
+      const qEntry = queryCatalog[primaryIdx] || {
+        name: String(primaryIdx),
+        dob: '—',
+        city: '—',
+        phone: '—',
+      }
+      const name = qEntry.name
+      const qv = encode(name),
+        clusters = model.groups.map((g) => ({ ...g, score: dot(g.v, qv) })),
+        winner = clusters.reduce((a, b) => (a.score >= b.score ? a : b)),
+        members = winner.items.map((r) => ({ ...r, score: dot(r.v, qv) })),
+        best = members.reduce((a, b) => (a.score >= b.score ? a : b)),
+        hitIndex = members.findIndex((r) => r.score >= 0.9),
+        hit = hitIndex >= 0 ? members[hitIndex] : null,
+        verifyCount = hitIndex >= 0 ? hitIndex + 1 : members.length
+
+      let attrChecks = null,
+        matchedAttrCount = 0
+      if (hit) {
+        attrChecks = {
+          dob: compareAttr('dob', hit.dob, qEntry.dob),
+          city: compareAttr('city', hit.city, qEntry.city),
+          phone: compareAttr('phone', hit.phone, qEntry.phone),
+        }
+        matchedAttrCount = Object.values(attrChecks).filter(
+          (c) => c.status === 'exact' || c.status === 'norm',
+        ).length
+      }
+
+      return {
+        name,
+        queryRecord: {
+          name: qEntry.name,
+          dob: qEntry.dob || '—',
+          city: qEntry.city || '—',
+          phone: qEntry.phone || '—',
+        },
+        qIndex: primaryIdx,
+        queueSize: indices.length,
+        qv,
+        clusters,
+        winner,
+        members,
+        best,
+        hit,
+        hitIndex,
+        verifyCount,
+        attrChecks,
+        matchedAttrCount,
+        model,
+      }
+    }
+
+    const stages = [
+      '提取姓名属性',
+      '形成聚类',
+      '簇中心向量化',
+      '比较簇中心',
+      '展开候选条目',
+      '逐条向量核验',
+      '多属性核验结果',
+    ]
+    const stageHints = [
+      '展示双方完整多属性记录，将非运算属性（出生日期、城市、电话）虚化淡去，高亮并提取姓名属性',
+      '左侧提取出的姓名逐条化为彩色节点，在三维空间形成聚类簇',
+      '三维簇收拢为簇中心条目，随后与右侧查询同步向量化为统一的「待测」特征向量',
+      '两侧向量连线计算余弦相似度（灰：待测 / 浅白：已测未选 / 青瓷绿：锁定最高相似簇）',
+      '被选中的最优簇展开还原为簇内全部原始候选条目（含姓名与虚化辅助属性）',
+      '簇内条目以一致的向量化效果转为待测向量，逐条比对并在命中阈值（≥0.90）时立即触发早停',
+      '对称还原双方完整多属性记录，逐项核对出生日期、城市、电话等辅助信息以确认同一对象',
+    ]
+
+    let job = null,
+      phase = -1,
+      elapsed = 0,
+      playing = false,
+      last = 0,
+      raf = 0,
+      span = [],
+      W = 0,
+      H = 0,
+      dpr = 1
+
+    const clamp = (x) => Math.max(0, Math.min(1, x)),
+      ease = (x) => {
+        x = clamp(x)
+        return x * x * (3 - 2 * x)
+      },
+      mix = (a, b, u) => a + (b - a) * u,
+      lerpP = (a, b, u) => [mix(a[0], b[0], u), mix(a[1], b[1], u)]
+
+    const ctx = $('stage').getContext('2d')
+
+    function resize() {
+      const r = $('stage').parentElement.getBoundingClientRect()
+      W = r.width
+      H = r.height
+      dpr = Math.min(2, window.devicePixelRatio || 1)
+      $('stage').width = Math.round(W * dpr)
+      $('stage').height = Math.round(H * dpr)
+      if (phase >= 0) draw()
+    }
+    new ResizeObserver(resize).observe($('stage').parentElement)
+
+    function text(s, x, y, size, color = C_INK, opt = {}) {
+      ctx.save()
+      if (opt.blur && opt.blur > 0.1) {
+        ctx.filter = 'blur(' + opt.blur.toFixed(1) + 'px)'
+      }
+      ctx.fillStyle = color
+      ctx.font = (opt.weight || 400) + ' ' + size + 'px ' + (opt.font || sans)
+      ctx.textAlign = opt.align || 'left'
+      ctx.textBaseline = 'middle'
+      if (opt.max) {
+        let str = String(s)
+        if (ctx.measureText(str).width > opt.max) {
+          while (str.length && ctx.measureText(str + '…').width > opt.max) str = str.slice(0, -1)
+          s = str + '…'
+        }
+      }
+      ctx.fillText(s, x, y)
+      ctx.restore()
+    }
+
+    function alpha(n, fn) {
+      if (n <= 0.001) return
+      ctx.save()
+      ctx.globalAlpha *= clamp(n)
+      fn()
+      ctx.restore()
+    }
+
+    function line(a, b, col = C_RULE, w = 1) {
+      ctx.beginPath()
+      ctx.moveTo(...a)
+      ctx.lineTo(...b)
+      ctx.strokeStyle = col
+      ctx.lineWidth = w
+      ctx.stroke()
+    }
+
+    function circle(x, y, r, col) {
+      if (r <= 0) return
+      ctx.beginPath()
+      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.fillStyle = col
+      ctx.fill()
+    }
+
+    function strokeCircle(x, y, r, col, w = 1.4) {
+      if (r <= 0) return
+      ctx.beginPath()
+      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.strokeStyle = col
+      ctx.lineWidth = w
+      ctx.stroke()
+    }
+
+    function roundRect(x, y, w, h, r, fill, stroke, lineW = 1) {
+      ctx.beginPath()
+      ctx.roundRect(x, y, w, h, r)
+      if (fill) {
+        ctx.fillStyle = fill
+        ctx.fill()
+      }
+      if (stroke) {
+        ctx.strokeStyle = stroke
+        ctx.lineWidth = lineW
+        ctx.stroke()
+      }
+    }
+
+    function clip(x, y, w, h, fn) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(x, y, w, h)
+      ctx.clip()
+      fn()
+      ctx.restore()
+    }
+
+    /* Strictly symmetric Left & Right column geometry:
+       Desktop: Left = 0..45% (width 0.45W), Gap = 45%..55% (center at 0.50W), Right = 55%..100% (width 0.45W)
+       Mobile (<720px): Left = 0..46%, Gap = 46%..54%, Right = 54%..100% */
+    function geometry() {
+      const small = W < 720,
+        L = W * (small ? 0.46 : 0.45),
+        R = W * (small ? 0.54 : 0.55),
+        C = H * 0.5,
+        step = Math.min(48, (H - 32) / 7)
+      return {
+        small,
+        L,
+        R,
+        C,
+        step,
+        fs: small ? 13 : 15.5,
+        vs: small ? 11 : 15,
+        qx: R,
+        qw: W - R,
+        top: 16,
+        bottom: H - 16,
+      }
+    }
+
+    const REEL_STOP_OFFSET = 26
+
+    function reel(ms, opacity = 1, morphProgress = null, attrDim = 0) {
+      const { L, C, step, fs, small } = geometry(),
+        rows = job.model.rows
+      const t = reduced.matches ? 1 : Math.min(ms / 2200, 1)
+      const offset = (1 - (1 - t) ** 2.35) * Math.min(rows.length * 0.75, REEL_STOP_OFFSET)
+      const auxAlpha = Math.max(0.12, 1 - attrDim * 0.88),
+        auxBlur = attrDim * 2.2,
+        nameHighlight = attrDim
+
+      clip(0, 0, L, H, () => {
+        for (let j = -6; j <= 6; j++) {
+          const ix = Math.floor(offset) + j,
+            y = C + (ix - offset) * step,
+            edgeFade = clamp((H * 0.47 - Math.abs(y - C)) / (step * 1.45))
+          if (edgeFade <= 0) continue
+          const r = rows[((ix % rows.length) + rows.length) % rows.length]
+          const rowMorph = morphProgress ? morphProgress(j, y, r) : 0
+          if (rowMorph >= 1) continue
+          const squeeze = 1 - ease(rowMorph) * 0.55
+
+          alpha(edgeFade * opacity * (1 - ease(rowMorph)), () => {
+            line([4, y + step * 0.48], [4 + (L - 8) * squeeze, y + step * 0.48], C_RULE_SOFT)
+            if (nameHighlight > 0.05 && rowMorph < 0.2) {
+              alpha(nameHighlight * 0.85, () => {
+                roundRect(4, y - step * 0.36, Math.min(L * 0.35, 148), step * 0.72, 4, C_ACCENT_SOFT, C_ACCENT_BORDER)
+              })
+            }
+            const nameX = 12 + (1 - squeeze) * 26,
+              nameCol = nameHighlight > 0.4 ? '#ffffff' : C_INK,
+              nameWeight = nameHighlight > 0.3 ? 650 : 480
+            text(r.name, nameX, y, fs + nameHighlight * 0.8, nameCol, {
+              weight: nameWeight,
+              max: L * (small ? 0.54 : 0.32),
+            })
+
+            alpha(auxAlpha * (1 - rowMorph), () => {
+              if (!small) {
+                text(r.dob, L * 0.36, y, 12, C_MUTED, {
+                  font: mono,
+                  max: L * 0.21,
+                  blur: auxBlur,
+                })
+                text(r.city, L * 0.59, y, 12, C_MUTED, {
+                  max: L * 0.16,
+                  blur: auxBlur,
+                })
+                text(r.phone, L - 8, y, 11.5, C_MUTED, {
+                  font: mono,
+                  align: 'right',
+                  max: L * 0.24,
+                  blur: auxBlur,
+                })
+              } else {
+                text(r.dob + ' · ' + r.city, L - 6, y, 11, C_MUTED, {
+                  align: 'right',
+                  max: L * 0.42,
+                  blur: auxBlur,
+                })
+              }
+            })
+          })
+        }
+      })
+      return offset
+    }
+
+    function project(p, yaw) {
+      const [x, y, z] = p,
+        cs = Math.cos(yaw),
+        sn = Math.sin(yaw),
+        xx = x * cs + z * sn,
+        zz = -x * sn + z * cs,
+        tilt = 0.31,
+        yy = y * Math.cos(tilt) - zz * Math.sin(tilt),
+        depth = y * Math.sin(tilt) + zz * Math.cos(tilt)
+      const { L, C } = geometry(),
+        s = (Math.min(L * 0.34, H * 0.35) * 3.8) / (3.8 - depth * 0.28)
+      return [L * 0.5 + xx * s, C - yy * s, depth]
+    }
+
+    function anchor(i, k) {
+      const a = (2 * Math.PI * i) / k + 0.38
+      return [1.14 * Math.cos(a), 0.76 * Math.sin(a), 0.56 * Math.sin(2 * a + 0.4)]
+    }
+
+    function cloudPos(r) {
+      const g = job.clusters.find((c) => c.i === r.group),
+        idx = job.clusters.indexOf(g),
+        a = anchor(idx, job.clusters.length)
+      return a.map((v, i) => v + 0.92 * (r.v[[1, 6, 13][i]] - g.v[[1, 6, 13][i]]))
+    }
+
+    function axes(yaw, opacity) {
+      alpha(opacity, () => {
+        const o = project([0, 0, 0], yaw)
+        const wire = (p, q, col = '#1f2523') =>
+          line(project(p, yaw).slice(0, 2), project(q, yaw).slice(0, 2), col)
+        for (let j = -2; j <= 2; j++) {
+          wire([j * 0.46, -0.88, -0.92], [j * 0.46, -0.88, 0.92])
+          wire([-0.92, -0.88, j * 0.46], [0.92, -0.88, j * 0.46])
+        }
+        const labels = ['X', 'Y', 'Z']
+        for (let i = 0; i < 3; i++) {
+          let p = [0, 0, 0],
+            n = [0, 0, 0]
+          p[i] = 1.48
+          n[i] = -1.24
+          const u = project(p, yaw),
+            v = project(n, yaw),
+            dx = u[0] - o[0],
+            dy = u[1] - o[1],
+            dl = Math.hypot(dx, dy) || 1
+          line(v.slice(0, 2), u.slice(0, 2), '#36403c', 1.1)
+          text(labels[i], u[0] + (dx / dl) * 11, u[1] + (dy / dl) * 11, 11, C_MUTED, {
+            font: mono,
+            weight: 600,
+            align: 'center',
+          })
+        }
+        circle(o[0], o[1], 2.4, '#4d5954')
+      })
+    }
+
+    function rowY(i, n) {
+      const { C, step } = geometry()
+      return C + (i - (n - 1) / 2) * step
+    }
+
+    function connector(x0, y0, x1, y1, u, col, width = 1.75, baseAlpha = 1) {
+      if (u <= 0) return
+      alpha(baseAlpha, () => {
+        ctx.save()
+        const bend = (x1 - x0) * 0.46,
+          len = Math.hypot(x1 - x0, y1 - y0) * 1.25
+        ctx.beginPath()
+        ctx.moveTo(x0, y0)
+        ctx.bezierCurveTo(x0 + bend, y0, x1 - bend, y1, x1, y1)
+        ctx.strokeStyle = '#252b28'
+        ctx.lineWidth = 1
+        ctx.stroke()
+
+        ctx.strokeStyle = col
+        ctx.lineWidth = width
+        ctx.setLineDash([len, 9999])
+        ctx.lineDashOffset = (1 - clamp(u)) * len
+        ctx.stroke()
+        ctx.restore()
+        circle(x0, y0, 2.8, col)
+        if (u > 0.85) circle(x1, y1, 2.8, col)
+      })
+    }
+
+    /* ============================================================================
+       UNIFIED VECTORIZATION ROW COMPONENT & COLOR SCHEME (Palette C · 松烟青瓷)
+       Used identically by BOTH:
+       1) Cluster Centroid Vectorization & Comparison (Stage 03 -> Stage 04)
+       2) Intra-Cluster Candidate Vectorization & Verification (Stage 05 -> Stage 06)
+       ============================================================================ */
+    function drawUnifiedVectorRow(opts) {
+      const { L, small, vs, step } = geometry(),
+        {
+          y,
+          idTag, // e.g. 'C1' or '#1'
+          rawTitle, // e.g. '簇中心 1' or '張曜羣'
+          rawSub, // e.g. '含 8 条记录' or '2000-05-26 · Kaohsiung · +886...'
+          vector, // unit vector array
+          morph, // 0 = raw entry view, 1 = vectorized view
+          state, // 'pending' | 'probing' | 'tested' | 'matched' | 'skipped'
+          scoreText, // e.g. '0.340' or '最高 0.561' or '命中 0.986 · 早停'
+          dotSeedColor, // optional cluster pigment hint while in raw state
+          highlightAlpha = 1,
+          showDot = true,
+        } = opts
+
+      const isMatched = state === 'matched',
+        isProbing = state === 'probing',
+        isTested = state === 'tested',
+        isSkipped = state === 'skipped'
+
+      /* Unified Row Background Highlight */
+      if (isMatched && morph > 0.5) {
+        alpha(highlightAlpha, () => {
+          roundRect(2, y - step * 0.42, L - 6, step * 0.84, 4, C_JADE_SOFT, C_JADE_BORDER)
+          roundRect(2, y - step * 0.42, 3.5, step * 0.84, 2, C_JADE, null)
+        })
+      } else if (isProbing && morph > 0.5) {
+        roundRect(2, y - step * 0.42, L - 6, step * 0.84, 4, C_ELEVATED, '#2f3733')
+      }
+
+      /* Subtle horizontal scan sweep during morph (0.1 -> 0.9) so both vectorizations feel identical */
+      if (morph > 0.06 && morph < 0.94) {
+        const sweep = ease((morph - 0.06) / 0.88),
+          sx = mix(8, L - 36, sweep)
+        alpha(Math.sin(sweep * Math.PI) * 0.35, () => {
+          roundRect(sx - 24, y - step * 0.36, 48, step * 0.72, 3, '#263832', null)
+        })
+      }
+
+      /* 1. Raw Entry View (morph: 0 -> fades & slides slightly right into vector) */
+      const rawAlpha = clamp(1 - morph * 1.85),
+        slideShift = ease(morph) * 10
+      if (rawAlpha > 0.001) {
+        alpha(rawAlpha, () => {
+          if (showDot && dotSeedColor) {
+            circle(12, y, 4, dotSeedColor)
+          }
+          const idX = dotSeedColor ? 24 : 10,
+            titleX = dotSeedColor ? (small ? 48 : 58) : small ? 34 : 44
+          text(idTag, idX, y, small ? 10 : 12, C_FAINT, { font: mono, weight: 600 })
+          text(rawTitle, titleX + slideShift, y, small ? 13.5 : 16.5, C_INK, {
+            weight: 600,
+            max: L * (small ? 0.5 : 0.34),
+          })
+          if (rawSub) {
+            alpha(0.56, () => {
+              text(rawSub, L - 8, y, small ? 11 : 12, C_MUTED, {
+                align: 'right',
+                font: mono,
+                max: L * (small ? 0.34 : 0.52),
+              })
+            })
+          }
+        })
+      }
+
+      /* 2. Unified Vector View (morph: -> 1)
+         Identical 3-State Palette C Colors for both Cluster Centroids & Candidate Items:
+         - Pending / Skipped: Muted Slate (#6f7974) + hollow circle + '待测'
+         - Tested Non-Match: Mist White (#d5ddd8) + solid ash circle + score
+         - Matched / Winner: Celadon Jade (#4ca688) + solid jade circle + bold score */
+      const vecAlpha = clamp(morph * 1.85 - 0.85),
+        vecShift = (1 - ease(morph)) * -8
+      if (vecAlpha > 0.001) {
+        alpha(vecAlpha, () => {
+          const textCol = isMatched
+              ? C_JADE
+              : isTested
+                ? C_TESTED
+                : isProbing
+                  ? C_INK
+                  : C_PENDING,
+            idCol = isMatched ? C_JADE : isTested || isProbing ? C_MUTED : C_FAINT
+
+          if (showDot) {
+            if (isMatched) {
+              circle(12, y, 4, C_JADE)
+            } else if (isTested) {
+              circle(12, y, 3.6, '#8e9993')
+            } else if (isProbing) {
+              circle(12, y, 3.8, C_JADE)
+            } else {
+              strokeCircle(12, y, 3.3, '#58625d', 1.4)
+            }
+          }
+
+          text(idTag, 23, y, small ? 10.5 : 12.5, idCol, {
+            font: mono,
+            weight: isMatched || isTested ? 600 : 450,
+          })
+          text(vec(vector, small), (small ? 46 : 58) + vecShift, y, vs, textCol, {
+            font: mono,
+            weight: isMatched ? 700 : isTested ? 580 : 450,
+            max: L - (small ? 96 : 148),
+          })
+
+          if (isMatched || isTested) {
+            text(scoreText, L - 8, y, small ? 10 : 13, isMatched ? C_JADE : C_MUTED, {
+              align: 'right',
+              font: mono,
+              weight: isMatched ? 700 : 500,
+              max: L * 0.4,
+            })
+          } else if (!small) {
+            const pendingTxt = isSkipped ? '待测（早停跳过）' : isProbing ? '比对中…' : '待测'
+            text(pendingTxt, L - 8, y, 12, isProbing ? C_MUTED : C_FAINT, { align: 'right' })
+          }
+        })
+      }
+
+      line([6, y + step * 0.45], [L - 6, y + step * 0.45], C_RULE_SOFT)
+    }
+
+    /* Right-side Query Display (symmetric width qw = W - R = 0.45W, unified morph with left side) */
+    function focusQuery(vMix, opts = {}) {
+      const { C, qx, qw, small, vs, step } = geometry(),
+        qr = job.queryRecord,
+        attrDim = opts.attrDim ?? 1,
+        baseX = opts.x ?? qx,
+        baseY = opts.y ?? C,
+        w = W - baseX - 4,
+        pendingMix = opts.pendingMix ?? 1,
+        label = opts.badge
+
+      /* Sweep effect synchronized with left-side vectorization when vMix transitions 0 -> 1 */
+      if (vMix > 0.06 && vMix < 0.94) {
+        const sweep = ease((vMix - 0.06) / 0.88),
+          sx = mix(baseX + 6, baseX + w - 36, sweep)
+        alpha(Math.sin(sweep * Math.PI) * 0.35, () => {
+          roundRect(sx - 24, baseY - step * 0.36, 48, step * 0.72, 3, '#263832', null)
+        })
+      }
+
+      alpha(clamp(1 - vMix * 1.85), () => {
+        const cardAlpha = clamp(1 - attrDim * 0.72),
+          auxAlpha = Math.max(0.14, 1 - attrDim * 0.86),
+          auxBlur = attrDim * 2.2
+        if (attrDim < 0.98 && !opts.hideAux) {
+          const boxY = baseY - (small ? 36 : 44),
+            boxH = small ? 84 : 104
+          alpha(cardAlpha * 0.9, () => {
+            roundRect(baseX, boxY, w, boxH, 5, C_ELEVATED, C_RULE)
+          })
+          if (attrDim > 0.12) {
+            alpha(clamp(attrDim * 1.2) * (1 - attrDim * 0.5), () => {
+              roundRect(baseX + 6, baseY - 22, Math.min(w - 16, 220), 40, 4, C_ACCENT_SOFT, C_ACCENT_BORDER)
+            })
+          }
+          alpha(auxAlpha, () => {
+            const meta1 = '出生日期  ' + qr.dob + '    城市  ' + qr.city,
+              meta2 = '联系电话  ' + qr.phone
+            text(meta1, baseX + 10, baseY + (small ? 21 : 27), small ? 11 : 12.5, C_MUTED, {
+              max: w - 16,
+              blur: auxBlur,
+            })
+            text(meta2, baseX + 10, baseY + (small ? 36 : 45), small ? 11 : 12.5, C_MUTED, {
+              max: w - 16,
+              blur: auxBlur,
+            })
+          })
+        }
+
+        const size = opts.size ?? (small ? 20 : 27),
+          col = opts.color || (pendingMix > 0.5 ? '#b4bdb8' : C_INK)
+        text(job.name, baseX + 8, baseY - (attrDim < 0.98 && !opts.hideAux ? 6 : 0), size, col, {
+          font: serif,
+          weight: opts.weight ?? 700,
+          max: w - 14,
+        })
+        if (label) {
+          const labelY =
+            attrDim < 0.98 && !opts.hideAux
+              ? baseY - (small ? 26 : 32)
+              : baseY + (small ? 20 : 26)
+          text(label, baseX + 8, labelY, small ? 11 : 12.5, opts.badgeColor || '#df8370', {
+            font: sans,
+            weight: 600,
+            max: w - 14,
+          })
+        }
+      })
+
+      /* Unified Vectorized Query Row Q1 [...] */
+      alpha(clamp(vMix * 1.85 - 0.85), () => {
+        roundRect(baseX, baseY - step * 0.42, w, step * 0.84, 4, C_ELEVATED, C_RULE)
+        circle(baseX + 14, baseY, 4, C_ACCENT)
+        text('Q1', baseX + 26, baseY, small ? 10.5 : 12.5, '#df8370', { font: mono, weight: 600 })
+        text(vec(job.qv, small), baseX + (small ? 48 : 60), baseY, vs, C_INK, {
+          font: mono,
+          weight: 650,
+          max: w - (small ? 60 : 125),
+        })
+        if (!small) {
+          text('查询特征向量', baseX + w - 12, baseY, 12, C_MUTED, { align: 'right' })
+        }
+        text('已提取姓名特征向量（辅助属性待命中后核对）', baseX + 6, baseY + step * 0.42 + 16, small ? 11 : 12, C_FAINT, {
+          max: w - 8,
+        })
+      })
+    }
+
+    /* Render Cluster Centroid List (Stages 2, 3, 4) using drawUnifiedVectorRow */
+    function centers(listOpacity, morph, scoredIdx = -1, probingIdx = -1, winMix = 0, dimOthers = 1, showDot = true) {
+      const n = job.clusters.length
+      job.clusters.forEach((g, i) => {
+        const y = rowY(i, n),
+          isWinner = g.i === job.winner.i,
+          rowAlpha = listOpacity * (winMix > 0 && !isWinner ? mix(1, dimOthers, winMix) : 1)
+        alpha(rowAlpha, () => {
+          let state = 'pending',
+            scoreText = ''
+          if (winMix > 0.25 && isWinner) {
+            state = 'matched'
+            scoreText = '最高 ' + g.score.toFixed(3) + ' · 选入'
+          } else if (i <= scoredIdx) {
+            state = 'tested'
+            scoreText = g.score.toFixed(3)
+          } else if (i === probingIdx) {
+            state = 'probing'
+          }
+          drawUnifiedVectorRow({
+            y,
+            idTag: 'C' + (g.i + 1),
+            rawTitle: '聚类中心 ' + (g.i + 1),
+            rawSub: '簇内共 ' + g.items.length + ' 条记录',
+            vector: g.v,
+            morph,
+            state,
+            scoreText,
+            dotSeedColor: palette[g.i],
+            highlightAlpha: winMix,
+            showDot,
+          })
+        })
+      })
+    }
+
+    /* Render Intra-Cluster Candidate List (Stages 4, 5, 6) using the EXACT SAME drawUnifiedVectorRow */
+    function candidates(raw, completedCount, currentIdx, focusIndex, opts = {}) {
+      const { C, step, L, small } = geometry(),
+        arr = job.members,
+        n = arr.length,
+        fade = opts.fade ?? 1,
+        spread = opts.spread ?? 1,
+        originY = opts.originY ?? C,
+        morph = 1 - raw,
+        earlyStopped = job.hitIndex >= 0 && completedCount > job.hitIndex,
+        visible = Math.min(6, n),
+        center = mix(
+          (visible - 1) / 2,
+          n - (visible + 1) / 2,
+          n <= visible ? 0 : clamp((focusIndex - (visible - 1) / 2) / (n - visible)),
+        )
+      let targetY = C
+      clip(0, 0, L, H, () => {
+        arr.forEach((r, i) => {
+          const listY = C + (i - center) * step,
+            y = mix(originY, listY, spread),
+            a = clamp((H * 0.48 - Math.abs(listY - C)) / (step * 0.85)) * fade
+          if (i === currentIdx) targetY = y
+          if (a <= 0.001) return
+          const isDone = i < completedCount,
+            isHit = isDone && r.score >= 0.9,
+            isProbing = i === currentIdx && !isDone
+          let state = 'pending',
+            scoreText = ''
+          if (isHit) {
+            state = 'matched'
+            scoreText = '命中 ' + r.score.toFixed(3) + ' · 早停'
+          } else if (isDone) {
+            state = 'tested'
+            scoreText = r.score.toFixed(3)
+          } else if (isProbing) {
+            state = 'probing'
+          } else if (earlyStopped) {
+            state = 'skipped'
+          }
+
+          alpha(a, () => {
+            drawUnifiedVectorRow({
+              y,
+              idTag: '#' + (i + 1),
+              rawTitle: r.name,
+              rawSub: small ? r.city : r.dob + ' · ' + r.city + ' · ' + r.phone,
+              vector: r.v,
+              morph,
+              state,
+              scoreText,
+              dotSeedColor: null,
+              highlightAlpha: 1,
+              showDot: true,
+            })
+          })
+        })
+      })
+      return targetY
+    }
+
+    /* Strictly Equal-Width Left & Right Multi-Attribute Verification Result Cards */
+    function drawVerificationResult(restoreProgress) {
+      const { small, L, R, C, qx, qw } = geometry(),
+        hit = job.hit,
+        qr = job.queryRecord
+
+      /* Equal card width on both Left (0..L) and Right (R..W) */
+      const leftX = 2,
+        leftW = L - 6,
+        rightX = qx + 4,
+        rightW = qw - 6
+
+      if (!hit) {
+        reel(reduced.matches ? 0 : elapsed * 0.9, 1, null, 0)
+        const cardY = C - 84,
+          cardH = 168
+        roundRect(rightX, cardY, rightW, cardH, 6, C_ELEVATED, C_RULE)
+        roundRect(rightX, cardY, 4, cardH, 2, '#5e6863', null)
+        text('待核验查询记录 · 未命中', rightX + 16, cardY + 22, 12, C_MUTED, { weight: 600 })
+        text(qr.name, rightX + 16, cardY + 54, small ? 20 : 26, C_INK, {
+          font: serif,
+          weight: 700,
+          max: rightW - 28,
+        })
+        const rows = [
+          ['出生日期', qr.dob],
+          ['所在城市', qr.city],
+          ['联系电话', qr.phone],
+        ]
+        rows.forEach(([k, val], idx) => {
+          const ry = cardY + 90 + idx * 24
+          line([rightX + 14, ry - 12], [rightX + rightW - 14, ry - 12], C_RULE_SOFT)
+          text(k, rightX + 16, ry, 12, C_MUTED)
+          text(val, rightX + rightW - 16, ry, 12.5, C_TESTED, {
+            align: 'right',
+            font: mono,
+            max: rightW * 0.62,
+          })
+        })
+        return
+      }
+
+      const cardH = small ? 218 : 240,
+        cardY = Math.max(12, C - cardH / 2)
+
+      /* Left Card: Target Database Matched Record (Exact width = leftW) */
+      roundRect(leftX, cardY, leftW, cardH, 6, C_JADE_SOFT, C_JADE_BORDER)
+      roundRect(leftX, cardY, 4, cardH, 2, C_JADE, null)
+      text('目标库命中记录（#' + (hit.id + 1) + '）', leftX + 16, cardY + 22, 12, '#89bba8', {
+        weight: 600,
+      })
+      text('余弦相似度 ' + hit.score.toFixed(3), leftX + leftW - 14, cardY + 22, 12, C_JADE, {
+        align: 'right',
+        font: mono,
+        weight: 700,
+      })
+      text(hit.name, leftX + 16, cardY + 55, small ? 20 : 27, C_JADE, {
+        font: serif,
+        weight: 700,
+        max: leftW - 110,
+      })
+      text('库内登记姓名', leftX + leftW - 14, cardY + 55, 11.5, '#72a390', { align: 'right' })
+
+      /* Right Card: Query Record (Exact same width = rightW = leftW) */
+      roundRect(rightX, cardY, rightW, cardH, 6, C_JADE_SOFT, C_JADE_BORDER)
+      roundRect(rightX, cardY, 4, cardH, 2, C_JADE, null)
+      text('待核验查询记录', rightX + 16, cardY + 22, 12, '#89bba8', { weight: 600 })
+      const nameDiffText = hit.name === qr.name ? '姓名完全一致' : '姓名模糊匹配（字序/拼写差异）'
+      text(nameDiffText, rightX + rightW - 14, cardY + 22, 11.5, '#e08370', {
+        align: 'right',
+        weight: 600,
+        max: rightW * 0.62,
+      })
+      text(qr.name, rightX + 16, cardY + 55, small ? 20 : 27, C_JADE, {
+        font: serif,
+        weight: 700,
+        max: rightW - 30,
+      })
+
+      /* Row-by-row Multi-Attribute Comparison */
+      const attrRows = [
+        { label: '出生日期', dbVal: hit.dob, qVal: qr.dob, check: job.attrChecks.dob },
+        { label: '所在城市', dbVal: hit.city, qVal: qr.city, check: job.attrChecks.city },
+        { label: '联系电话', dbVal: hit.phone, qVal: qr.phone, check: job.attrChecks.phone },
+      ]
+
+      attrRows.forEach((row, idx) => {
+        const ry = cardY + 95 + idx * (small ? 33 : 37)
+        line([leftX + 14, ry - 16], [leftX + leftW - 14, ry - 16], '#213c33')
+        text(row.label, leftX + 16, ry, 12.5, '#83ab9b')
+        text(row.dbVal, leftX + leftW - 14, ry, small ? 12 : 13.5, C_INK, {
+          align: 'right',
+          font: mono,
+          weight: 550,
+          max: leftW * 0.66,
+        })
+
+        line([rightX + 14, ry - 16], [rightX + rightW - 14, ry - 16], '#213c33')
+        text(row.label, rightX + 16, ry, 12.5, '#83ab9b')
+        if (!small) {
+          text(row.qVal, rightX + 82, ry, 13, C_INK, {
+            font: mono,
+            weight: 550,
+            max: rightW - 208,
+          })
+        }
+        const badgeW = small ? 84 : 118,
+          badgeX = rightX + rightW - badgeW - 12
+        roundRect(badgeX, ry - 11, badgeW, 22, 3, row.check.bg, null)
+        text(row.check.label, badgeX + badgeW / 2, ry, small ? 10.5 : 11.5, row.check.color, {
+          align: 'center',
+          weight: 600,
+          max: badgeW - 6,
+        })
+
+        const isMatchedAttr = row.check.status === 'exact' || row.check.status === 'norm'
+        connector(
+          leftX + leftW + 3,
+          ry,
+          rightX - 3,
+          ry,
+          restoreProgress,
+          isMatchedAttr ? '#3c856d' : '#3a423e',
+          1.2,
+          isMatchedAttr ? 0.72 : 0.35,
+        )
+      })
+
+      connector(leftX + leftW + 3, cardY + 55, rightX - 3, cardY + 55, restoreProgress, C_JADE, 2.3, 1)
+
+      const footY = cardY + cardH - 18
+      line([leftX + 14, footY - 14], [leftX + leftW - 14, footY - 14], '#213c33')
+      line([rightX + 14, footY - 14], [rightX + rightW - 14, footY - 14], '#213c33')
+      text('核验依据：姓名特征匹配 + 多属性交叉比对', leftX + 16, footY, 12, '#83ab9b', {
+        max: leftW - 28,
+      })
+      text(
+        '辅助属性吻合 ' + job.matchedAttrCount + ' 项 → 确认为同一对象',
+        rightX + 16,
+        footY,
+        12,
+        C_JADE,
+        {
+          weight: 700,
+          max: rightW - 28,
+        },
+      )
+    }
+
+    function draw() {
+      if (!job || !W || phase < 0) return
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.clearRect(0, 0, W, H)
+      const { small, L, R, C, qx, step } = geometry(),
+        T = elapsed,
+        p = clamp(T / span[phase]),
+        u = (a, b) => (reduced.matches ? (T >= a ? 1 : 0) : ease((T - a) / (b - a)))
+
+      /* Exact center divider at W * 0.50 */
+      line([(L + R) / 2, 10], [(L + R) / 2, H - 10], C_RULE_SOFT)
+
+      /* PHASE 0: 提取姓名属性 */
+      if (phase === 0) {
+        const attrDim = u(1050, 2350)
+        alpha(u(40, 320), () => reel(T, 1, null, attrDim))
+        const lift = u(160, 1180),
+          toGrayBold = u(1100, 2200),
+          listFade = 1 - u(100, 680)
+        if (listFade > 0 && job.listLayout) {
+          alpha(listFade * 0.72, () => {
+            for (const item of job.listLayout) {
+              if (item.i === job.qIndex) continue
+              const iy = item.y * H
+              if (iy < 14 || iy > H - 14) continue
+              circle(qx + 8, iy, 4, '#3d4642')
+              text(item.name, qx + 22, iy, small ? 13.5 : 15, C_MUTED, { max: W - qx - 28 })
+            }
+          })
+        }
+        const source = job.source
+        const curX = mix(source.x * W, qx, lift),
+          curY = mix(source.y * H, C, lift),
+          curSize = mix(small ? 15 : 16.5, small ? 20 : 27, lift)
+        focusQuery(0, {
+          x: curX,
+          y: curY,
+          size: curSize,
+          attrDim,
+          pendingMix: toGrayBold,
+          weight: Math.round(mix(550, 700, toGrayBold)),
+          badge: attrDim < 0.45 ? '完整多属性查询记录' : '已虚化辅助属性 · 提取姓名待核验',
+        })
+      }
+
+      /* PHASE 1 (形成聚类) & PHASE 2 (簇中心向量化 — unified morph animation with Phase 5!) */
+      if (phase === 1 || phase === 2) {
+        const collapse = phase === 2,
+          axesAlpha = collapse ? 1 - u(650, 1180) : u(220, 1050),
+          merge = collapse ? u(0, 650) : 0,
+          toList = collapse ? u(660, 1320) : 0,
+          rowReveal = collapse ? u(980, 1420) : 0,
+          /* Unified text-to-vector morph (1450..2150ms) matching Stage 06's candidate morph! */
+          centroidMorph = collapse ? u(1450, 2150) : 0
+        const yaw = reduced.matches ? 0.36 : collapse ? 0.46 : 0.1 + 0.36 * ease(p)
+
+        const rows = job.model.rows,
+          k = job.clusters.length,
+          stopOff = Math.min(rows.length * 0.75, REEL_STOP_OFFSET)
+
+        const visibleSlots = new Map()
+        for (let j = -6; j <= 6; j++) {
+          const ix = Math.floor(stopOff) + j,
+            y = C + (ix - stopOff) * step,
+            r = rows[((ix % rows.length) + rows.length) % rows.length]
+          if (!visibleSlots.has(r.id)) visibleSlots.set(r.id, { j, y })
+        }
+
+        if (!collapse) {
+          reel(
+            2200,
+            1,
+            (j) => {
+              const delay = (j + 6) * 68
+              return u(delay, delay + 540)
+            },
+            1,
+          )
+        }
+
+        axes(yaw, axesAlpha * 0.95)
+
+        const centroid3D = job.clusters.map((g, idx) => ({
+          g,
+          idx,
+          pos: project(anchor(idx, k), yaw),
+        }))
+        const nodes = rows
+          .map((r) => ({ r, pos: project(cloudPos(r), yaw) }))
+          .sort((a, b) => a.pos[2] - b.pos[2])
+
+        clip(0, 0, L, H, () => {
+          const haloAlpha = (collapse ? 1 - merge : u(900, 1850)) * 0.18
+          if (haloAlpha > 0.005) {
+            for (const c of centroid3D) {
+              alpha(haloAlpha, () => circle(c.pos[0], c.pos[1], small ? 24 : 33, palette[c.g.i]))
+            }
+          }
+
+          for (const { r, pos } of nodes) {
+            const gIdx = job.clusters.findIndex((c) => c.i === r.group),
+              mid = centroid3D[gIdx].pos,
+              slot = visibleSlots.get(r.id)
+            let origin, m
+            if (slot) {
+              const delay = (slot.j + 6) * 68 + 160
+              origin = [mix(16, L * 0.28, 0.5), slot.y]
+              m = collapse ? 1 : u(delay, delay + 1150)
+            } else {
+              const delay = 280 + (r.id / rows.length) * 620
+              const enterFromTop = r.id % 2 === 0
+              origin = [L * 0.28 + (r.id % 5) * 16, enterFromTop ? 14 : H - 14]
+              m = collapse ? 1 : u(delay, delay + 1150)
+            }
+            if (m <= 0.001) continue
+            let pt = lerpP(origin, pos, m)
+            pt = lerpP(pt, mid, merge)
+
+            if (!collapse && m > 0.72) {
+              alpha((m - 0.72) * 0.5, () => line(pt, mid.slice(0, 2), palette[r.group], 0.75))
+            }
+
+            const dotAlpha = collapse ? 1 - ease(merge) : clamp(m * 1.35)
+            alpha(dotAlpha * 0.92, () => {
+              circle(pt[0], pt[1], (small ? 3.6 : 4.8) * (1 - 0.18 * merge), palette[r.group])
+            })
+          }
+
+          /* Merged centroid dot glides to row slot, then hands off seamlessly to drawUnifiedVectorRow's dot */
+          if (collapse && centroidMorph < 0.85) {
+            job.clusters.forEach((g, i) => {
+              const mid = centroid3D[i].pos,
+                target = [12, rowY(i, k)],
+                pt = lerpP(mid, target, toList)
+              alpha(u(100, 520) * (1 - clamp((centroidMorph - 0.35) * 2.2)), () => {
+                if (toList < 0.85) {
+                  alpha((1 - toList) * 0.24, () => circle(pt[0], pt[1], 12, palette[g.i]))
+                }
+                circle(pt[0], pt[1], mix(7, 4, toList), palette[g.i])
+              })
+            })
+          }
+        })
+
+        if (collapse && rowReveal > 0) {
+          centers(rowReveal, centroidMorph, -1, -1, 0, 1, centroidMorph >= 0.5)
+        }
+        /* Synchronized right-side query vectorization over the exact same window (1450..2150ms) */
+        focusQuery(collapse ? centroidMorph : 0, {
+          attrDim: 1,
+          badge: '已提取姓名属性 · 待核验',
+        })
+      }
+
+      /* PHASE 3: 比较簇中心 (Unified 3-state Palette C colors: Slate pending -> Mist White tested -> Celadon Jade winner) */
+      if (phase === 3) {
+        const n = job.clusters.length,
+          cycle = 430,
+          progress = Math.max(0, T - 160) / cycle,
+          activeIdx = Math.min(n - 1, Math.floor(progress)),
+          local = progress % 1,
+          scoredIdx = Math.min(n - 1, Math.floor(progress - 0.48)),
+          allDoneTime = 160 + n * cycle,
+          winMix = u(allDoneTime, allDoneTime + 520),
+          wi = job.clusters.findIndex((g) => g.i === job.winner.i),
+          probingIdx = T >= 160 && T < allDoneTime && activeIdx > scoredIdx ? activeIdx : -1
+
+        focusQuery(1)
+        text('余弦相似度', L - 8, rowY(0, n) - step * 0.56, small ? 10 : 12, C_MUTED, { align: 'right' })
+        centers(1, 1, scoredIdx, probingIdx, winMix, 0.48, true)
+
+        for (let c = 0; c <= activeIdx && c < n; c++) {
+          const isCurrent = c === activeIdx && T < allDoneTime,
+            isWinner = c === wi
+          if (winMix > 0 && !isWinner) {
+            connector(L - 2, rowY(c, n), qx - 2, C, 1, '#3b4540', 1.1, (1 - winMix) * 0.35)
+          } else if (isCurrent) {
+            connector(L - 2, rowY(c, n), qx - 2, C, reduced.matches ? 1 : ease(local), '#7c8a83', 1.7, 0.92)
+          } else if (T < allDoneTime) {
+            connector(L - 2, rowY(c, n), qx - 2, C, 1, '#3b4540', 1.1, 0.35)
+          }
+        }
+        if (winMix > 0) {
+          connector(L - 2, rowY(wi, n), qx - 2, C, 1, C_JADE, 2.2, winMix)
+        }
+      }
+
+      /* PHASE 4: 展开候选条目 */
+      if (phase === 4) {
+        const n = job.members.length,
+          slot = job.clusters.findIndex((g) => g.i === job.winner.i),
+          originY = rowY(slot, job.clusters.length),
+          fadeCentroids = 1 - u(40, 420),
+          fanOut = u(220, 1180),
+          targetFocus = job.hitIndex >= 0 ? job.hitIndex : Math.min(n - 1, Math.floor(n / 2)),
+          scrollFocus = mix(0, targetFocus, u(950, 1750))
+
+        if (fadeCentroids > 0) {
+          alpha(fadeCentroids, () => centers(1, 1, job.clusters.length - 1, -1, 1, 0.25, true))
+        }
+        if (fanOut > 0) {
+          candidates(1, 0, -1, scrollFocus, {
+            fade: u(180, 650),
+            spread: fanOut,
+            originY,
+          })
+        }
+        focusQuery(1)
+      }
+
+      /* PHASE 5: 逐条向量核验 (Exact same morph & 3-state Palette C colors as Phase 2->3, with Early Stopping!) */
+      if (phase === 5) {
+        const n = job.members.length,
+          verifyCount = job.verifyCount,
+          /* Identical 700ms morph curve as centroidMorph in Phase 2! */
+          raw = 1 - u(100, 800),
+          startFocus = job.hitIndex >= 0 ? job.hitIndex : Math.min(n - 1, Math.floor(n / 2)),
+          cycle = 520,
+          compareStart = 920,
+          endCompare = compareStart + verifyCount * cycle,
+          t = Math.max(0, T - compareStart) / cycle,
+          idx = Math.min(verifyCount - 1, Math.floor(t)),
+          local = t - Math.floor(t),
+          allFinished = T >= endCompare,
+          completedCount =
+            T < compareStart ? 0 : Math.min(verifyCount, idx + (local >= 0.52 || allFinished ? 1 : 0)),
+          focus =
+            T < compareStart
+              ? mix(startFocus, 0, u(0, 760))
+              : allFinished
+                ? verifyCount - 1
+                : Math.min(verifyCount - 1, idx + ease(clamp(local * 1.15)))
+
+        const activeRow = allFinished ? (job.hitIndex >= 0 ? job.hitIndex : -1) : T >= compareStart ? idx : -1
+        const targetY = candidates(raw, completedCount, activeRow, focus)
+
+        if (T >= compareStart) {
+          if (!allFinished) {
+            const curItem = job.members[idx],
+              itemScored = local >= 0.52,
+              itemHit = itemScored && curItem.score >= 0.9,
+              lineCol = itemHit ? C_JADE : itemScored ? '#9ba59f' : '#7c8a83',
+              lineProgress = reduced.matches ? 1 : ease(clamp(local / 0.48))
+            connector(L - 2, targetY, qx - 2, C, lineProgress, lineCol, itemHit ? 2.2 : 1.7)
+          } else if (job.hit) {
+            connector(L - 2, targetY, qx - 2, C, 1, C_JADE, 2.2)
+          }
+        }
+        focusQuery(1)
+      }
+
+      /* PHASE 6: 多属性核验结果 */
+      if (phase === 6) {
+        const isDirect = queryState.mode === 'direct-result',
+          hit = job.hit,
+          n = job.members.length,
+          ix = hit ? job.hitIndex : n - 1,
+          fadeOutList = isDirect ? 0 : 1 - u(40, 420),
+          restore = isDirect ? u(0, 380) : u(320, 960)
+
+        if (fadeOutList > 0) {
+          alpha(fadeOutList, () => {
+            candidates(0, job.verifyCount, ix, ix)
+            focusQuery(1)
+          })
+        }
+
+        alpha(restore, () => {
+          drawVerificationResult(isDirect ? u(80, 450) : u(460, 1080))
+        })
+
+        if (isDirect || T >= 450) {
+          const finalText = hit ? '核验到高度匹配对象' : '未查到匹配对象'
+          if ($('status').textContent !== finalText) {
+            $('status').textContent = finalText
+            $('status').className = hit ? 'success' : 'miss'
+            $('statusSub').textContent = hit
+              ? '库内「' +
+                hit.name +
+                '」与查询「' +
+                job.name +
+                '」姓名相似度 ' +
+                hit.score.toFixed(3) +
+                '，且 ' +
+                job.matchedAttrCount +
+                ' 项辅助属性一致，确认为同一人'
+              : '目标库候选最高姓名相似度 ' + job.best.score.toFixed(3) + '（低于 0.90 阈值）'
+          }
+        }
+      }
+
+      const total = span.reduce((a, b) => a + b, 0) || 1
+      $('track').firstElementChild.style.transform =
+        'scaleX(' + (span.slice(0, phase).reduce((a, b) => a + b, 0) + Math.min(T, span[phase])) / total + ')'
+    }
+
+    function renderStepBar() {
+      const wrap = $('steps')
+      if (!wrap.children.length) {
+        stages.forEach((name, idx) => {
+          const btn = el('button')
+          btn.className = 'stepbtn'
+          btn.type = 'button'
+          const num = el('i', '0' + (idx + 1))
+          btn.append(num, el('span', name))
+          btn.onclick = () => jumpToPhase(idx)
+          wrap.append(btn)
+        })
+      }
+      Array.from(wrap.children).forEach((btn, idx) => {
+        btn.className = 'stepbtn' + (idx === phase ? ' active' : idx < phase ? ' done' : '')
+      })
+    }
+
+    function phaseUI() {
+      const isDirect = queryState.mode === 'direct-result',
+        end = phase === 6
+      if (!isDirect) {
+        $('status').textContent = stages[phase]
+        $('status').className = ''
+        $('statusSub').textContent = stageHints[phase] || ''
+      }
+      $('steps').hidden = isDirect
+      $('track').hidden = isDirect
+      $('reset').hidden = false
+      $('back').hidden = isDirect
+      $('back').disabled = phase === 0
+      $('pause').hidden = isDirect || end
+      $('pause').textContent = playing ? '暂停' : '继续'
+      $('next').hidden = isDirect || end
+      $('skipResult').hidden = isDirect || end
+      $('viewProcess').hidden = !isDirect
+      $('run').hidden = isDirect || !end
+      $('run').textContent = '重新播放过程'
+      renderStepBar()
+      $('accessible').textContent = end
+        ? job.hit
+          ? '核验到高度匹配对象：' + job.hit.name + ' 与 ' + job.name
+          : '未查到匹配对象：' + job.name
+        : stages[phase] + '，查询条目 ' + job.name
+    }
+
+    function tick(now) {
+      raf = 0
+      if (!playing || phase < 0) return
+      if (last) elapsed += Math.min(now - last, 100)
+      last = now
+      if (elapsed >= span[phase]) {
+        if (phase === 6) {
+          elapsed = span[phase]
+          draw()
+          playing = false
+          return
+        }
+        elapsed -= span[phase]
+        phase++
+        phaseUI()
+      }
+      draw()
+      raf = requestAnimationFrame(tick)
+    }
+
+    function captureSetupLayout() {
+      const bounds = $('stage').parentElement.getBoundingClientRect(),
+        buttons = Array.from($('qList').children)
+      const listLayout = buttons.map((btn, i) => {
+        const sp = btn.querySelector('.qname') || btn,
+          r = sp.getBoundingClientRect()
+        return {
+          i,
+          name: queryCatalog[i]?.name || '',
+          x: clamp((r.left - bounds.left) / (bounds.width || 1)),
+          y: clamp((r.top + r.height / 2 - bounds.top) / (bounds.height || 1)),
+        }
+      })
+      const activeBtn = buttons[queryState.activeIndex]
+      const activeRect = (activeBtn?.querySelector('.qname') || activeBtn)?.getBoundingClientRect()
+      const source = activeRect
+        ? {
+            x: clamp((activeRect.left - bounds.left) / (bounds.width || 1)),
+            y: clamp((activeRect.top + activeRect.height / 2 - bounds.top) / (bounds.height || 1)),
+          }
+        : { x: 0.56, y: 0.32 }
+      return { source, listLayout }
+    }
+
+    function prepareJob() {
+      const prevSource = phase >= 0 && job ? job.source : null,
+        prevList = phase >= 0 && job ? job.listLayout : null
+      stopClock()
+      const m = models[+$('db').value]
+      queryState.queue = [queryState.activeIndex]
+      const captured = prevSource ? { source: prevSource, listLayout: prevList } : captureSetupLayout()
+      job = makeRun(m, queryState.queue)
+      job.source = captured.source
+      job.listLayout = captured.listLayout
+      span = [
+        2700,
+        3250,
+        3400,
+        160 + 430 * job.clusters.length + 1400,
+        2950 + Math.max(0, job.members.length - 6) * 260,
+        1900 + job.verifyCount * 520,
+        2300,
+      ]
+      $('qCount').textContent = '当前核验 1 条（含 4 项属性）'
+      $('setup').classList.add('depart')
+      $('setup').setAttribute('aria-hidden', 'true')
+      $('setup').inert = true
+      $('stage').hidden = false
+    }
+
+    function startDirectResult() {
+      prepareJob()
+      queryState.mode = 'direct-result'
+      phase = 6
+      elapsed = 0
+      playing = true
+      phaseUI()
+      resize()
+      raf = requestAnimationFrame(tick)
+    }
+
+    function startProcess() {
+      if (!job) prepareJob()
+      stopClock()
+      queryState.mode = 'process'
+      phase = 0
+      elapsed = 0
+      playing = true
+      phaseUI()
+      resize()
+      raf = requestAnimationFrame(tick)
+    }
+
+    function stopClock() {
+      if (raf) cancelAnimationFrame(raf)
+      raf = 0
+      last = 0
+      playing = false
+    }
+
+    function jumpToPhase(targetPhase) {
+      if (!job || targetPhase < 0 || targetPhase > 6) return
+      const wasPlaying = playing
+      stopClock()
+      queryState.mode = 'process'
+      phase = targetPhase
+      playing = wasPlaying && targetPhase < 6
+      elapsed = playing ? 0 : Math.max(0, span[phase] - 350)
+      phaseUI()
+      draw()
+      if (playing) raf = requestAnimationFrame(tick)
+    }
+
+    function changePhase(d) {
+      let was = playing,
+        from = phase
+      stopClock()
+      queryState.mode = 'process'
+      phase = Math.max(0, Math.min(6, phase + d))
+      playing = was || from === 6
+      elapsed = playing ? 0 : Math.max(0, span[phase] - 350)
+      phaseUI()
+      draw()
+      if (playing) raf = requestAnimationFrame(tick)
+    }
+
+    function reset() {
+      stopClock()
+      job = null
+      phase = -1
+      queryState.mode = 'idle'
+      $('setup').inert = false
+      $('setup').removeAttribute('aria-hidden')
+      $('setup').classList.remove('depart')
+      $('qCount').textContent = queryCatalog.length + ' 条多属性样本可选'
+      $('stage').hidden = true
+      $('steps').hidden = true
+      $('track').hidden = true
+      ;['back', 'pause', 'next', 'reset', 'skipResult', 'viewProcess'].forEach((k) => ($(k).hidden = true))
+      $('run').hidden = false
+      $('run').textContent = '开始核验'
+      $('status').textContent = ''
+      $('statusSub').textContent = ''
+      $('accessible').textContent = ''
+      $('db').focus()
+    }
+
+    function pause() {
+      if (phase < 0 || phase === 6) return
+      if (playing) stopClock()
+      else {
+        playing = true
+        last = 0
+        raf = requestAnimationFrame(tick)
+      }
+      phaseUI()
+    }
+
+    function mountData() {
+      const db = +$('db').value,
+        rows = models[db].rows
+      $('dbCount').textContent = '共 ' + rows.length + ' 条多属性记录'
+      $('dbHint').textContent = '前 6 条多属性记录预览（共 ' + rows.length + ' 条）'
+      $('dbPreview').replaceChildren(
+        ...rows.slice(0, 6).map((r) => {
+          const row = el('div')
+          row.className = 'preview-row'
+          const sName = el('span', r.name),
+            sDob = el('span', r.dob),
+            sCity = el('span', r.city),
+            sPhone = el('span', r.phone)
+          sName.className = 'pname'
+          sDob.className = 'pattr'
+          sCity.className = 'pcity'
+          sPhone.className = 'pattr'
+          row.append(sName, sDob, sCity, sPhone)
+          return row
+        }),
+      )
+      $('qCount').textContent = queryCatalog.length + ' 条多属性样本可选'
+      $('qList').replaceChildren(
+        ...queryCatalog.map((item, i) => {
+          const b = el('button')
+          b.type = 'button'
+          b.className = 'qitem'
+          b.setAttribute('aria-pressed', i === queryState.activeIndex)
+
+          const body = el('div')
+          body.className = 'qbody'
+
+          const top = el('div')
+          top.className = 'qtop'
+          const nameSpan = el('span', item.name)
+          nameSpan.className = 'qname'
+          top.append(nameSpan)
+          if (item.tag) {
+            const tagSpan = el('span', item.tag)
+            tagSpan.className = 'qtag'
+            top.append(tagSpan)
+          }
+
+          const meta = el(
+            'div',
+            '出生日期: ' + (item.dob || '—') + '  ·  城市: ' + (item.city || '—') + '  ·  电话: ' + (item.phone || '—'),
+          )
+          meta.className = 'qmeta'
+
+          body.append(top, meta)
+          b.append(body)
+          b.onclick = () => {
+            queryState.activeIndex = i
+            queryState.queue = [i]
+            mountData()
+            $('qList').children[i]?.focus()
+          }
+          return b
+        }),
+      )
+    }
+
+    function modal(title, ...children) {
+      $('modalTitle').textContent = title
+      $('modalBody').replaceChildren(...children)
+      $('dialog').showModal()
+    }
+    $('close').onclick = () => $('dialog').close()
+    $('dialog').onclick = (e) => {
+      if (e.target === $('dialog')) {
+        const b = e.target.getBoundingClientRect()
+        if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom)
+          e.target.close()
+      }
+    }
+
+    function browse() {
+      const lib = libraries[+$('db').value],
+        table = el('table'),
+        input = el('input')
+      input.type = 'search'
+      input.placeholder = '筛选姓名、出生日期、城市或电话（共 ' + lib.rows.length + ' 条）'
+      input.setAttribute('aria-label', input.placeholder)
+      const show = () => {
+        const head = el('tr')
+        head.append(el('th', '#'), el('th', '姓名'), el('th', '出生日期'), el('th', '城市'), el('th', '联系电话'))
+        table.replaceChildren(head)
+        lib.rows.forEach(([n, dob, c, ph], idx) => {
+          if (![n, dob, c, ph].join(' ').toLowerCase().includes(input.value.toLowerCase())) return
+          const tr = el('tr')
+          tr.append(el('td', String(idx + 1)), el('td', n), el('td', dob), el('td', c), el('td', ph))
+          table.append(tr)
+        })
+      }
+      input.oninput = show
+      show()
+      modal(lib.name + '（' + lib.rows.length + ' 条）', input, table)
+    }
+
+    function addRecords(records, tagLabel = '自定义条目') {
+      const valid = records
+        .map((r) => ({
+          name: String(r.name || '').trim(),
+          dob: String(r.dob || '').trim() || '—',
+          city: String(r.city || '').trim() || '—',
+          phone: String(r.phone || '').trim() || '—',
+        }))
+        .filter((r) => r.name.length <= 100 && clean(r.name))
+      if (!valid.length) throw Error('没有可用的姓名记录。')
+      const currentDb = +$('db').value
+      for (const rec of valid) {
+        const existing = queryCatalog.findIndex((q) => q.name === rec.name)
+        if (existing >= 0) {
+          queryCatalog[existing] = { ...queryCatalog[existing], ...rec, tag: tagLabel }
+        } else {
+          queryCatalog.push({ ...rec, db: currentDb, tag: tagLabel })
+        }
+      }
+      queryState.activeIndex = queryCatalog.findIndex((q) => q.name === valid[0].name)
+      queryState.queue = [queryState.activeIndex]
+      mountData()
+      $('dialog').close()
+      $('qList').children[queryState.activeIndex]?.scrollIntoView({ block: 'nearest' })
+    }
+
+    function addOne() {
+      const form = el('form'),
+        grid = el('div'),
+        inName = el('input'),
+        inDob = el('input'),
+        inCity = el('input'),
+        inPhone = el('input'),
+        b = el('button', '添加并设为待核验条目'),
+        msg = el('p')
+      grid.className = 'form-grid'
+      inName.required = true
+      inName.maxLength = 100
+      inName.placeholder = '例如：曜張羣、貽莊量、Stella Borghi'
+      inDob.placeholder = '例如：2000-05-26（选填）'
+      inCity.placeholder = '例如：Kaohsiung / Milano（选填）'
+      inPhone.placeholder = '例如：+886480853144（选填）'
+
+      const wrapField = (labelTxt, inputEl, full = false) => {
+        const lab = el('label', labelTxt)
+        if (full) lab.className = 'full'
+        lab.append(inputEl)
+        return lab
+      }
+      grid.append(
+        wrapField('待核验姓名（必填，支持错别字/字序调换模糊核验）', inName, true),
+        wrapField('出生日期（核验依据）', inDob),
+        wrapField('所在城市（核验依据）', inCity),
+        wrapField('联系电话（核验依据）', inPhone, true),
+      )
+      b.className = 'primary'
+      msg.className = 'error'
+      form.append(grid, msg, b)
+      form.onsubmit = (e) => {
+        e.preventDefault()
+        try {
+          addRecords(
+            [
+              {
+                name: inName.value,
+                dob: inDob.value,
+                city: inCity.value,
+                phone: inPhone.value,
+              },
+            ],
+            '手动添加',
+          )
+        } catch (x) {
+          msg.textContent = x.message
+        }
+      }
+      modal('添加多属性查询条目', form)
+      inName.focus()
+    }
+
+    function csv(s) {
+      const rows = [],
+        r = []
+      let v = '',
+        quoted = false
+      for (let i = 0; i < s.length; i++) {
+        const c = s[i]
+        if (c === '"') {
+          if (quoted && s[i + 1] === '"') {
+            v += '"'
+            i++
+          } else quoted = !quoted
+        } else if (c === ',' && !quoted) {
+          r.push(v)
+          v = ''
+        } else if ((c === '\n' || c === '\r') && !quoted) {
+          if (c === '\r' && s[i + 1] === '\n') i++
+          r.push(v)
+          rows.push(r.splice(0))
+          v = ''
+        } else v += c
+      }
+      if (quoted) throw Error('CSV 引号未闭合。')
+      r.push(v)
+      rows.push(r)
+      return rows
+    }
+
+    async function sheet(file) {
+      const b = new Uint8Array(await file.arrayBuffer()),
+        d = new DataView(b.buffer),
+        u16 = (i) => d.getUint16(i, true),
+        u32 = (i) => d.getUint32(i, true),
+        dec = new TextDecoder(),
+        entries = new Map()
+      let e = b.length - 22
+      while (e >= Math.max(0, b.length - 65557) && u32(e) !== 0x06054b50) e--
+      if (e < 0 || u32(e) !== 0x06054b50) throw Error('无法读取工作簿。')
+      let k = u32(e + 16)
+      for (let i = 0; i < u16(e + 10); i++) {
+        if (u32(k) !== 0x02014b50) throw Error('工作簿目录无效。')
+        let nl = u16(k + 28)
+        entries.set(dec.decode(b.slice(k + 46, k + 46 + nl)), [
+          u32(k + 42),
+          u32(k + 20),
+          u32(k + 24),
+          u16(k + 10),
+        ])
+        k += 46 + nl + u16(k + 30) + u16(k + 32)
+      }
+      async function xml(n) {
+        if (!entries.has(n)) throw Error('工作表缺少数据。')
+        let [p, z, size, m] = entries.get(n)
+        if (size > 6000000) throw Error('工作表过大。')
+        let off = p + 30 + u16(p + 26) + u16(p + 28),
+          blob = new Blob([b.slice(off, off + z)]),
+          s
+        if (m === 0) s = await blob.text()
+        else if (m === 8 && typeof DecompressionStream !== 'undefined') {
+          const reader = blob.stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader(),
+            parts = []
+          let len = 0
+          while (true) {
+            let part = await reader.read()
+            if (part.done) break
+            len += part.value.length
+            if (len > 6000000) {
+              await reader.cancel()
+              throw Error('工作表过大。')
+            }
+            parts.push(part.value)
+          }
+          s = await new Blob(parts).text()
+        } else throw Error('此浏览器不能读取该工作簿，请另存为 CSV。')
+        const doc = new DOMParser().parseFromString(s, 'application/xml')
+        if (doc.getElementsByTagName('parsererror').length) throw Error('工作表不是有效 XML。')
+        return doc
+      }
+      const tags = (n, t) => Array.from(n.getElementsByTagNameNS('*', t)),
+        wb = await xml('xl/workbook.xml'),
+        rel = await xml('xl/_rels/workbook.xml.rels'),
+        first = tags(wb, 'sheet')[0],
+        rid = first?.getAttributeNS(
+          'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+          'id',
+        ),
+        target = tags(rel, 'Relationship')
+          .find((r) => r.getAttribute('Id') === rid)
+          ?.getAttribute('Target')
+      if (!target) throw Error('找不到第一张工作表。')
+      const path = new URL(target, 'https://internal.invalid/xl/workbook.xml').pathname.slice(1),
+        ss = entries.has('xl/sharedStrings.xml')
+          ? tags(await xml('xl/sharedStrings.xml'), 'si').map((x) =>
+              tags(x, 't')
+                .map((t) => t.textContent)
+                .join(''),
+            )
+          : [],
+        doc = await xml(path)
+      return tags(doc, 'row').map((row) => {
+        const vals = []
+        for (const c of tags(row, 'c')) {
+          let letters = c.getAttribute('r')?.match(/^[A-Z]+/)?.[0] || 'A',
+            i = 0
+          for (const l of letters) i = i * 26 + l.charCodeAt(0) - 64
+          if (i > 200) continue
+          const val = tags(c, 'v')[0]?.textContent || '',
+            t = c.getAttribute('t')
+          vals[i - 1] =
+            t === 's'
+              ? ss[+val]
+              : t === 'inlineStr'
+                ? tags(c, 't')
+                    .map((x) => x.textContent)
+                    .join('')
+                : val
+        }
+        return vals
+      })
+    }
+
+    function importQ() {
+      const f = el('input'),
+        msg = el('p'),
+        lab = el('label', '选择 CSV 或 Excel（.xlsx）多属性名单文件'),
+        hint = el(
+          'p',
+          '首行需包含“姓名 / name / name_local”列，可选包含“出生日期 / dob”、“城市 / city”、“电话 / phone”列。',
+        )
+      f.type = 'file'
+      f.accept = '.csv,.xlsx'
+      f.className = 'file'
+      lab.append(f)
+      msg.className = 'error'
+      hint.className = 'muted'
+      f.onchange = async () => {
+        try {
+          let file = f.files[0]
+          if (!file) return
+          if (file.size > 3000000) throw Error('请选择 3 MB 以内的文件。')
+          let rows = /\.xlsx$/i.test(file.name)
+            ? await sheet(file)
+            : /\.csv$/i.test(file.name)
+              ? csv((await file.text()).replace(/^\uFEFF/, ''))
+              : null
+          if (!rows) throw Error('请选择 CSV 或 .xlsx 文件。')
+          const header = (rows[0] || []).map((x) => String(x || '').trim().toLowerCase())
+          const iName = header.findIndex((x) => ['name', 'name_local', '姓名', '查询姓名'].includes(x)),
+            iRoman = header.findIndex((x) => x === 'name_romanized'),
+            iDob = header.findIndex((x) => ['dob', 'date_of_birth', '出生日期', '生日'].includes(x)),
+            iCity = header.findIndex((x) => ['city', '城市', '所在城市'].includes(x)),
+            iPhone = header.findIndex((x) => ['phone', 'tel', '电话', '联系电话'].includes(x))
+          if (iName < 0 && iRoman < 0) throw Error('首行未找到姓名列。')
+          if (rows.length > 2001) throw Error('单次最多导入 2,000 条。')
+          if (!$('dialog').open || !f.isConnected) return
+          const recs = rows.slice(1).map((r) => ({
+            name: (iName >= 0 ? r[iName] : '') || (iRoman >= 0 ? r[iRoman] : '') || '',
+            dob: iDob >= 0 ? r[iDob] : '',
+            city: iCity >= 0 ? r[iCity] : '',
+            phone: iPhone >= 0 ? r[iPhone] : '',
+          }))
+          addRecords(recs, '文件导入')
+        } catch (x) {
+          msg.textContent = x.message || '导入失败。'
+        }
+      }
+      modal('导入多属性查询名单', lab, hint, msg)
+    }
+
+    libraries.forEach((l, i) => $('db').add(new Option(l.name, i)))
+    $('db').onchange = () => {
+      const db = +$('db').value
+      if (queryCatalog[queryState.activeIndex]?.db !== db) {
+        const matchIdx = queryCatalog.findIndex((q) => q.db === db)
+        if (matchIdx >= 0) {
+          queryState.activeIndex = matchIdx
+          queryState.queue = [matchIdx]
+        }
+      }
+      mountData()
+    }
+    $('browse').onclick = browse
+    $('browseMore').onclick = browse
+    $('importQ').onclick = importQ
+    $('addQ').onclick = addOne
+    $('run').onclick = () => {
+      if (queryState.mode === 'idle') startDirectResult()
+      else startProcess()
+    }
+    $('viewProcess').onclick = startProcess
+    $('skipResult').onclick = startDirectResult
+    $('pause').onclick = pause
+    $('next').onclick = () => changePhase(1)
+    $('back').onclick = () => changePhase(-1)
+    $('reset').onclick = reset
+    $('about').onclick = () => {
+      if (playing && phase >= 0 && phase < 6) pause()
+      modal(
+        '演示说明',
+        el(
+          'p',
+          '本演示接入项目真实多属性数据集（data/fused_multilingual），左右两侧采用严格等宽对称布局，完整呈现银行记录的姓名、出生日期、城市、联系电话四项属性。',
+        ),
+        el(
+          'p',
+          '1. 直接核验结果：点击「开始核验」后，系统先直接给出是否命中的结论，并左右对称并排比对双方姓名及出生日期、城市、电话等具体辅助属性，作为模糊匹配下确认同一对象的核验依据。',
+        ),
+        el(
+          'p',
+          '2. 统一向量化与早停流程：点击「查看核验过程」可逐步检视 7 阶段流程。其中「03 簇中心向量化 → 04 比较簇中心」与「05 展开候选条目 → 06 逐条向量核验」采用完全一致的横向扫描向量化过渡动效与三态配色语义（松烟暗灰：待测 / 宣白浅灰：已测未选 / 青瓷翠绿：选中最优簇或命中早停）。',
+        ),
+      )
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && playing && phase < 6) pause()
+    })
+    mountData()
+  </script>
+</html>

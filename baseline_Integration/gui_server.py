@@ -59,6 +59,12 @@ def index():
     return send_from_directory(str(gui_dir), "index.html")
 
 
+@app.route("/matching-stage")
+def matching_stage():
+    """Standalone, browser-local visualization; does not call the HE backend."""
+    return send_from_directory(str(PROJECT_ROOT / "gui" / "templates"), "matching_stage.html")
+
+
 @app.route("/api/run", methods=["POST"])
 def api_run():
     """Run the protocol and stream SSE events back.

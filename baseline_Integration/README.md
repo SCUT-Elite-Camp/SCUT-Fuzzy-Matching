@@ -77,6 +77,8 @@ python scripts/demo_multi_attribute_dataset.py --config config/examples/fused_mu
 # 本地 Web 可视化交互界面（集成多属性多语言 + 单属性双模式）：
 python gui_server.py --port 5000
 # 在浏览器打开 http://localhost:5000
+# 单页动效演示：http://localhost:5000/matching-stage
+# 也可直接打开 gui/templates/matching_stage.html（离线、无依赖、本地明文示意，不执行 CKKS）
 ```
 
 `demo_multi_attribute_dataset.py` 不带 `--limit` 时默认只跑前 20 条查询（每条查询都是一次
